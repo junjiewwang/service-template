@@ -1,0 +1,193 @@
+# ============================================
+# TCS Service Configuration
+# Version: 2.0
+# ============================================
+
+# ============================================
+# 基础服务信息
+# ============================================
+service:
+  name: apm-async-task
+  description: "APM Async Task Service"
+
+  # 服务端口配置（支持多端口）
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    expose: true
+    description: "HTTP API port"
+
+  - name: metrics
+    port: 9090
+    protocol: TCP
+    expose: false
+    description: "Prometheus metrics"
+
+  deploy_dir: /usr/local/services
+
+# ============================================
+# 语言和版本配置
+# ============================================
+language:
+  type: go # go | python | nodejs | java | rust
+  version: "1.23"
+  config:
+    goproxy: "https://goproxy.cn,direct"
+    gosumdb: "sum.golang.org"
+
+# ============================================
+# 构建配置
+# ============================================
+build:
+  dependency_files:
+    auto_detect: true
+
+  builder_image:
+    amd64: "mirrors.tencent.com/tcs-infra/tceforqci_x86_go23:v1.0.0"
+    arm64: "mirrors.tencent.com/tcs-infra/tceforqci_arm_go23:v1.0.0"
+
+  runtime_image:
+    amd64: "mirrors.tencent.com/tencentos/tencentos3-minimal:latest"
+    arm64: "mirrors.tencent.com/tencentos/tencentos3-minimal:latest"
+
+  system_dependencies:
+    build:
+      packages:
+      - git
+      - make
+      - gcc
+
+  commands:
+    pre_build: |
+      echo "Pre-build stage"
+      go version
+
+    build: |
+      cd ${SERVICE_ROOT}
+      CGO_ENABLED=0 go build -ldflags="-s -w" -o ${BUILD_OUTPUT_DIR}/bin/${SERVICE_NAME} ./cmd/server
+      cp -r configs ${BUILD_OUTPUT_DIR}/
+      cp -r scripts ${BUILD_OUTPUT_DIR}/
+
+    post_build: |
+      echo "Post-build completed"
+
+  output_dir: dist
+
+# ============================================
+# 插件配置
+# ============================================
+plugins:
+- name: selfMonitor
+  description: "TCE Self Monitor Tool"
+  download_url: "https://mirrors.tencent.com/repository/generic/selfMonitor/download_tool.sh"
+  install_dir: /tce
+  install_command: |
+    echo "Installing ${PLUGIN_NAME} to ${PLUGIN_INSTALL_DIR}..."
+    curl -fsSL "${PLUGIN_DOWNLOAD_URL}" | bash -s "${PLUGIN_INSTALL_DIR}"
+    echo "${PLUGIN_NAME} installed successfully"
+  required: true
+
+# ============================================
+# 运行时配置
+# ============================================
+runtime:
+  system_dependencies:
+    packages:
+    - ca-certificates
+    - tzdata
+
+  healthcheck:
+    enabled: true
+    type: http
+    http:
+      path: /health
+      port: 8080
+      timeout: 3
+
+  startup:
+    command: |
+      #!/bin/sh
+      set -e
+      cd ${SERVICE_ROOT}
+      export SERVICE_NAME="${SERVICE_NAME}"
+      export SERVICE_PORT="${SERVICE_PORT}"
+      exec ${SERVICE_BIN_DIR}/${SERVICE_NAME} \
+        --config=${CONFIG_DIR}/config.yaml \
+        --port=${SERVICE_PORT}
+
+    env:
+    - name: GO_ENV
+      value: production
+    - name: LOG_LEVEL
+      value: info
+
+# ============================================
+# 本地开发和测试配置
+# ============================================
+local_dev:
+  compose:
+    resources:
+      limits:
+        cpus: "0.5"
+        memory: 1G
+      reservations:
+        cpus: "0.25"
+        memory: 512M
+
+    volumes:
+    - source: ./bk-ci/tcs/build/config.yaml
+      target: /usr/local/services/${SERVICE_NAME}/config.yaml
+      type: bind
+      description: "Service config"
+
+    - source: ./bk-ci/tcs/build/sdk.json
+      target: /tce/conf/config/tce.config.center/sdk.json
+      type: bind
+      description: "TCE SDK config"
+
+    healthcheck:
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    labels:
+      kompose.image-pull-policy: "IfNotPresent"
+      reloader.stakater.com/auto: "true"
+
+  kubernetes:
+    enabled: true
+    namespace: default
+    output_dir: k8s-manifests
+    volume_type: configMap
+
+    configmap:
+      auto_detect: true
+
+    wait:
+      enabled: true
+      timeout: 300s
+
+# ============================================
+# Makefile 生成配置
+# ============================================
+makefile:
+  custom_targets:
+  - name: test
+    description: "Run tests"
+    commands:
+    - go test -v ./...
+
+  - name: lint
+    description: "Run linter"
+    commands:
+    - golangci-lint run
+
+# ============================================
+# 元数据
+# ============================================
+metadata:
+  template_version: "2.0.0"
+  generated_at: ""
+  generator: "tcs-gen"
