@@ -1,10 +1,11 @@
 package generator
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestScriptsGenerator_GenerateBuildScript(t *testing.T) {
@@ -34,10 +35,7 @@ func TestScriptsGenerator_GenerateBuildScript(t *testing.T) {
 	vars := NewVariables(cfg)
 	g := NewScriptsGenerator(cfg, engine, vars)
 	content, err := g.GenerateBuildScript()
-
-	if err != nil {
-		t.Fatalf("GenerateBuildScript() error = %v", err)
-	}
+	require.NoError(t, err, "GenerateBuildScript() should not return an error")
 
 	expectedStrings := []string{
 		"#!/bin/bash",
@@ -46,9 +44,7 @@ func TestScriptsGenerator_GenerateBuildScript(t *testing.T) {
 	}
 
 	for _, expected := range expectedStrings {
-		if !strings.Contains(content, expected) {
-			t.Errorf("Build script missing expected string: %s", expected)
-		}
+		assert.Contains(t, content, expected, "Build script should contain expected string: %s", expected)
 	}
 }
 
@@ -95,18 +91,10 @@ func TestScriptsGenerator_GenerateDepsInstallScript(t *testing.T) {
 			vars := NewVariables(cfg)
 			g := NewScriptsGenerator(cfg, engine, vars)
 			content, err := g.GenerateDepsInstallScript()
+			require.NoError(t, err, "GenerateDepsInstallScript() should not return an error")
 
-			if err != nil {
-				t.Fatalf("GenerateDepsInstallScript() error = %v", err)
-			}
-
-			if !strings.Contains(content, "#!/bin/bash") {
-				t.Error("Script missing shebang")
-			}
-
-			if !strings.Contains(content, tt.check) {
-				t.Errorf("Script missing expected command: %s", tt.check)
-			}
+			assert.Contains(t, content, "#!/bin/bash", "Script should contain shebang")
+			assert.Contains(t, content, tt.check, "Script should contain expected command: %s", tt.check)
 		})
 	}
 }
@@ -139,10 +127,7 @@ func TestScriptsGenerator_GenerateRtPrepareScript(t *testing.T) {
 	vars := NewVariables(cfg)
 	g := NewScriptsGenerator(cfg, engine, vars)
 	content, err := g.GenerateRtPrepareScript()
-
-	if err != nil {
-		t.Fatalf("GenerateRtPrepareScript() error = %v", err)
-	}
+	require.NoError(t, err, "GenerateRtPrepareScript() should not return an error")
 
 	expectedStrings := []string{
 		"#!/bin/sh",
@@ -150,8 +135,6 @@ func TestScriptsGenerator_GenerateRtPrepareScript(t *testing.T) {
 	}
 
 	for _, expected := range expectedStrings {
-		if !strings.Contains(content, expected) {
-			t.Errorf("Rt prepare script missing expected string: %s", expected)
-		}
+		assert.Contains(t, content, expected, "Rt prepare script should contain expected string: %s", expected)
 	}
 }

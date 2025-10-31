@@ -1,10 +1,11 @@
 package generator
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConfigMapGenerator_Generate(t *testing.T) {
@@ -77,16 +78,14 @@ func TestConfigMapGenerator_Generate(t *testing.T) {
 			g := NewConfigMapGenerator(tt.config, engine, vars)
 			content, err := g.Generate()
 
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Generate() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			if tt.wantErr {
+				assert.Error(t, err, "Generate() should return an error")
+			} else {
+				require.NoError(t, err, "Generate() should not return an error")
+				assert.NotEmpty(t, content, "Generated content should not be empty")
 
-			if err == nil {
 				for _, check := range tt.checks {
-					if !strings.Contains(content, check) {
-						t.Errorf("Generated content missing expected string: %s", check)
-					}
+					assert.Contains(t, content, check, "Generated content should contain expected string: %s", check)
 				}
 			}
 		})

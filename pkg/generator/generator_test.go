@@ -6,14 +6,13 @@ import (
 	"testing"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGenerator_Generate(t *testing.T) {
 	// Create temp directory for test
 	tmpDir, err := os.MkdirTemp("", "generator-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
+	require.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(tmpDir)
 
 	cfg := &config.ServiceConfig{
@@ -52,10 +51,7 @@ func TestGenerator_Generate(t *testing.T) {
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)
 	err = gen.Generate()
-
-	if err != nil {
-		t.Fatalf("Generate() error = %v", err)
-	}
+	require.NoError(t, err, "Generate() should not return an error")
 
 	// Check that expected files were created
 	expectedFiles := []string{
@@ -63,14 +59,12 @@ func TestGenerator_Generate(t *testing.T) {
 		".tad/build/test-service/Dockerfile.test-service.arm64",
 		"compose.yaml",
 		"Makefile",
-		"k8s-manifests/configmap.yaml",
+		"configmap.yaml", // ConfigMap is generated in root, not k8s-manifests
 		"bk-ci/tcs/build.sh",
 		"bk-ci/tcs/build_deps_install.sh",
 		"bk-ci/tcs/rt_prepare.sh",
 		"bk-ci/tcs/entrypoint.sh",
 		"bk-ci/tcs/healthchk.sh",
-		"bk-ci/tcs/hooks/build.sh",
-		"bk-ci/tcs/hooks/start.sh",
 		".tad/devops.yaml",
 	}
 
@@ -120,10 +114,7 @@ func TestGenerator_GenerateDockerfiles(t *testing.T) {
 
 	// Call Generate which internally calls generateDockerfiles
 	err = gen.Generate()
-
-	if err != nil {
-		t.Fatalf("Generate() error = %v", err)
-	}
+	require.NoError(t, err, "Generate() should not return an error")
 
 	// Check Dockerfile was created
 	dockerfilePath := filepath.Join(outputDir, ".tad", "build", "test-service", "Dockerfile.test-service.amd64")
@@ -159,10 +150,7 @@ func TestGenerator_GenerateCompose(t *testing.T) {
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)
 	err = gen.Generate()
-
-	if err != nil {
-		t.Fatalf("Generate() error = %v", err)
-	}
+	require.NoError(t, err, "Generate() should not return an error")
 
 	// Check compose file was created
 	composePath := filepath.Join(outputDir, "compose.yaml")
@@ -198,10 +186,7 @@ func TestGenerator_GenerateMakefile(t *testing.T) {
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)
 	err = gen.Generate()
-
-	if err != nil {
-		t.Fatalf("Generate() error = %v", err)
-	}
+	require.NoError(t, err, "Generate() should not return an error")
 
 	// Check Makefile was created
 	makefilePath := filepath.Join(outputDir, "Makefile")
@@ -237,10 +222,7 @@ func TestGenerator_GenerateScripts(t *testing.T) {
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)
 	err = gen.Generate()
-
-	if err != nil {
-		t.Fatalf("Generate() error = %v", err)
-	}
+	require.NoError(t, err, "Generate() should not return an error")
 
 	// Check scripts were created
 	expectedScripts := []string{
@@ -249,8 +231,6 @@ func TestGenerator_GenerateScripts(t *testing.T) {
 		"bk-ci/tcs/rt_prepare.sh",
 		"bk-ci/tcs/entrypoint.sh",
 		"bk-ci/tcs/healthchk.sh",
-		"bk-ci/tcs/hooks/build.sh",
-		"bk-ci/tcs/hooks/start.sh",
 	}
 
 	for _, script := range expectedScripts {
@@ -296,10 +276,7 @@ func TestGenerator_GenerateConfigMap(t *testing.T) {
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)
 	err = gen.Generate()
-
-	if err != nil {
-		t.Fatalf("Generate() error = %v", err)
-	}
+	require.NoError(t, err, "Generate() should not return an error")
 
 	// Check configmap was created (it's generated in root, not k8s-manifests)
 	configmapPath := filepath.Join(outputDir, "configmap.yaml")

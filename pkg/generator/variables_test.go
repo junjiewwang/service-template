@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewVariables(t *testing.T) {
@@ -27,25 +28,11 @@ func TestNewVariables(t *testing.T) {
 
 	vars := NewVariables(cfg)
 
-	if vars.ServiceName != "test-service" {
-		t.Errorf("ServiceName = %v, want test-service", vars.ServiceName)
-	}
-
-	if vars.ServicePort != 8080 {
-		t.Errorf("ServicePort = %v, want 8080", vars.ServicePort)
-	}
-
-	if vars.ServiceRoot != "/usr/local/services/test-service" {
-		t.Errorf("ServiceRoot = %v, want /usr/local/services/test-service", vars.ServiceRoot)
-	}
-
-	if vars.PortsList != "8080,9090" {
-		t.Errorf("PortsList = %v, want 8080,9090", vars.PortsList)
-	}
-
-	if len(vars.Ports) != 2 {
-		t.Errorf("Ports length = %v, want 2", len(vars.Ports))
-	}
+	assert.Equal(t, "test-service", vars.ServiceName, "ServiceName should match")
+	assert.Equal(t, 8080, vars.ServicePort, "ServicePort should be 8080")
+	assert.Equal(t, "/usr/local/services/test-service", vars.ServiceRoot, "ServiceRoot should match")
+	assert.Equal(t, "8080,9090", vars.PortsList, "PortsList should match")
+	assert.Len(t, vars.Ports, 2, "Ports should have 2 items")
 }
 
 func TestVariables_WithArchitecture(t *testing.T) {
@@ -74,13 +61,8 @@ func TestVariables_WithArchitecture(t *testing.T) {
 		t.Run(tt.arch, func(t *testing.T) {
 			archVars := vars.WithArchitecture(tt.arch)
 
-			if archVars.GOARCH != tt.wantGOARCH {
-				t.Errorf("GOARCH = %v, want %v", archVars.GOARCH, tt.wantGOARCH)
-			}
-
-			if archVars.GOOS != tt.wantGOOS {
-				t.Errorf("GOOS = %v, want %v", archVars.GOOS, tt.wantGOOS)
-			}
+			assert.Equal(t, tt.wantGOARCH, archVars.GOARCH, "GOARCH should match")
+			assert.Equal(t, tt.wantGOOS, archVars.GOOS, "GOOS should match")
 		})
 	}
 }
@@ -107,21 +89,10 @@ func TestVariables_WithPlugin(t *testing.T) {
 
 	pluginVars := vars.WithPlugin(plugin)
 
-	if pluginVars.PluginName != "selfMonitor" {
-		t.Errorf("PluginName = %v, want selfMonitor", pluginVars.PluginName)
-	}
-
-	if pluginVars.PluginDescription != "TCE Self Monitor" {
-		t.Errorf("PluginDescription = %v, want TCE Self Monitor", pluginVars.PluginDescription)
-	}
-
-	if pluginVars.PluginDownloadURL != "https://example.com/download.sh" {
-		t.Errorf("PluginDownloadURL = %v, want https://example.com/download.sh", pluginVars.PluginDownloadURL)
-	}
-
-	if pluginVars.PluginInstallDir != "/tce" {
-		t.Errorf("PluginInstallDir = %v, want /tce", pluginVars.PluginInstallDir)
-	}
+	assert.Equal(t, "selfMonitor", pluginVars.PluginName, "PluginName should match")
+	assert.Equal(t, "TCE Self Monitor", pluginVars.PluginDescription, "PluginDescription should match")
+	assert.Equal(t, "https://example.com/download.sh", pluginVars.PluginDownloadURL, "PluginDownloadURL should match")
+	assert.Equal(t, "/tce", pluginVars.PluginInstallDir, "PluginInstallDir should match")
 }
 
 func TestVariables_ToMap(t *testing.T) {
@@ -138,19 +109,8 @@ func TestVariables_ToMap(t *testing.T) {
 	vars := NewVariables(cfg)
 	m := vars.ToMap()
 
-	if m["ServiceName"] != "test-service" {
-		t.Errorf("Map ServiceName = %v, want test-service", m["ServiceName"])
-	}
-
-	if m["SERVICE_NAME"] != "test-service" {
-		t.Errorf("Map SERVICE_NAME = %v, want test-service", m["SERVICE_NAME"])
-	}
-
-	if m["ServicePort"] != 8080 {
-		t.Errorf("Map ServicePort = %v, want 8080", m["ServicePort"])
-	}
-
-	if m["SERVICE_PORT"] != 8080 {
-		t.Errorf("Map SERVICE_PORT = %v, want 8080", m["SERVICE_PORT"])
-	}
+	assert.Equal(t, "test-service", m["ServiceName"], "Map ServiceName should match")
+	assert.Equal(t, "test-service", m["SERVICE_NAME"], "Map SERVICE_NAME should match")
+	assert.Equal(t, 8080, m["ServicePort"], "Map ServicePort should be 8080")
+	assert.Equal(t, 8080, m["SERVICE_PORT"], "Map SERVICE_PORT should be 8080")
 }

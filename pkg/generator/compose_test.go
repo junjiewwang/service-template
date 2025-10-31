@@ -1,10 +1,11 @@
 package generator
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestComposeGenerator_Generate(t *testing.T) {
@@ -82,9 +83,8 @@ func TestComposeGenerator_Generate(t *testing.T) {
 	generator := NewComposeGenerator(cfg, engine, vars)
 
 	content, err := generator.Generate()
-	if err != nil {
-		t.Fatalf("Generate() error = %v", err)
-	}
+	require.NoError(t, err, "Generate() should not return an error")
+	assert.NotEmpty(t, content, "Generated content should not be empty")
 
 	// Check that content contains expected sections
 	expectedSections := []string{
@@ -114,9 +114,7 @@ func TestComposeGenerator_Generate(t *testing.T) {
 	}
 
 	for _, section := range expectedSections {
-		if !strings.Contains(content, section) {
-			t.Errorf("Generated compose.yaml missing section: %s", section)
-		}
+		assert.Contains(t, content, section, "Generated compose.yaml should contain section: %s", section)
 	}
 }
 
@@ -144,9 +142,8 @@ func TestComposeGenerator_GenerateMinimal(t *testing.T) {
 	generator := NewComposeGenerator(cfg, engine, vars)
 
 	content, err := generator.Generate()
-	if err != nil {
-		t.Fatalf("Generate() error = %v", err)
-	}
+	require.NoError(t, err, "Generate() should not return an error")
+	assert.NotEmpty(t, content, "Generated content should not be empty")
 
 	// Check minimal required sections
 	requiredSections := []string{
@@ -159,8 +156,6 @@ func TestComposeGenerator_GenerateMinimal(t *testing.T) {
 	}
 
 	for _, section := range requiredSections {
-		if !strings.Contains(content, section) {
-			t.Errorf("Generated compose.yaml missing required section: %s", section)
-		}
+		assert.Contains(t, content, section, "Generated compose.yaml should contain required section: %s", section)
 	}
 }

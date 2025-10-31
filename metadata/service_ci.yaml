@@ -73,7 +73,7 @@ build:
 # 插件配置
 # ============================================
 # 1、在build.sh脚本中将插件放置在/plugins目录下，在dockerfile中以/plugins目录来将插件从builder镜像中copy到runtime镜像中,然后再根据插件的install_dir来将插件copy到对应的目录中
-# 2、插件需要支持运行时的环境变量设置runtime_env，即将runtime_env配置放置在对应插件的目录下，然后再runtime镜像中使插件的环境变量生效
+# 2、插件需要支持运行时的环境变量设置runtime_env，即将runtime_env配置放置在对应插件的目录下，然后再runtime镜像中使插件的环境变量生效，可以在/plugins目录下集成一个install.sh来实现
 plugins:
 - name: selfMonitor
   description: "TCE Self Monitor Tool"

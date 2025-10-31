@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewDevOpsGenerator(t *testing.T) {
@@ -35,15 +37,11 @@ func TestNewDevOpsGenerator(t *testing.T) {
 	engine := NewTemplateEngine()
 	vars := NewVariables(cfg)
 	gen := NewDevOpsGenerator(cfg, engine, vars)
+	require.NotNil(t, gen, "Expected non-nil generator")
 
-	if gen == nil {
-		t.Fatal("Expected non-nil generator")
-	}
 	// Test that generator can generate content
 	_, err := gen.Generate()
-	if err != nil {
-		t.Errorf("Failed to generate: %v", err)
-	}
+	assert.NoError(t, err, "Failed to generate content")
 }
 
 func TestDevOpsGenerator_Generate(t *testing.T) {
@@ -75,9 +73,7 @@ func TestDevOpsGenerator_Generate(t *testing.T) {
 	gen := NewDevOpsGenerator(cfg, engine, vars)
 
 	content, err := gen.Generate()
-	if err != nil {
-		t.Fatalf("Generate failed: %v", err)
-	}
+	require.NoError(t, err, "Generate should not fail")
 
 	// Verify content contains expected sections
 	expectedStrings := []string{
@@ -97,9 +93,7 @@ func TestDevOpsGenerator_Generate(t *testing.T) {
 	}
 
 	for _, expected := range expectedStrings {
-		if !strings.Contains(content, expected) {
-			t.Errorf("Expected content to contain %q", expected)
-		}
+		assert.Contains(t, content, expected, "Expected content to contain %q", expected)
 	}
 }
 
@@ -123,20 +117,12 @@ func TestDevOpsGenerator_GenerateWithCustomTemplate(t *testing.T) {
 	gen := NewDevOpsGenerator(cfg, engine, vars)
 
 	content, err := gen.Generate()
-	if err != nil {
-		t.Fatalf("Generate failed: %v", err)
-	}
+	require.NoError(t, err, "Generate should not fail")
 
 	// Check that the embedded template is used and variables are processed
-	if !strings.Contains(content, "Auto-generated DevOps configuration") {
-		t.Error("Expected embedded template content")
-	}
-	if !strings.Contains(content, "Python 3.11") {
-		t.Error("Expected language type in content")
-	}
-	if !strings.Contains(content, "/opt/service") {
-		t.Error("Expected deploy dir in content")
-	}
+	assert.Contains(t, content, "Auto-generated DevOps configuration", "Expected embedded template content")
+	assert.Contains(t, content, "Python 3.11", "Expected language type in content")
+	assert.Contains(t, content, "/opt/service", "Expected deploy dir in content")
 }
 
 // TestDevOpsGenerator_PrepareTemplateVars removed - tests internal implementation
@@ -178,12 +164,8 @@ func TestParseImageAndTag(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			image, tag := parseImageAndTag(tt.fullImage)
-			if image != tt.expectedImage {
-				t.Errorf("Expected image %q, got %q", tt.expectedImage, image)
-			}
-			if tag != tt.expectedTag {
-				t.Errorf("Expected tag %q, got %q", tt.expectedTag, tag)
-			}
+			assert.Equal(t, tt.expectedImage, image, "Image should match expected")
+			assert.Equal(t, tt.expectedTag, tag, "Tag should match expected")
 		})
 	}
 }
@@ -205,9 +187,7 @@ func TestGetLanguageDisplayName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.langType, func(t *testing.T) {
 			result := getLanguageDisplayName(tt.langType, tt.version)
-			if result != tt.expected {
-				t.Errorf("Expected %q, got %q", tt.expected, result)
-			}
+			assert.Equal(t, tt.expected, result, "Language display name should match expected")
 		})
 	}
 }
@@ -253,14 +233,10 @@ func TestDevOpsGenerator_DifferentLanguages(t *testing.T) {
 			gen := NewDevOpsGenerator(cfg, engine, vars)
 
 			content, err := gen.Generate()
-			if err != nil {
-				t.Fatalf("Generate failed for %s: %v", lang.langType, err)
-			}
+			require.NoError(t, err, "Generate failed for %s", lang.langType)
 
 			// Verify language-specific content
-			if !strings.Contains(content, "tad:") {
-				t.Error("Expected TAD configuration")
-			}
+			assert.Contains(t, content, "tad:", "Expected TAD configuration")
 
 			// Verify other language examples are shown
 			otherLangs := []string{"python", "nodejs", "java"}

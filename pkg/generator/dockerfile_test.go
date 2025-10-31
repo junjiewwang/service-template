@@ -1,10 +1,11 @@
 package generator
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDockerfileGenerator_Generate(t *testing.T) {
@@ -74,9 +75,7 @@ func TestDockerfileGenerator_Generate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.arch, func(t *testing.T) {
 			content, err := generator.Generate(tt.arch)
-			if err != nil {
-				t.Fatalf("Generate() error = %v", err)
-			}
+			require.NoError(t, err, "Generate() should not return an error")
 
 			// Check that content contains expected sections
 			expectedSections := []string{
@@ -88,26 +87,16 @@ func TestDockerfileGenerator_Generate(t *testing.T) {
 			}
 
 			for _, section := range expectedSections {
-				if !strings.Contains(content, section) {
-					t.Errorf("Generated Dockerfile missing section: %s", section)
-				}
+				assert.Contains(t, content, section, "Generated Dockerfile should contain section: %s", section)
 			}
 
 			// Check architecture-specific image variables
 			if tt.arch == "amd64" {
-				if !strings.Contains(content, "BUILDER_IMAGE_X86") {
-					t.Error("Dockerfile should contain BUILDER_IMAGE_X86 variable")
-				}
-				if !strings.Contains(content, "TLINUX_BASE_IMAGE_X86") {
-					t.Error("Dockerfile should contain TLINUX_BASE_IMAGE_X86 variable")
-				}
+				assert.Contains(t, content, "BUILDER_IMAGE_X86", "Dockerfile should contain BUILDER_IMAGE_X86 variable")
+				assert.Contains(t, content, "TLINUX_BASE_IMAGE_X86", "Dockerfile should contain TLINUX_BASE_IMAGE_X86 variable")
 			} else if tt.arch == "arm64" {
-				if !strings.Contains(content, "BUILDER_IMAGE_ARM") {
-					t.Error("Dockerfile should contain BUILDER_IMAGE_ARM variable")
-				}
-				if !strings.Contains(content, "TLINUX_BASE_IMAGE_ARM") {
-					t.Error("Dockerfile should contain TLINUX_BASE_IMAGE_ARM variable")
-				}
+				assert.Contains(t, content, "BUILDER_IMAGE_ARM", "Dockerfile should contain BUILDER_IMAGE_ARM variable")
+				assert.Contains(t, content, "TLINUX_BASE_IMAGE_ARM", "Dockerfile should contain TLINUX_BASE_IMAGE_ARM variable")
 			}
 		})
 	}
@@ -128,15 +117,7 @@ func TestGetDefaultDependencyFiles(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.language, func(t *testing.T) {
 			got := getDefaultDependencyFiles(tt.language)
-			if len(got) != len(tt.want) {
-				t.Errorf("getDefaultDependencyFiles() = %v, want %v", got, tt.want)
-				return
-			}
-			for i, file := range got {
-				if file != tt.want[i] {
-					t.Errorf("getDefaultDependencyFiles()[%d] = %v, want %v", i, file, tt.want[i])
-				}
-			}
+			assert.Equal(t, tt.want, got, "getDefaultDependencyFiles() should return expected files")
 		})
 	}
 }
@@ -158,9 +139,7 @@ func TestDetectPackageManager(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.image, func(t *testing.T) {
 			got := detectPackageManager(tt.image)
-			if got != tt.want {
-				t.Errorf("detectPackageManager(%s) = %v, want %v", tt.image, got, tt.want)
-			}
+			assert.Equal(t, tt.want, got, "detectPackageManager(%s) should return expected package manager", tt.image)
 		})
 	}
 }

@@ -1,10 +1,11 @@
 package generator
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMakefileGenerator_Generate(t *testing.T) {
@@ -70,16 +71,12 @@ func TestMakefileGenerator_Generate(t *testing.T) {
 			g := NewMakefileGenerator(tt.config, engine, vars)
 			content, err := g.Generate()
 
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Generate() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			if err == nil {
+			if tt.wantErr {
+				assert.Error(t, err, "Generate() should return an error")
+			} else {
+				require.NoError(t, err, "Generate() should not return an error")
 				for _, check := range tt.checks {
-					if !strings.Contains(content, check) {
-						t.Errorf("Generated content missing expected string: %s", check)
-					}
+					assert.Contains(t, content, check, "Generated content should contain expected string: %s", check)
 				}
 			}
 		})
