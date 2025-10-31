@@ -7,22 +7,16 @@
 # 基础服务信息
 # ============================================
 service:
-  name: apm-async-task
+  name: apm-api
   description: "APM Async Task Service"
   
   # 服务端口配置（支持多端口）
   ports:
     - name: http
-      port: 8080
-      protocol: TCP
-      expose: true
-      description: "HTTP API port"
-    
-    - name: metrics
-      port: 9090
+      port: 16686
       protocol: TCP
       expose: false
-      description: "Prometheus metrics"
+      description: "HTTP API port"
   
   deploy_dir: /usr/local/services
 
@@ -33,8 +27,8 @@ language:
   type: go                              # go | python | nodejs | java | rust
   version: "1.23"
   config:
-    goproxy: "https://goproxy.cn,direct"
-    gosumdb: "sum.golang.org"
+    goproxy: "https://goproxy.woa.com,direct"
+    gosumdb: "sum.woa.com+643d7a06+Ac5f5VOC4N8NUXdmhbm8pZSXIWfhek5JSmWdWrq7pLX4"
 
 # ============================================
 # 构建配置
@@ -54,9 +48,9 @@ build:
   system_dependencies:
     build:
       packages:
-        - git
-        - make
-        - gcc
+        - gzip
+        - curl
+        - tar
   
   commands:
     pre_build: |
@@ -64,10 +58,11 @@ build:
       go version
     
     build: |
-      cd ${SERVICE_ROOT}
-      CGO_ENABLED=0 go build -ldflags="-s -w" -o ${BUILD_OUTPUT_DIR}/bin/${SERVICE_NAME} ./cmd/server
-      cp -r configs ${BUILD_OUTPUT_DIR}/
-      cp -r scripts ${BUILD_OUTPUT_DIR}/
+      GOSUMD=off go build -o ${BUILD_OUTPUT_DIR}/bin/apm-api ./cmd/tapm-api-tcs
+      mkdir -p ${BUILD_OUTPUT_DIR}/conf
+      cp -f ./conf/tab.yaml ${BUILD_OUTPUT_DIR}/conf/
+      cp -f ./conf/table.toml ${BUILD_OUTPUT_DIR}/conf/
+      cp -f ./conf/flink_rule.yaml ${BUILD_OUTPUT_DIR}/conf/
     
     post_build: |
       echo "Post-build completed"
@@ -93,34 +88,22 @@ plugins:
 # ============================================
 runtime:
   system_dependencies:
-    packages:
-      - ca-certificates
-      - tzdata
+    packages: []
   
   healthcheck:
     enabled: true
-    type: http
-    http:
-      path: /health
-      port: 8080
-      timeout: 3
+    type: exec
   
   startup:
     command: |
       #!/bin/sh
       set -e
       cd ${SERVICE_ROOT}
-      export SERVICE_NAME="${SERVICE_NAME}"
-      export SERVICE_PORT="${SERVICE_PORT}"
-      exec ${SERVICE_BIN_DIR}/${SERVICE_NAME} \
-        --config=${CONFIG_DIR}/config.yaml \
-        --port=${SERVICE_PORT}
+      exec ./bin/${SERVICE_NAME}
     
     env:
-      - name: GO_ENV
-        value: production
-      - name: LOG_LEVEL
-        value: info
+      - name: JAEGER_SERVICE_NAME
+        value: tapm-api
 
 # ============================================
 # 本地开发和测试配置

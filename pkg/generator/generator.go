@@ -15,15 +15,19 @@ type Generator struct {
 	config         *config.ServiceConfig
 	templateEngine *TemplateEngine
 	variables      *Variables
+	factory        *GeneratorFactory
 	outputDir      string
 }
 
 // NewGenerator creates a new generator instance
 func NewGenerator(cfg *config.ServiceConfig, outputDir string) *Generator {
+	engine := NewTemplateEngine()
+	vars := NewVariables(cfg)
 	return &Generator{
 		config:         cfg,
-		templateEngine: NewTemplateEngine(),
-		variables:      NewVariables(cfg),
+		templateEngine: engine,
+		variables:      vars,
+		factory:        NewGeneratorFactory(cfg, engine, vars),
 		outputDir:      outputDir,
 	}
 }
@@ -58,11 +62,6 @@ func (g *Generator) Generate() error {
 		return fmt.Errorf("failed to generate scripts: %w", err)
 	}
 
-	// Generate hooks
-	if err := g.generateHooks(); err != nil {
-		return fmt.Errorf("failed to generate hooks: %w", err)
-	}
-
 	// Generate DevOps configuration
 	if err := g.generateDevOps(); err != nil {
 		return fmt.Errorf("failed to generate DevOps configuration: %w", err)
@@ -90,10 +89,13 @@ func (g *Generator) generateDockerfiles() error {
 	}
 
 	for _, arch := range architectures {
-		vars := g.variables.WithArchitecture(arch)
+		// Use factory to create generator
+		generator, err := g.factory.CreateGenerator("dockerfile", arch)
+		if err != nil {
+			return fmt.Errorf("failed to create dockerfile generator: %w", err)
+		}
 
-		generator := NewDockerfileGenerator(g.config, g.templateEngine, vars)
-		content, err := generator.Generate(arch)
+		content, err := generator.Generate()
 		if err != nil {
 			return fmt.Errorf("failed to generate Dockerfile for %s: %w", arch, err)
 		}
@@ -113,7 +115,11 @@ func (g *Generator) generateDockerfiles() error {
 
 // generateCompose generates docker-compose.yaml
 func (g *Generator) generateCompose() error {
-	generator := NewComposeGenerator(g.config, g.templateEngine, g.variables)
+	generator, err := g.factory.CreateGenerator("compose")
+	if err != nil {
+		return fmt.Errorf("failed to create compose generator: %w", err)
+	}
+
 	content, err := generator.Generate()
 	if err != nil {
 		return err
@@ -130,7 +136,11 @@ func (g *Generator) generateCompose() error {
 
 // generateMakefile generates Makefile
 func (g *Generator) generateMakefile() error {
-	generator := NewMakefileGenerator(g.config, g.templateEngine, g.variables)
+	generator, err := g.factory.CreateGenerator("makefile")
+	if err != nil {
+		return fmt.Errorf("failed to create makefile generator: %w", err)
+	}
+
 	content, err := generator.Generate()
 	if err != nil {
 		return err
@@ -147,19 +157,24 @@ func (g *Generator) generateMakefile() error {
 
 // generateScripts generates build and deployment scripts
 func (g *Generator) generateScripts() error {
-	generator := NewScriptsGenerator(g.config, g.templateEngine, g.variables)
-
 	scripts := []struct {
-		name   string
-		method func() (string, error)
+		name          string
+		generatorType string
 	}{
-		{"bk-ci/tcs/build.sh", generator.GenerateBuildScript},
-		{"bk-ci/tcs/deps_install.sh", generator.GenerateDepsInstallScript},
-		{"bk-ci/tcs/rt_prepare.sh", generator.GenerateRtPrepareScript},
+		{"bk-ci/tcs/build.sh", "build-script"},
+		{"bk-ci/tcs/build_deps_install.sh", "deps-install-script"},
+		{"bk-ci/tcs/rt_prepare.sh", "rt-prepare-script"},
+		{"bk-ci/tcs/entrypoint.sh", "entrypoint-script"},
+		{"bk-ci/tcs/healthchk.sh", "healthcheck-script"},
 	}
 
 	for _, script := range scripts {
-		content, err := script.method()
+		generator, err := g.factory.CreateGenerator(script.generatorType)
+		if err != nil {
+			return fmt.Errorf("failed to create %s generator: %w", script.generatorType, err)
+		}
+
+		content, err := generator.Generate()
 		if err != nil {
 			return fmt.Errorf("failed to generate %s: %w", script.name, err)
 		}
@@ -186,78 +201,13 @@ func (g *Generator) generateScripts() error {
 	return nil
 }
 
-// generateHooks generates hook scripts
-func (g *Generator) generateHooks() error {
-	hooksDir := filepath.Join(g.outputDir, "hooks")
-	if err := os.MkdirAll(hooksDir, 0755); err != nil {
-		return fmt.Errorf("failed to create hooks directory: %w", err)
-	}
-
-	// Generate healthcheck script
-	healthcheckContent, err := g.generateHealthcheckScript()
-	if err != nil {
-		return fmt.Errorf("failed to generate healthcheck script: %w", err)
-	}
-
-	healthcheckPath := filepath.Join(hooksDir, "healthchk.sh")
-	if err := utils.WriteFile(healthcheckPath, healthcheckContent); err != nil {
-		return err
-	}
-	if err := os.Chmod(healthcheckPath, 0755); err != nil {
-		return err
-	}
-	fmt.Println("✓ Generated hooks/healthchk.sh")
-
-	// Generate start script
-	startContent, err := g.generateStartScript()
-	if err != nil {
-		return fmt.Errorf("failed to generate start script: %w", err)
-	}
-
-	startPath := filepath.Join(hooksDir, "start.sh")
-	if err := utils.WriteFile(startPath, startContent); err != nil {
-		return err
-	}
-	if err := os.Chmod(startPath, 0755); err != nil {
-		return err
-	}
-	fmt.Println("✓ Generated hooks/start.sh")
-
-	return nil
-}
-
-// generateHealthcheckScript generates the health check script
-func (g *Generator) generateHealthcheckScript() (string, error) {
-	vars := g.variables.ToMap()
-
-	var script string
-	if g.config.Runtime.Healthcheck.Type == "custom" {
-		script = g.config.Runtime.Healthcheck.CustomScript
-	} else if g.config.Runtime.Healthcheck.Type == "http" {
-		script = fmt.Sprintf(`#!/bin/sh
-# Auto-generated health check script
-
-curl -f http://localhost:%d%s || exit 1
-`, g.config.Runtime.Healthcheck.HTTP.Port, g.config.Runtime.Healthcheck.HTTP.Path)
-	} else {
-		script = `#!/bin/sh
-# Default health check
-exit 0
-`
-	}
-
-	return SubstituteVariables(script, vars), nil
-}
-
-// generateStartScript generates the startup script
-func (g *Generator) generateStartScript() (string, error) {
-	vars := g.variables.ToMap()
-	return SubstituteVariables(g.config.Runtime.Startup.Command, vars), nil
-}
-
 // generateDevOps generates DevOps configuration
 func (g *Generator) generateDevOps() error {
-	generator := NewDevOpsGenerator(g.config, g.templateEngine, g.variables)
+	generator, err := g.factory.CreateGenerator("devops")
+	if err != nil {
+		return fmt.Errorf("failed to create devops generator: %w", err)
+	}
+
 	content, err := generator.Generate()
 	if err != nil {
 		return err
@@ -279,7 +229,11 @@ func (g *Generator) generateDevOps() error {
 
 // generateConfigMap generates Kubernetes ConfigMap
 func (g *Generator) generateConfigMap() error {
-	generator := NewConfigMapGenerator(g.config, g.templateEngine, g.variables)
+	generator, err := g.factory.CreateGenerator("configmap")
+	if err != nil {
+		return fmt.Errorf("failed to create configmap generator: %w", err)
+	}
+
 	content, err := generator.Generate()
 	if err != nil {
 		return err

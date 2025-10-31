@@ -7,22 +7,16 @@
 # 基础服务信息
 # ============================================
 service:
-  name: apm-async-task
-  description: "APM Async Task Service"
+  name: apm-api
+  description: "APM API Service"
 
   # 服务端口配置（支持多端口）
   ports:
   - name: http
-    port: 8080
-    protocol: TCP
-    expose: true
-    description: "HTTP API port"
-
-  - name: metrics
-    port: 9090
+    port: 16686
     protocol: TCP
     expose: false
-    description: "Prometheus metrics"
+    description: "HTTP API port"
 
   deploy_dir: /usr/local/services
 
@@ -33,8 +27,8 @@ language:
   type: go # go | python | nodejs | java | rust
   version: "1.23"
   config:
-    goproxy: "https://goproxy.cn,direct"
-    gosumdb: "sum.golang.org"
+    goproxy: "https://goproxy.woa.com,direct"
+    gosumdb: "sum.woa.com+643d7a06+Ac5f5VOC4N8NUXdmhbm8pZSXIWfhek5JSmWdWrq7pLX4"
 
 # ============================================
 # 构建配置
@@ -54,9 +48,9 @@ build:
   system_dependencies:
     build:
       packages:
-      - git
-      - make
-      - gcc
+      - gzip
+      - curl
+      - tar
 
   commands:
     pre_build: |
@@ -64,10 +58,11 @@ build:
       go version
 
     build: |
-      cd ${SERVICE_ROOT}
-      CGO_ENABLED=0 go build -ldflags="-s -w" -o ${BUILD_OUTPUT_DIR}/bin/${SERVICE_NAME} ./cmd/server
-      cp -r configs ${BUILD_OUTPUT_DIR}/
-      cp -r scripts ${BUILD_OUTPUT_DIR}/
+      GOSUMD=off go build -o ${BUILD_OUTPUT_DIR}/bin/apm-api ./cmd/tapm-api-tcs
+      mkdir -p ${BUILD_OUTPUT_DIR}/conf
+      cp -f ./conf/tab.yaml ${BUILD_OUTPUT_DIR}/conf/
+      cp -f ./conf/table.toml ${BUILD_OUTPUT_DIR}/conf/
+      cp -f ./conf/flink_rule.yaml ${BUILD_OUTPUT_DIR}/conf/
 
     post_build: |
       echo "Post-build completed"
@@ -77,6 +72,8 @@ build:
 # ============================================
 # 插件配置
 # ============================================
+# 1、在build.sh脚本中将插件放置在/plugins目录下，在dockerfile中以/plugins目录来将插件从builder镜像中copy到runtime镜像中,然后再根据插件的install_dir来将插件copy到对应的目录中
+# 2、插件需要支持运行时的环境变量设置runtime_env，即将runtime_env配置放置在对应插件的目录下，然后再runtime镜像中使插件的环境变量生效
 plugins:
 - name: selfMonitor
   description: "TCE Self Monitor Tool"
@@ -86,41 +83,35 @@ plugins:
     echo "Installing ${PLUGIN_NAME} to ${PLUGIN_INSTALL_DIR}..."
     curl -fsSL "${PLUGIN_DOWNLOAD_URL}" | bash -s "${PLUGIN_INSTALL_DIR}"
     echo "${PLUGIN_NAME} installed successfully"
+  # 运行时环境变量
+  runtime_env:
+  - name: TCESTAURY_TOOL_PATH
+    value: ${PLUGIN_INSTALL_DIR}
+  - name: TCESTAURY_CONFIG_PATH
+    value: ${PLUGIN_INSTALL_DIR}/config
   required: true
-
 # ============================================
 # 运行时配置
 # ============================================
+# 在build.sh中将运行时配置所生成的entrypoint.sh脚本和healthcheck.sh脚本放到服务目录中
 runtime:
   system_dependencies:
-    packages:
-    - ca-certificates
-    - tzdata
+    packages: []
 
   healthcheck:
     enabled: true
-    type: http
-    http:
-      path: /health
-      port: 8080
-      timeout: 3
+    type: exec
 
   startup:
     command: |
       #!/bin/sh
       set -e
       cd ${SERVICE_ROOT}
-      export SERVICE_NAME="${SERVICE_NAME}"
-      export SERVICE_PORT="${SERVICE_PORT}"
-      exec ${SERVICE_BIN_DIR}/${SERVICE_NAME} \
-        --config=${CONFIG_DIR}/config.yaml \
-        --port=${SERVICE_PORT}
+      exec ./bin/${SERVICE_NAME}
 
     env:
-    - name: GO_ENV
-      value: production
-    - name: LOG_LEVEL
-      value: info
+    - name: JAEGER_SERVICE_NAME
+      value: tapm-api
 
 # ============================================
 # 本地开发和测试配置
@@ -137,12 +128,14 @@ local_dev:
 
     volumes:
     - source: ./bk-ci/tcs/build/config.yaml
-      target: /usr/local/services/${SERVICE_NAME}/config.yaml
+      # 支持${SERVICE_ROOT}变量的替换
+      target: ${SERVICE_ROOT}/config.yaml
       type: bind
       description: "Service config"
 
     - source: ./bk-ci/tcs/build/sdk.json
-      target: /tce/conf/config/tce.config.center/sdk.json
+      # 支持${PLUGIN_INSTALL_DIR}变量的替换
+      target: ${PLUGIN_INSTALL_DIR}/config/sdk.json
       type: bind
       description: "TCE SDK config"
 

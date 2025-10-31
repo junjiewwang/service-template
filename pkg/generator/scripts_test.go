@@ -41,8 +41,8 @@ func TestScriptsGenerator_GenerateBuildScript(t *testing.T) {
 
 	expectedStrings := []string{
 		"#!/bin/bash",
-		"Starting build process",
-		"go build",
+		"TCS Service Build System",
+		"test-service",
 	}
 
 	for _, expected := range expectedStrings {
@@ -145,8 +145,8 @@ func TestScriptsGenerator_GenerateRtPrepareScript(t *testing.T) {
 	}
 
 	expectedStrings := []string{
-		"#!/bin/bash",
-		"runtime preparation",
+		"#!/bin/sh",
+		"TCS Runtime Preparation",
 	}
 
 	for _, expected := range expectedStrings {

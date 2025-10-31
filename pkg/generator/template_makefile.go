@@ -4,35 +4,44 @@ import (
 	"github.com/junjiewwang/service-template/pkg/config"
 )
 
-// MakefileGenerator generates Makefile
-type MakefileGenerator struct {
-	config         *config.ServiceConfig
-	templateEngine *TemplateEngine
-	variables      *Variables
+// Generator type constant
+const GeneratorTypeMakefile = "makefile"
+
+// MakefileTemplateGenerator generates Makefile using factory pattern
+type MakefileTemplateGenerator struct {
+	BaseTemplateGenerator
 }
 
-// NewMakefileGenerator creates a new Makefile generator
-func NewMakefileGenerator(cfg *config.ServiceConfig, engine *TemplateEngine, vars *Variables) *MakefileGenerator {
-	return &MakefileGenerator{
-		config:         cfg,
-		templateEngine: engine,
-		variables:      vars,
+// init registers the Makefile generator
+func init() {
+	RegisterGenerator(GeneratorTypeMakefile, createMakefileGenerator)
+}
+
+// createMakefileGenerator is the creator function for Makefile generator
+func createMakefileGenerator(cfg *config.ServiceConfig, engine *TemplateEngine, vars *Variables, options ...interface{}) (TemplateGenerator, error) {
+	return NewMakefileTemplateGenerator(cfg, engine, vars), nil
+}
+
+// NewMakefileTemplateGenerator creates a new Makefile template generator
+func NewMakefileTemplateGenerator(cfg *config.ServiceConfig, engine *TemplateEngine, vars *Variables) *MakefileTemplateGenerator {
+	return &MakefileTemplateGenerator{
+		BaseTemplateGenerator: BaseTemplateGenerator{
+			config:         cfg,
+			templateEngine: engine,
+			variables:      vars,
+			name:           GeneratorTypeMakefile,
+		},
 	}
 }
 
 // Generate generates Makefile content
-func (g *MakefileGenerator) Generate() (string, error) {
-	// Prepare template variables
+func (g *MakefileTemplateGenerator) Generate() (string, error) {
 	vars := g.prepareTemplateVars()
-
-	// Use embedded template
-	templateContent := g.getDefaultMakefileTemplate()
-
-	return g.templateEngine.Render(templateContent, vars)
+	return g.RenderTemplate(makefileTemplate, vars)
 }
 
 // prepareTemplateVars prepares variables for Makefile template
-func (g *MakefileGenerator) prepareTemplateVars() map[string]interface{} {
+func (g *MakefileTemplateGenerator) prepareTemplateVars() map[string]interface{} {
 	vars := make(map[string]interface{})
 
 	// Basic info
@@ -54,9 +63,8 @@ func (g *MakefileGenerator) prepareTemplateVars() map[string]interface{} {
 	return vars
 }
 
-// getDefaultMakefileTemplate returns embedded default Makefile template
-func (g *MakefileGenerator) getDefaultMakefileTemplate() string {
-	return `# Auto-generated Makefile
+// makefileTemplate is the Makefile template
+const makefileTemplate = `# Auto-generated Makefile
 # Generated at: {{ .GENERATED_AT }}
 
 SERVICE_NAME := {{ .SERVICE_NAME }}
@@ -138,4 +146,3 @@ clean: ## Clean build artifacts
 {{- end }}
 {{- end }}
 `
-}

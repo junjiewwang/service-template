@@ -40,6 +40,7 @@ type Variables struct {
 	PluginDescription string
 	PluginDownloadURL string
 	PluginInstallDir  string
+	PluginRootDir     string // 新增：插件根目录 /plugins
 
 	// All config for template access
 	Config *config.ServiceConfig
@@ -74,6 +75,9 @@ func NewVariables(cfg *config.ServiceConfig) *Variables {
 	// Set directory paths
 	vars.ConfigDir = fmt.Sprintf("%s/configs", vars.ServiceRoot)
 	vars.ServiceBinDir = fmt.Sprintf("%s/bin", vars.ServiceRoot)
+
+	// 新增：设置插件根目录
+	vars.PluginRootDir = "/plugins"
 
 	return vars
 }
@@ -121,6 +125,7 @@ func (v *Variables) ToMap() map[string]interface{} {
 		"PluginDescription": v.PluginDescription,
 		"PluginDownloadURL": v.PluginDownloadURL,
 		"PluginInstallDir":  v.PluginInstallDir,
+		"PluginRootDir":     v.PluginRootDir,
 		"Config":            v.Config,
 
 		// Convenience functions
@@ -135,5 +140,6 @@ func (v *Variables) ToMap() map[string]interface{} {
 		"PLUGIN_DESCRIPTION":  v.PluginDescription,
 		"PLUGIN_DOWNLOAD_URL": v.PluginDownloadURL,
 		"PLUGIN_INSTALL_DIR":  v.PluginInstallDir,
+		"PLUGIN_ROOT_DIR":     v.PluginRootDir,
 	}
 }

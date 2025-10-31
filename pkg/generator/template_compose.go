@@ -4,50 +4,57 @@ import (
 	"github.com/junjiewwang/service-template/pkg/config"
 )
 
-// ComposeGenerator generates docker-compose.yaml
-type ComposeGenerator struct {
-	config         *config.ServiceConfig
-	templateEngine *TemplateEngine
-	variables      *Variables
+// Generator type constant
+const GeneratorTypeCompose = "compose"
+
+// ComposeTemplateGenerator generates docker-compose.yaml using factory pattern
+type ComposeTemplateGenerator struct {
+	BaseTemplateGenerator
 }
 
-// NewComposeGenerator creates a new Compose generator
-func NewComposeGenerator(cfg *config.ServiceConfig, engine *TemplateEngine, vars *Variables) *ComposeGenerator {
-	return &ComposeGenerator{
-		config:         cfg,
-		templateEngine: engine,
-		variables:      vars,
+// init registers the Compose generator
+func init() {
+	RegisterGenerator(GeneratorTypeCompose, createComposeGenerator)
+}
+
+// createComposeGenerator is the creator function for Compose generator
+func createComposeGenerator(cfg *config.ServiceConfig, engine *TemplateEngine, vars *Variables, options ...interface{}) (TemplateGenerator, error) {
+	return NewComposeTemplateGenerator(cfg, engine, vars), nil
+}
+
+// NewComposeTemplateGenerator creates a new Compose template generator
+func NewComposeTemplateGenerator(cfg *config.ServiceConfig, engine *TemplateEngine, vars *Variables) *ComposeTemplateGenerator {
+	return &ComposeTemplateGenerator{
+		BaseTemplateGenerator: BaseTemplateGenerator{
+			config:         cfg,
+			templateEngine: engine,
+			variables:      vars,
+			name:           GeneratorTypeCompose,
+		},
 	}
 }
 
 // Generate generates docker-compose.yaml content
-func (g *ComposeGenerator) Generate() (string, error) {
-	// Use embedded template
-	templateContent := g.getDefaultComposeTemplate()
-
-	// Prepare template variables
+func (g *ComposeTemplateGenerator) Generate() (string, error) {
 	vars := g.prepareTemplateVars()
-
-	return g.templateEngine.Render(templateContent, vars)
+	return g.RenderTemplate(composeTemplate, vars)
 }
 
 // prepareTemplateVars prepares variables for compose template
-func (g *ComposeGenerator) prepareTemplateVars() map[string]interface{} {
+func (g *ComposeTemplateGenerator) prepareTemplateVars() map[string]interface{} {
 	vars := make(map[string]interface{})
 
 	// Basic info
 	vars["GENERATED_AT"] = g.config.Metadata.GeneratedAt
 	vars["SERVICE_NAME"] = g.config.Service.Name
 
-	// Ports - 修正端口映射格式
-	// 根据需求，如果 port 为 8080，则生成 "8080" 而不是 "8080:8080"
+	// Ports
 	type PortMapping struct {
 		Port       int
 		TargetPort int
 	}
 	var ports []PortMapping
 	for _, port := range g.config.Service.Ports {
-		// 使用相同的端口号作为主机端口和容器端口
 		ports = append(ports, PortMapping{
 			Port:       port.Port,
 			TargetPort: port.Port,
@@ -65,9 +72,26 @@ func (g *ComposeGenerator) prepareTemplateVars() map[string]interface{} {
 	}
 	var volumes []VolumeMapping
 	for _, vol := range g.config.LocalDev.Compose.Volumes {
+		// 扩展变量映射以支持SERVICE_ROOT和PLUGIN_INSTALL_DIR
+		variableMap := g.variables.ToMap()
+		variableMap["SERVICE_ROOT"] = g.config.Service.DeployDir + "/" + g.config.Service.Name
+		variableMap["PLUGIN_INSTALL_DIR"] = "/plugins"
+
+		// 支持本地开发配置中定义的其他变量
+		if len(g.config.LocalDev.SupportedVariables) > 0 {
+			for _, supportedVar := range g.config.LocalDev.SupportedVariables {
+				switch supportedVar {
+				case "SERVICE_ROOT":
+					variableMap[supportedVar] = g.config.Service.DeployDir + "/" + g.config.Service.Name
+				case "PLUGIN_INSTALL_DIR":
+					variableMap[supportedVar] = "/plugins"
+				}
+			}
+		}
+
 		volumes = append(volumes, VolumeMapping{
 			Source: vol.Source,
-			Target: SubstituteVariables(vol.Target, g.variables.ToMap()),
+			Target: SubstituteVariables(vol.Target, variableMap),
 		})
 	}
 	vars["VOLUMES"] = volumes
@@ -94,9 +118,8 @@ func (g *ComposeGenerator) prepareTemplateVars() map[string]interface{} {
 	return vars
 }
 
-// getDefaultComposeTemplate returns embedded default compose template
-func (g *ComposeGenerator) getDefaultComposeTemplate() string {
-	return `# Auto-generated docker-compose.yaml
+// composeTemplate is the docker-compose.yaml template
+const composeTemplate = `# Auto-generated docker-compose.yaml
 # Generated at: {{ .GENERATED_AT }}
 
 version: '3.8'
@@ -177,4 +200,3 @@ services:
 {{- end }}
     restart: unless-stopped
 `
-}

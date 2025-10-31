@@ -84,9 +84,7 @@ func TestDockerfileGenerator_Generate(t *testing.T) {
 				"WORKDIR",
 				"COPY",
 				"RUN",
-				"EXPOSE",
-				"HEALTHCHECK",
-				"CMD",
+				"ENTRYPOINT",
 			}
 
 			for _, section := range expectedSections {

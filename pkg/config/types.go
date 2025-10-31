@@ -84,6 +84,14 @@ type PluginConfig struct {
 	InstallDir     string `yaml:"install_dir"`
 	InstallCommand string `yaml:"install_command"`
 	Required       bool   `yaml:"required"`
+	// 运行时环境变量配置
+	RuntimeEnv []EnvironmentVariable `yaml:"runtime_env,omitempty"`
+}
+
+// EnvironmentVariable represents an environment variable
+type EnvironmentVariable struct {
+	Name  string `yaml:"name"`
+	Value string `yaml:"value"`
 }
 
 // RuntimeConfig contains runtime settings
@@ -91,6 +99,8 @@ type RuntimeConfig struct {
 	SystemDependencies SystemDependenciesConfig `yaml:"system_dependencies,omitempty"`
 	Healthcheck        HealthcheckConfig        `yaml:"healthcheck"`
 	Startup            StartupConfig            `yaml:"startup"`
+	// 控制是否生成运行时脚本的开关
+	GenerateScripts bool `yaml:"generate_scripts,omitempty"`
 }
 
 // HealthcheckConfig for health check settings
@@ -124,6 +134,8 @@ type EnvConfig struct {
 type LocalDevConfig struct {
 	Compose    ComposeConfig    `yaml:"compose"`
 	Kubernetes KubernetesConfig `yaml:"kubernetes"`
+	// 支持的变量列表
+	SupportedVariables []string `yaml:"supported_variables,omitempty"`
 }
 
 // ComposeConfig for Docker Compose settings

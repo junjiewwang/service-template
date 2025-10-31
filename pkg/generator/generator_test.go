@@ -63,12 +63,14 @@ func TestGenerator_Generate(t *testing.T) {
 		".tad/build/test-service/Dockerfile.test-service.arm64",
 		"compose.yaml",
 		"Makefile",
-		"configmap.yaml",
+		"k8s-manifests/configmap.yaml",
 		"bk-ci/tcs/build.sh",
-		"bk-ci/tcs/deps_install.sh",
+		"bk-ci/tcs/build_deps_install.sh",
 		"bk-ci/tcs/rt_prepare.sh",
-		"hooks/start.sh",
-		"hooks/healthchk.sh",
+		"bk-ci/tcs/entrypoint.sh",
+		"bk-ci/tcs/healthchk.sh",
+		"bk-ci/tcs/hooks/build.sh",
+		"bk-ci/tcs/hooks/start.sh",
 		".tad/devops.yaml",
 	}
 
@@ -243,10 +245,12 @@ func TestGenerator_GenerateScripts(t *testing.T) {
 	// Check scripts were created
 	expectedScripts := []string{
 		"bk-ci/tcs/build.sh",
-		"bk-ci/tcs/deps_install.sh",
+		"bk-ci/tcs/build_deps_install.sh",
 		"bk-ci/tcs/rt_prepare.sh",
-		"hooks/start.sh",
-		"hooks/healthchk.sh",
+		"bk-ci/tcs/entrypoint.sh",
+		"bk-ci/tcs/healthchk.sh",
+		"bk-ci/tcs/hooks/build.sh",
+		"bk-ci/tcs/hooks/start.sh",
 	}
 
 	for _, script := range expectedScripts {

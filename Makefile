@@ -3,7 +3,7 @@
 # Variables
 BINARY_NAME=tcs-gen
 MAIN_PATH=./cmd/tcs-gen
-BUILD_DIR=./build
+BUILD_DIR=./bin
 INSTALL_PATH=/usr/local/bin
 
 # Go parameters
