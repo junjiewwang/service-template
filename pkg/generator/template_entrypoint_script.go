@@ -57,11 +57,12 @@ func (g *EntrypointScriptTemplateGenerator) Generate() (string, error) {
 		"HAS_PLUGINS_ENV": len(pluginEnvs) > 0, // 新增：是否有插件环境变量
 	}
 
-	return g.RenderTemplate(entrypointScriptTemplate, vars)
+	return g.RenderTemplate(g.getTemplate(), vars)
 }
 
-// Template content
-const entrypointScriptTemplate = `#!/bin/sh
+// getTemplate returns the entrypoint script template
+func (g *EntrypointScriptTemplateGenerator) getTemplate() string {
+	return `#!/bin/sh
 
 echo "========================================="
 echo "TCS Service Entrypoint"
@@ -118,3 +119,4 @@ echo ""
 
 # ============================================
 `
+}

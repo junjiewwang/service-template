@@ -67,11 +67,12 @@ func (g *BuildScriptTemplateGenerator) Generate() (string, error) {
 		"GENERATE_SCRIPTS":   g.config.Runtime.GenerateScripts, // 新增：是否生成运行时脚本
 	}
 
-	return g.RenderTemplate(buildScriptTemplate, vars)
+	return g.RenderTemplate(g.getTemplate(), vars)
 }
 
-// buildScriptTemplate is the build.sh template
-const buildScriptTemplate = `#!/bin/bash
+// getTemplate returns the build.sh template
+func (g *BuildScriptTemplateGenerator) getTemplate() string {
+	return `#!/bin/bash
 
 script_path=$(
 	cd $(dirname $0)
@@ -261,6 +262,6 @@ if [ -f "${script_path}/healthchk.sh" ]; then
 	echo "✓ Generated ${SERVICE_DIR}/healthcheck.sh"
 fi
 
-
 echo "Done!"
 `
+}

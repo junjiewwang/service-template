@@ -54,11 +54,12 @@ func (g *DepsInstallScriptTemplateGenerator) Generate() (string, error) {
 		"GO_SUMDB":            goSumDB,
 	}
 
-	return g.RenderTemplate(depsInstallScriptTemplate, vars)
+	return g.RenderTemplate(g.getTemplate(), vars)
 }
 
 // depsInstallScriptTemplate is the build_deps_install.sh template
-const depsInstallScriptTemplate = `#!/bin/bash
+func (g *DepsInstallScriptTemplateGenerator) getTemplate() string {
+	return `#!/bin/bash
 # deps_install.sh - Dependency installation script
 # This script is used to install build-time dependencies in a separate Docker layer
 # to leverage Docker's layer caching mechanism for faster builds.
@@ -202,3 +203,4 @@ fi
 
 echo "Dependency installation completed successfully"
 `
+}

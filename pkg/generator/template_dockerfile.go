@@ -55,7 +55,7 @@ func NewDockerfileTemplateGenerator(cfg *config.ServiceConfig, engine *TemplateE
 // Generate generates Dockerfile content
 func (g *DockerfileTemplateGenerator) Generate() (string, error) {
 	vars := g.prepareTemplateVars()
-	return g.RenderTemplate(dockerfileTemplate, vars)
+	return g.RenderTemplate(g.getTemplate(), vars)
 }
 
 // prepareTemplateVars prepares variables for Dockerfile template
@@ -180,8 +180,9 @@ func detectPackageManager(image string) string {
 	return "yum"
 }
 
-// dockerfileTemplate is the Dockerfile template
-const dockerfileTemplate = `# Define build arguments - only set once
+// getTemplate returns the Dockerfile template
+func (g *DockerfileTemplateGenerator) getTemplate() string {
+	return `# Define build arguments - only set once
 {{- if eq .ARCH "amd64" }}
 ARG TLINUX_BASE_IMAGE_X86  
 ARG TLINUX_TAG_X86
@@ -279,3 +280,4 @@ WORKDIR ${DEPLOY_DIR}
 # Set entrypoint
 ENTRYPOINT ["/tce/entrypoint.sh"]
 `
+}

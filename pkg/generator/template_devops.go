@@ -39,7 +39,7 @@ func NewDevOpsTemplateGenerator(cfg *config.ServiceConfig, engine *TemplateEngin
 // Generate generates devops.yaml content in TAD format
 func (g *DevOpsTemplateGenerator) Generate() (string, error) {
 	vars := g.prepareTemplateVars()
-	return g.RenderTemplate(devopsTemplate, vars)
+	return g.RenderTemplate(g.getTemplate(), vars)
 }
 
 // prepareTemplateVars prepares variables for devops template
@@ -98,8 +98,9 @@ func getLanguageDisplayName(langType, version string) string {
 	}
 }
 
-// devopsTemplate is the devops.yaml template
-const devopsTemplate = `# Auto-generated DevOps configuration
+func (g *DevOpsTemplateGenerator) getTemplate() string {
+
+	return `# Auto-generated DevOps configuration
 # Generated at: {{ .GENERATED_AT }}
 
 tad:
@@ -133,3 +134,4 @@ tad:
   - name: "DEPLOY_DIR"  # 服务部署目录
     value: "{{ .DEPLOY_DIR }}"
 `
+}

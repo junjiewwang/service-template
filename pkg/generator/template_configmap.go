@@ -40,7 +40,7 @@ func NewConfigMapTemplateGenerator(cfg *config.ServiceConfig, engine *TemplateEn
 // Generate generates ConfigMap YAML content
 func (g *ConfigMapTemplateGenerator) Generate() (string, error) {
 	vars := g.prepareTemplateVars()
-	return g.RenderTemplate(configMapTemplate, vars)
+	return g.RenderTemplate(g.getTemplate(), vars)
 }
 
 // prepareTemplateVars prepares variables for ConfigMap template
@@ -92,8 +92,9 @@ func (g *ConfigMapTemplateGenerator) isConfigFile(path string) bool {
 	return false
 }
 
-// configMapTemplate is the Kubernetes ConfigMap template
-const configMapTemplate = `# Auto-generated Kubernetes ConfigMap
+// getTemplate returns the Kubernetes ConfigMap template
+func (g *ConfigMapTemplateGenerator) getTemplate() string {
+	return `# Auto-generated Kubernetes ConfigMap
 # Generated at: {{ .GENERATED_AT }}
 
 apiVersion: v1
@@ -115,3 +116,4 @@ data:
   # Add your configuration data here
 {{- end }}
 `
+}

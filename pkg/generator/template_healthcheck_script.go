@@ -40,11 +40,12 @@ func (g *HealthcheckScriptTemplateGenerator) Generate() (string, error) {
 		"SERVICE_NAME": g.config.Service.Name,
 		"DEPLOY_DIR":   g.config.Service.DeployDir,
 	}
-	return g.RenderTemplate(healthcheckScriptTemplate, vars)
+	return g.RenderTemplate(g.getTemplate(), vars)
 }
 
-// Template content
-const healthcheckScriptTemplate = `#!/bin/bash
+// getTemplate returns the healthcheck script template
+func (g *HealthcheckScriptTemplateGenerator) getTemplate() string {
+	return `#!/bin/bash
 
 # Default healthcheck: check if service process is running
 ps=$(ls -l /proc/*/exe 2>/dev/null | grep "{{ .SERVICE_NAME }}" | grep -v grep)
@@ -55,3 +56,4 @@ ps=$(ls -l /proc/*/exe 2>/dev/null | grep "{{ .SERVICE_NAME }}" | grep -v grep)
 # normal
 exit 0
 `
+}

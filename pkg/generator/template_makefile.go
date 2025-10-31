@@ -37,7 +37,7 @@ func NewMakefileTemplateGenerator(cfg *config.ServiceConfig, engine *TemplateEng
 // Generate generates Makefile content
 func (g *MakefileTemplateGenerator) Generate() (string, error) {
 	vars := g.prepareTemplateVars()
-	return g.RenderTemplate(makefileTemplate, vars)
+	return g.RenderTemplate(g.getTemplate(), vars)
 }
 
 // prepareTemplateVars prepares variables for Makefile template
@@ -63,8 +63,9 @@ func (g *MakefileTemplateGenerator) prepareTemplateVars() map[string]interface{}
 	return vars
 }
 
-// makefileTemplate is the Makefile template
-const makefileTemplate = `# Auto-generated Makefile
+// getTemplate returns the Makefile template
+func (g *MakefileTemplateGenerator) getTemplate() string {
+	return `# Auto-generated Makefile
 # Generated at: {{ .GENERATED_AT }}
 
 SERVICE_NAME := {{ .SERVICE_NAME }}
@@ -146,3 +147,4 @@ clean: ## Clean build artifacts
 {{- end }}
 {{- end }}
 `
+}

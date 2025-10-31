@@ -37,7 +37,7 @@ func NewComposeTemplateGenerator(cfg *config.ServiceConfig, engine *TemplateEngi
 // Generate generates docker-compose.yaml content
 func (g *ComposeTemplateGenerator) Generate() (string, error) {
 	vars := g.prepareTemplateVars()
-	return g.RenderTemplate(composeTemplate, vars)
+	return g.RenderTemplate(g.getTemplate(), vars)
 }
 
 // prepareTemplateVars prepares variables for compose template
@@ -118,8 +118,9 @@ func (g *ComposeTemplateGenerator) prepareTemplateVars() map[string]interface{} 
 	return vars
 }
 
-// composeTemplate is the docker-compose.yaml template
-const composeTemplate = `# Auto-generated docker-compose.yaml
+// getTemplate returns the docker-compose.yaml template
+func (g *ComposeTemplateGenerator) getTemplate() string {
+	return `# Auto-generated docker-compose.yaml
 # Generated at: {{ .GENERATED_AT }}
 
 version: '3.8'
@@ -200,3 +201,4 @@ services:
 {{- end }}
     restart: unless-stopped
 `
+}
