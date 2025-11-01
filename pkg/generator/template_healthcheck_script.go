@@ -1,6 +1,8 @@
 package generator
 
 import (
+	_ "embed"
+
 	"github.com/junjiewwang/service-template/pkg/config"
 )
 
@@ -34,6 +36,9 @@ func NewHealthcheckScriptTemplateGenerator(cfg *config.ServiceConfig, engine *Te
 	}
 }
 
+//go:embed templates/healthcheck.sh.tmpl
+var healthcheckScriptTemplate string
+
 // Generate generates healthchk.sh content
 func (g *HealthcheckScriptTemplateGenerator) Generate() (string, error) {
 	vars := map[string]interface{}{
@@ -45,15 +50,5 @@ func (g *HealthcheckScriptTemplateGenerator) Generate() (string, error) {
 
 // getTemplate returns the healthcheck script template
 func (g *HealthcheckScriptTemplateGenerator) getTemplate() string {
-	return `#!/bin/bash
-
-# Default healthcheck: check if service process is running
-ps=$(ls -l /proc/*/exe 2>/dev/null | grep "{{ .SERVICE_NAME }}" | grep -v grep)
-
-# abnormal
-[[ "$ps" == "" ]] && exit 1
-
-# normal
-exit 0
-`
+	return healthcheckScriptTemplate
 }

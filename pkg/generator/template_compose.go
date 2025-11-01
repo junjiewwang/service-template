@@ -1,6 +1,8 @@
 package generator
 
 import (
+	_ "embed"
+
 	"github.com/junjiewwang/service-template/pkg/config"
 )
 
@@ -33,6 +35,9 @@ func NewComposeTemplateGenerator(cfg *config.ServiceConfig, engine *TemplateEngi
 		},
 	}
 }
+
+//go:embed templates/compose.yaml.tmpl
+var composeTemplate string
 
 // Generate generates docker-compose.yaml content
 func (g *ComposeTemplateGenerator) Generate() (string, error) {
@@ -120,85 +125,5 @@ func (g *ComposeTemplateGenerator) prepareTemplateVars() map[string]interface{} 
 
 // getTemplate returns the docker-compose.yaml template
 func (g *ComposeTemplateGenerator) getTemplate() string {
-	return `# Auto-generated docker-compose.yaml
-# Generated at: {{ .GENERATED_AT }}
-
-version: '3.8'
-
-services:
-  {{ .SERVICE_NAME }}:
-    image: {{ .SERVICE_NAME }}:latest-amd64
-    container_name: {{ .SERVICE_NAME }}
-{{- if .PORTS }}
-    ports:
-{{- range .PORTS }}
-{{- if eq .Port .TargetPort }}
-      - "{{ .Port }}"
-{{- else }}
-      - "{{ .Port }}:{{ .TargetPort }}"
-{{- end }}
-{{- end }}
-{{- end }}
-{{- if .ENV_VARS }}
-    environment:
-{{- range .ENV_VARS }}
-      - {{ .Name }}={{ .Value }}
-{{- end }}
-{{- end }}
-{{- if .VOLUMES }}
-    volumes:
-{{- range .VOLUMES }}
-      - {{ .Source }}:{{ .Target }}
-{{- end }}
-{{- end }}
-{{- if or .LIMITS_CPUS .LIMITS_MEMORY .RESERVATIONS_CPUS .RESERVATIONS_MEMORY }}
-    deploy:
-      resources:
-{{- if or .LIMITS_CPUS .LIMITS_MEMORY }}
-        limits:
-{{- if .LIMITS_CPUS }}
-          cpus: '{{ .LIMITS_CPUS }}'
-{{- end }}
-{{- if .LIMITS_MEMORY }}
-          memory: {{ .LIMITS_MEMORY }}
-{{- end }}
-{{- end }}
-{{- if or .RESERVATIONS_CPUS .RESERVATIONS_MEMORY }}
-        reservations:
-{{- if .RESERVATIONS_CPUS }}
-          cpus: '{{ .RESERVATIONS_CPUS }}'
-{{- end }}
-{{- if .RESERVATIONS_MEMORY }}
-          memory: {{ .RESERVATIONS_MEMORY }}
-{{- end }}
-{{- end }}
-{{- end }}
-{{- if .HEALTHCHECK_ENABLED }}
-    healthcheck:
-{{- if eq .HEALTHCHECK_TYPE "http" }}
-      test: ["CMD", "curl", "-f", "http://localhost:{{ .HEALTHCHECK_HTTP_PORT }}{{ .HEALTHCHECK_HTTP_PATH }}"]
-{{- else }}
-      test: ["CMD", "/bin/sh", "/usr/local/services/${SERVICE_NAME}/hooks/healthchk.sh"]
-{{- end }}
-{{- if .HEALTHCHECK_INTERVAL }}
-      interval: {{ .HEALTHCHECK_INTERVAL }}
-{{- end }}
-{{- if .HEALTHCHECK_TIMEOUT }}
-      timeout: {{ .HEALTHCHECK_TIMEOUT }}
-{{- end }}
-{{- if .HEALTHCHECK_RETRIES }}
-      retries: {{ .HEALTHCHECK_RETRIES }}
-{{- end }}
-{{- if .HEALTHCHECK_START_PERIOD }}
-      start_period: {{ .HEALTHCHECK_START_PERIOD }}
-{{- end }}
-{{- end }}
-{{- if .LABELS }}
-    labels:
-{{- range $key, $value := .LABELS }}
-      {{ $key }}: "{{ $value }}"
-{{- end }}
-{{- end }}
-    restart: unless-stopped
-`
+	return composeTemplate
 }

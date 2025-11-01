@@ -32,11 +32,22 @@ func TestMakefileGenerator_Generate(t *testing.T) {
 					Type:    "golang",
 					Version: "1.21",
 				},
+				LocalDev: config.LocalDevConfig{
+					Kubernetes: config.KubernetesConfig{
+						Namespace:  "default",
+						OutputDir:  "k8s-manifests",
+						VolumeType: "configMap",
+					},
+				},
 			},
 			wantErr: false,
 			checks: []string{
-				"SERVICE_NAME := test-service",
+				"PROJECT_NAME ?= test-service",
 				".PHONY:",
+				"ARCH := $(shell uname -m)",
+				"check-tools:",
+				"k8s-convert:",
+				"k8s-deploy:",
 			},
 		},
 		{
@@ -56,10 +67,20 @@ func TestMakefileGenerator_Generate(t *testing.T) {
 					Type:    "golang",
 					Version: "1.21",
 				},
+				LocalDev: config.LocalDevConfig{
+					Kubernetes: config.KubernetesConfig{
+						Namespace:  "production",
+						OutputDir:  "k8s-output",
+						VolumeType: "persistentVolumeClaim",
+					},
+				},
 			},
 			wantErr: false,
 			checks: []string{
-				"SERVICE_NAME := multi-arch-service",
+				"PROJECT_NAME ?= multi-arch-service",
+				"K8S_NAMESPACE ?= production",
+				"K8S_OUTPUT_DIR ?= k8s-output",
+				"K8S_VOLUME_TYPE ?= persistentVolumeClaim",
 			},
 		},
 	}

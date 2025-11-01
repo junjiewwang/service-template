@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//go:embed templates/service.yaml.example
+//go:embed templates/service.example.yaml
 var serviceYamlExample string
 
 var initCmd = &cobra.Command{

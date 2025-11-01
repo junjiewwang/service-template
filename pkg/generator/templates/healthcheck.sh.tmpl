@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Default healthcheck: check if service process is running
+ps=$(ls -l /proc/*/exe 2>/dev/null | grep "{{ .SERVICE_NAME }}" | grep -v grep)
+
+# abnormal
+[[ "$ps" == "" ]] && exit 1
+
+# normal
+exit 0

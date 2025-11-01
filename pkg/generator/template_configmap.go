@@ -1,6 +1,7 @@
 package generator
 
 import (
+	_ "embed"
 	"path/filepath"
 	"strings"
 
@@ -36,6 +37,9 @@ func NewConfigMapTemplateGenerator(cfg *config.ServiceConfig, engine *TemplateEn
 		},
 	}
 }
+
+//go:embed templates/configmap.yaml.tmpl
+var configmapTemplate string
 
 // Generate generates ConfigMap YAML content
 func (g *ConfigMapTemplateGenerator) Generate() (string, error) {
@@ -94,26 +98,5 @@ func (g *ConfigMapTemplateGenerator) isConfigFile(path string) bool {
 
 // getTemplate returns the Kubernetes ConfigMap template
 func (g *ConfigMapTemplateGenerator) getTemplate() string {
-	return `# Auto-generated Kubernetes ConfigMap
-# Generated at: {{ .GENERATED_AT }}
-
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .CONFIGMAP_NAME }}
-  namespace: {{ .NAMESPACE }}
-  labels:
-    app: {{ .SERVICE_NAME }}
-data:
-{{- if .CONFIG_FILES }}
-{{- range .CONFIG_FILES }}
-  {{ .FileName }}: |
-    # Config file content should be provided here
-    # Source: {{ .Source }}
-{{- end }}
-{{- else }}
-  # No config files detected
-  # Add your configuration data here
-{{- end }}
-`
+	return configmapTemplate
 }

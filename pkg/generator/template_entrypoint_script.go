@@ -1,6 +1,8 @@
 package generator
 
 import (
+	_ "embed"
+
 	"github.com/junjiewwang/service-template/pkg/config"
 )
 
@@ -34,6 +36,9 @@ func NewEntrypointScriptTemplateGenerator(cfg *config.ServiceConfig, engine *Tem
 	}
 }
 
+//go:embed templates/entrypoint.sh.tmpl
+var entrypointScriptTemplate string
+
 // Generate generates entrypoint.sh content
 func (g *EntrypointScriptTemplateGenerator) Generate() (string, error) {
 	// 准备插件环境变量信息
@@ -62,61 +67,5 @@ func (g *EntrypointScriptTemplateGenerator) Generate() (string, error) {
 
 // getTemplate returns the entrypoint script template
 func (g *EntrypointScriptTemplateGenerator) getTemplate() string {
-	return `#!/bin/sh
-
-echo "========================================="
-echo "TCS Service Entrypoint"
-echo "Service: {{ .SERVICE_NAME }}"
-echo "Deploy Dir: {{ .DEPLOY_DIR }}"
-echo "========================================="
-
-# Export service paths as environment variables
-export SERVICE_ROOT="{{ .DEPLOY_DIR }}/{{ .SERVICE_NAME }}"
-export SERVICE_BIN_DIR="{{ .DEPLOY_DIR }}/{{ .SERVICE_NAME }}/bin"
-export SERVICE_NAME="{{ .SERVICE_NAME }}"
-
-echo "Service Root: ${SERVICE_ROOT}"
-echo "Service Bin Dir: ${SERVICE_BIN_DIR}"
-echo "Service Name: ${SERVICE_NAME}"
-
-{{- if .ENV_VARS }}
-# Set environment variables
-{{- range .ENV_VARS }}
-export {{ .Name }}={{ .Value }}
-{{- end }}
-{{- end }}
-
-{{- if .HAS_PLUGINS_ENV }}
-# ============================================
-# Load plugin environment variables
-# ============================================
-{{- range .PLUGINS_ENV }}
-# Load environment variables for plugin: {{ .Name }}
-PLUGIN_ENV_FILE="{{ .InstallDir }}/.env"
-if [ -f "${PLUGIN_ENV_FILE}" ]; then
-    echo "Loading environment variables for {{ .Name }} from ${PLUGIN_ENV_FILE}"
-    set -a  # Automatically export all variables
-    . "${PLUGIN_ENV_FILE}"
-    set +a
-    
-    # 显示已加载的环境变量
-    echo "Environment variables loaded for {{ .Name }}:"
-    {{- range .RuntimeEnv }}
-    echo "  {{ .Name }}=${{ .Name }}"
-    {{- end }}
-else
-    echo "Warning: Environment file not found for {{ .Name }}: ${PLUGIN_ENV_FILE}"
-fi
-echo ""
-{{- end }}
-{{- end }}
-
-# ============================================
-# Language-specific start command (CUSTOMIZE THIS SECTION)
-# ============================================
-# For Go:
-{{ .STARTUP_COMMAND }}
-
-# ============================================
-`
+	return entrypointScriptTemplate
 }

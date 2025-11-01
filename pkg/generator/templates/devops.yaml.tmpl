@@ -1,0 +1,33 @@
+# Auto-generated DevOps configuration
+# Generated at: {{ .GENERATED_AT }}
+
+tad:
+  export_envs:
+  # ============================================
+  # Runtime Base Images (运行时基础镜像)
+  # ============================================
+  - name: "TLINUX_BASE_IMAGE_X86"  # 运行时基础镜像名称 (x86)
+    value: "{{ .RUNTIME_IMAGE_X86 }}"
+  - name: "TLINUX_TAG_X86"  # 运行时基础镜像tag (x86)
+    value: "{{ .RUNTIME_TAG_X86 }}"
+  - name: "TLINUX_BASE_IMAGE_ARM"  # 运行时基础镜像名称 (arm64)
+    value: "{{ .RUNTIME_IMAGE_ARM }}"
+  - name: "TLINUX_TAG_ARM"  # 运行时基础镜像tag (arm64)
+    value: "{{ .RUNTIME_TAG_ARM }}"
+  
+  # ============================================
+  # Builder Images (构建镜像)
+  # ============================================
+  # 使用 {{ .LANGUAGE_DISPLAY_NAME }} 构建镜像
+  
+  # {{ .LANGUAGE_DISPLAY_NAME }} 构建镜像 (默认)
+  - name: "BUILDER_IMAGE_X86"  # x86 构建镜像
+    value: "{{ .BUILDER_IMAGE_X86 }}"
+  - name: "BUILDER_IMAGE_ARM"  # arm64 构建镜像
+    value: "{{ .BUILDER_IMAGE_ARM }}"
+  
+  # ============================================
+  # Deployment Configuration (部署配置)
+  # ============================================
+  - name: "DEPLOY_DIR"  # 服务部署目录
+    value: "{{ .DEPLOY_DIR }}"
