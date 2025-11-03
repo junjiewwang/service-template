@@ -1,11 +1,23 @@
 # Auto-generated docker-compose.yaml
 # Generated at: {{ .GENERATED_AT }}
 
-version: '3.8'
-
 services:
   {{ .SERVICE_NAME }}:
-    image: {{ .SERVICE_NAME }}:latest-amd64
+    build:
+      context: .
+      dockerfile: .tad/build/{{ .SERVICE_NAME }}/${DOCKERFILE}
+      args:
+        # ARM64 args
+        - TLINUX_BASE_IMAGE_ARM=${TLINUX_BASE_IMAGE_ARM}
+        - TLINUX_TAG_ARM=${TLINUX_TAG_ARM}
+        - BUILDER_IMAGE_ARM=${BUILDER_IMAGE_ARM}
+        # AMD64 args
+        - TLINUX_BASE_IMAGE_X86=${TLINUX_BASE_IMAGE_X86}
+        - TLINUX_TAG_X86=${TLINUX_TAG_X86}
+        - BUILDER_IMAGE_X86=${BUILDER_IMAGE_X86}
+        # Common args
+        - DEPLOY_DIR=${DEPLOY_DIR}
+    image: {{ .SERVICE_NAME }}:latest-${DOCKER_ARCH}
     container_name: {{ .SERVICE_NAME }}
 {{- if .PORTS }}
     ports:

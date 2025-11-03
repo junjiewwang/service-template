@@ -5,7 +5,7 @@ script_path=$(
 	pwd
 )
 
-PKG_NAME={{ .SERVICE_NAME }}
+SERVICE_NAME={{ .SERVICE_NAME }}
 
 # 到项目根目录并获取绝对路径
 cd $script_path/../../
@@ -29,6 +29,7 @@ BUILD_OUTPUT_DIR="${BUILD_OUTPUT_DIR:-${PROJECT_ROOT}/dist}"
 
 export BUILD_OUTPUT_DIR
 export PROJECT_ROOT
+export SERVICE_NAME
 
 echo "Project root: ${PROJECT_ROOT}"
 echo "Build output directory: ${BUILD_OUTPUT_DIR}"
@@ -39,7 +40,7 @@ echo "Build output directory: ${BUILD_OUTPUT_DIR}"
 # ============================================
 echo "========================================="
 echo "TCS Service Build System"
-echo "Service: ${PKG_NAME}"
+echo "Service: ${SERVICE_NAME}"
 echo "========================================="
 
 # Create output directories
@@ -59,6 +60,8 @@ echo "Pre-build completed successfully"
 # Execute build commands
 # ============================================
 echo "Executing build commands..."
+# Ensure we're in the project root directory before building
+cd ${PROJECT_ROOT}
 {{ .BUILD_COMMAND }}
 [ $? -ne 0 ] && echo "ERROR: Build commands failed" && exit 1
 echo "Build completed successfully"
@@ -76,7 +79,7 @@ echo "Post-build completed successfully"
 # ============================================
 # Deploy artifacts
 # ============================================
-target_path={{ .DEPLOY_DIR }}/${PKG_NAME}
+target_path={{ .DEPLOY_DIR }}/${SERVICE_NAME}
 # create service dir
 mkdir -p ${target_path}
 

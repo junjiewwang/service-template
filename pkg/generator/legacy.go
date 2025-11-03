@@ -79,23 +79,6 @@ func (g *DevOpsGenerator) Generate() (string, error) {
 	return g.generator.Generate()
 }
 
-// ConfigMapGenerator is a legacy wrapper for ConfigMapTemplateGenerator
-type ConfigMapGenerator struct {
-	generator *ConfigMapTemplateGenerator
-}
-
-// NewConfigMapGenerator creates a new ConfigMap generator (legacy)
-func NewConfigMapGenerator(cfg *config.ServiceConfig, engine *TemplateEngine, vars *Variables) *ConfigMapGenerator {
-	return &ConfigMapGenerator{
-		generator: NewConfigMapTemplateGenerator(cfg, engine, vars),
-	}
-}
-
-// Generate generates ConfigMap YAML content (legacy)
-func (g *ConfigMapGenerator) Generate() (string, error) {
-	return g.generator.Generate()
-}
-
 // ScriptsGenerator is a legacy wrapper for script template generators
 type ScriptsGenerator struct {
 	config         *config.ServiceConfig

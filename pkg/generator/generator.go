@@ -67,13 +67,6 @@ func (g *Generator) Generate() error {
 		return fmt.Errorf("failed to generate DevOps configuration: %w", err)
 	}
 
-	// Generate ConfigMap if needed
-	if g.config.LocalDev.Kubernetes.Enabled && g.config.LocalDev.Kubernetes.ConfigMap.AutoDetect {
-		if err := g.generateConfigMap(); err != nil {
-			return fmt.Errorf("failed to generate ConfigMap: %w", err)
-		}
-	}
-
 	fmt.Println("✓ Project generated successfully!")
 	return nil
 }
@@ -224,31 +217,5 @@ func (g *Generator) generateDevOps() error {
 	}
 
 	fmt.Println("✓ Generated .tad/devops.yaml")
-	return nil
-}
-
-// generateConfigMap generates Kubernetes ConfigMap
-func (g *Generator) generateConfigMap() error {
-	generator, err := g.factory.CreateGenerator("configmap")
-	if err != nil {
-		return fmt.Errorf("failed to create configmap generator: %w", err)
-	}
-
-	content, err := generator.Generate()
-	if err != nil {
-		return err
-	}
-
-	k8sDir := filepath.Join(g.outputDir, g.config.LocalDev.Kubernetes.OutputDir)
-	if err := os.MkdirAll(k8sDir, 0755); err != nil {
-		return fmt.Errorf("failed to create k8s directory: %w", err)
-	}
-
-	outputPath := filepath.Join(k8sDir, "configmap.yaml")
-	if err := utils.WriteFile(outputPath, content); err != nil {
-		return err
-	}
-
-	fmt.Println("✓ Generated k8s-manifests/configmap.yaml")
 	return nil
 }

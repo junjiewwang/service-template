@@ -45,7 +45,7 @@ COPY bk-ci/tcs/build_deps_install.sh /opt/bk-ci/tcs/
 # ============================================
 # This layer will be cached if dependency files haven't changed
 # Only source code changes won't invalidate this cache layer
-RUN bash -xe /opt/bk-ci/tcs/build_deps_install.sh
+RUN sh -xe /opt/bk-ci/tcs/build_deps_install.sh
 
 # ============================================
 # Layer 3: Copy all source code
@@ -58,7 +58,7 @@ COPY . /opt/
 # Layer 4: Build the service
 # ============================================
 # Build using already installed dependencies
-RUN bash -xe /opt/bk-ci/tcs/build.sh
+RUN sh -xe /opt/bk-ci/tcs/build.sh
 
 # Runtime stage
 {{- if eq .ARCH "amd64" }}
@@ -90,8 +90,8 @@ COPY --from=builder /plugins /plugins
 RUN sh -xe /plugins/install.sh
 {{- end }}
 
-# Set working directory
-WORKDIR ${DEPLOY_DIR}
+# Set working directory to service directory
+WORKDIR ${DEPLOY_DIR}/{{ .SERVICE_NAME }}
 
-# Set entrypoint
-ENTRYPOINT ["/tce/entrypoint.sh"]
+# Set entrypoint (use service-specific entrypoint script)
+ENTRYPOINT ["./entrypoint.sh"]
