@@ -159,17 +159,29 @@ runtime:
 
   # 健康检查配置
   # 工具会根据 type 自动生成 healthcheck.sh 脚本
+  #
+  # 生成逻辑：
+  # 1. 当 enabled=false 时，生成默认的进程检查脚本
+  # 2. 当 enabled=true 且 type=custom 时：
+  #    - 如果提供了 custom_script，则使用 custom_script 的内容
+  #    - 如果未提供 custom_script，则生成默认的进程检查脚本
+  # 3. 当 enabled=true 且 type 为其他类型（http/tcp/exec）时，生成默认的进程检查脚本
+  #
   healthcheck:
     enabled: true
     type: http # http | tcp | exec | custom
 
     # HTTP 健康检查（当 type=http 时使用）
+    # 注意：此配置主要用于 Docker Compose 的 healthcheck 配置
+    # 实际的 healthchk.sh 脚本仍使用默认的进程检查逻辑
     http:
       path: /health
       port: 8080
       timeout: 3
 
     # 自定义健康检查脚本（当 type=custom 时使用）
+    # 重要：只有当 type=custom 且提供了 custom_script 时，才会替换默认的 healthchk.sh 内容
+    #
     # 可用变量：
     #   ${SERVICE_NAME}       - 服务名称
     #   ${SERVICE_PORT}       - 主服务端口
@@ -293,6 +305,22 @@ makefile:
     description: "Run linter"
     commands:
     - golangci-lint run
+
+# ============================================
+# CI/CD 路径配置（可选）
+# ============================================
+# 用于统一管理 CI/CD 相关脚本和配置文件的路径
+# 如果不配置，将使用默认值
+ci:
+  # CI 脚本目录（相对于项目根目录）
+  # 默认: bk-ci/tcs
+  # 该目录用于存放构建脚本、部署脚本等
+  script_dir: bk-ci/tcs
+
+  # 构建配置目录（用于 K8s ConfigMap 等）
+  # 默认: bk-ci/tcs/build
+  # 该目录用于存放配置文件，会被挂载到容器中
+  build_config_dir: bk-ci/tcs/build
 
 # ============================================
 # 元数据

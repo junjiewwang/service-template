@@ -1,10 +1,22 @@
-#!/bin/bash
+#!/bin/sh
+
+# Export service paths as environment variables
+export SERVICE_ROOT="{{ .DEPLOY_DIR }}/{{ .SERVICE_NAME }}"
+export SERVICE_BIN_DIR="{{ .DEPLOY_DIR }}/{{ .SERVICE_NAME }}/bin"
+export SERVICE_NAME="{{ .SERVICE_NAME }}"
+
+{{- if and .HEALTHCHECK_ENABLED (eq .HEALTHCHECK_TYPE "custom") .CUSTOM_SCRIPT }}
+
+# Custom healthcheck script
+{{ .CUSTOM_SCRIPT }}
+{{- else }}
 
 # Default healthcheck: check if service process is running
-ps=$(ls -l /proc/*/exe 2>/dev/null | grep "{{ .SERVICE_NAME }}" | grep -v grep)
+ps=$(ls -l /proc/*/exe 2>/dev/null | grep "${SERVICE_NAME}" | grep -v grep)
 
 # abnormal
 [[ "$ps" == "" ]] && exit 1
 
 # normal
 exit 0
+{{- end }}

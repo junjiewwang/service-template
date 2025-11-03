@@ -54,17 +54,19 @@ func TestGenerator_Generate(t *testing.T) {
 	require.NoError(t, err, "Generate() should not return an error")
 
 	// Check that expected files were created
+	// Use CIPaths to get expected script paths
+	ciPaths := NewCIPaths(cfg)
 	expectedFiles := []string{
 		".tad/build/test-service/Dockerfile.test-service.amd64",
 		".tad/build/test-service/Dockerfile.test-service.arm64",
 		"compose.yaml",
 		"Makefile",
 		"configmap.yaml", // ConfigMap is generated in root, not k8s-manifests
-		"bk-ci/tcs/build.sh",
-		"bk-ci/tcs/build_deps_install.sh",
-		"bk-ci/tcs/rt_prepare.sh",
-		"bk-ci/tcs/entrypoint.sh",
-		"bk-ci/tcs/healthchk.sh",
+		ciPaths.GetScriptPath(ciPaths.BuildScript),
+		ciPaths.GetScriptPath(ciPaths.DepsInstallScript),
+		ciPaths.GetScriptPath(ciPaths.RtPrepareScript),
+		ciPaths.GetScriptPath(ciPaths.EntrypointScript),
+		ciPaths.GetScriptPath(ciPaths.HealthcheckScript),
 		".tad/devops.yaml",
 	}
 
@@ -225,12 +227,14 @@ func TestGenerator_GenerateScripts(t *testing.T) {
 	require.NoError(t, err, "Generate() should not return an error")
 
 	// Check scripts were created
+	// Use CIPaths to get expected script paths
+	ciPaths := NewCIPaths(cfg)
 	expectedScripts := []string{
-		"bk-ci/tcs/build.sh",
-		"bk-ci/tcs/build_deps_install.sh",
-		"bk-ci/tcs/rt_prepare.sh",
-		"bk-ci/tcs/entrypoint.sh",
-		"bk-ci/tcs/healthchk.sh",
+		ciPaths.GetScriptPath(ciPaths.BuildScript),
+		ciPaths.GetScriptPath(ciPaths.DepsInstallScript),
+		ciPaths.GetScriptPath(ciPaths.RtPrepareScript),
+		ciPaths.GetScriptPath(ciPaths.EntrypointScript),
+		ciPaths.GetScriptPath(ciPaths.HealthcheckScript),
 	}
 
 	for _, script := range expectedScripts {

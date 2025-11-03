@@ -52,6 +52,7 @@ func (g *ComposeTemplateGenerator) prepareTemplateVars() map[string]interface{} 
 	// Basic info
 	vars["GENERATED_AT"] = g.config.Metadata.GeneratedAt
 	vars["SERVICE_NAME"] = g.config.Service.Name
+	vars["SERVICE_ROOT"] = g.config.Service.DeployDir + "/" + g.config.Service.Name
 
 	// Ports
 	type PortMapping struct {

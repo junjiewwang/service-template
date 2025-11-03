@@ -42,6 +42,9 @@ type Variables struct {
 	PluginInstallDir  string
 	PluginRootDir     string // 新增：插件根目录 /plugins
 
+	// CI paths
+	CIPaths *CIPaths
+
 	// All config for template access
 	Config *config.ServiceConfig
 }
@@ -58,6 +61,7 @@ func NewVariables(cfg *config.ServiceConfig) *Variables {
 		LanguageConfig:  cfg.Language.Config,
 		Ports:           cfg.Service.Ports,
 		Config:          cfg,
+		CIPaths:         NewCIPaths(cfg), // 初始化 CI 路径管理器
 	}
 
 	// Set main service port (first port)
@@ -106,7 +110,7 @@ func (v *Variables) WithPlugin(plugin config.PluginConfig) *Variables {
 
 // ToMap converts Variables to a map for template execution
 func (v *Variables) ToMap() map[string]interface{} {
-	return map[string]interface{}{
+	result := map[string]interface{}{
 		"ServiceName":       v.ServiceName,
 		"ServicePort":       v.ServicePort,
 		"ServiceRoot":       v.ServiceRoot,
@@ -142,4 +146,13 @@ func (v *Variables) ToMap() map[string]interface{} {
 		"PLUGIN_INSTALL_DIR":  v.PluginInstallDir,
 		"PLUGIN_ROOT_DIR":     v.PluginRootDir,
 	}
+
+	// 合并 CI 路径变量
+	if v.CIPaths != nil {
+		for k, val := range v.CIPaths.ToTemplateVars() {
+			result[k] = val
+		}
+	}
+
+	return result
 }

@@ -38,14 +38,14 @@ COPY {{ . }} ./
 {{- end }}
 
 # Copy build scripts needed for dependency installation
-COPY bk-ci/tcs/build_deps_install.sh /opt/bk-ci/tcs/
+COPY {{ .CI_SCRIPT_DIR }}/{{ .DEPS_INSTALL_SCRIPT }} {{ .CI_CONTAINER_DIR }}/
 
 # ============================================
 # Layer 2: Install dependencies (cacheable if deps files unchanged)
 # ============================================
 # This layer will be cached if dependency files haven't changed
 # Only source code changes won't invalidate this cache layer
-RUN sh -xe /opt/bk-ci/tcs/build_deps_install.sh
+RUN sh -xe {{ .DEPS_INSTALL_SCRIPT_CONTAINER_PATH }}
 
 # ============================================
 # Layer 3: Copy all source code
@@ -58,7 +58,7 @@ COPY . /opt/
 # Layer 4: Build the service
 # ============================================
 # Build using already installed dependencies
-RUN sh -xe /opt/bk-ci/tcs/build.sh
+RUN sh -xe {{ .BUILD_SCRIPT_CONTAINER_PATH }}
 
 # Runtime stage
 {{- if eq .ARCH "amd64" }}
@@ -71,10 +71,10 @@ FROM ${TLINUX_BASE_IMAGE_ARM}:${TLINUX_TAG_ARM}
 ARG DEPLOY_DIR
 
 # Copy runtime preparation script
-COPY bk-ci/tcs/rt_prepare.sh /tmp/rt_prepare.sh
+COPY {{ .CI_SCRIPT_DIR }}/{{ .RT_PREPARE_SCRIPT }} /tmp/{{ .RT_PREPARE_SCRIPT }}
 
 # Install runtime dependencies
-RUN sh -xe /tmp/rt_prepare.sh && rm -f /tmp/rt_prepare.sh
+RUN sh -xe /tmp/{{ .RT_PREPARE_SCRIPT }} && rm -f /tmp/{{ .RT_PREPARE_SCRIPT }}
 
 # Copy built artifacts from builder stage
 COPY --from=builder ${DEPLOY_DIR} ${DEPLOY_DIR}

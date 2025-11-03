@@ -64,9 +64,10 @@ func (g *DockerfileTemplateGenerator) Generate() (string, error) {
 
 // prepareTemplateVars prepares variables for Dockerfile template
 func (g *DockerfileTemplateGenerator) prepareTemplateVars() map[string]interface{} {
-	vars := make(map[string]interface{})
+	// 从 variables 获取所有基础变量（包括 CI 路径变量）
+	vars := g.variables.ToMap()
 
-	// Basic info
+	// Basic info (覆盖或添加特定变量)
 	vars["ARCH"] = g.arch
 	vars["GENERATED_AT"] = g.config.Metadata.GeneratedAt
 	vars["SERVICE_NAME"] = g.config.Service.Name

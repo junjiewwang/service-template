@@ -150,45 +150,37 @@ func (g *Generator) generateMakefile() error {
 
 // generateScripts generates build and deployment scripts
 func (g *Generator) generateScripts() error {
-	scripts := []struct {
-		name          string
-		generatorType string
-	}{
-		{"bk-ci/tcs/build.sh", "build-script"},
-		{"bk-ci/tcs/build_deps_install.sh", "deps-install-script"},
-		{"bk-ci/tcs/rt_prepare.sh", "rt-prepare-script"},
-		{"bk-ci/tcs/entrypoint.sh", "entrypoint-script"},
-		{"bk-ci/tcs/healthchk.sh", "healthcheck-script"},
-	}
+	// 使用 CIPaths 获取所有脚本路径
+	scriptPaths := g.variables.CIPaths.GetAllScriptPaths()
 
-	for _, script := range scripts {
-		generator, err := g.factory.CreateGenerator(script.generatorType)
+	for generatorType, scriptPath := range scriptPaths {
+		generator, err := g.factory.CreateGenerator(generatorType)
 		if err != nil {
-			return fmt.Errorf("failed to create %s generator: %w", script.generatorType, err)
+			return fmt.Errorf("failed to create %s generator: %w", generatorType, err)
 		}
 
 		content, err := generator.Generate()
 		if err != nil {
-			return fmt.Errorf("failed to generate %s: %w", script.name, err)
+			return fmt.Errorf("failed to generate %s: %w", scriptPath, err)
 		}
 
-		outputPath := filepath.Join(g.outputDir, script.name)
+		outputPath := filepath.Join(g.outputDir, scriptPath)
 		if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
-			return fmt.Errorf("failed to create directory for %s: %w", script.name, err)
+			return fmt.Errorf("failed to create directory for %s: %w", scriptPath, err)
 		}
 
 		if err := utils.WriteFile(outputPath, content); err != nil {
-			return fmt.Errorf("failed to write %s: %w", script.name, err)
+			return fmt.Errorf("failed to write %s: %w", scriptPath, err)
 		}
 
 		// Make shell scripts executable
-		if filepath.Ext(script.name) == ".sh" {
+		if filepath.Ext(scriptPath) == ".sh" {
 			if err := os.Chmod(outputPath, 0755); err != nil {
-				return fmt.Errorf("failed to make %s executable: %w", script.name, err)
+				return fmt.Errorf("failed to make %s executable: %w", scriptPath, err)
 			}
 		}
 
-		fmt.Printf("✓ Generated %s\n", script.name)
+		fmt.Printf("✓ Generated %s\n", scriptPath)
 	}
 
 	return nil

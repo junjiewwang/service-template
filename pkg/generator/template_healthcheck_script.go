@@ -42,9 +42,13 @@ var healthcheckScriptTemplate string
 // Generate generates healthchk.sh content
 func (g *HealthcheckScriptTemplateGenerator) Generate() (string, error) {
 	vars := map[string]interface{}{
-		"SERVICE_NAME": g.config.Service.Name,
-		"DEPLOY_DIR":   g.config.Service.DeployDir,
+		"SERVICE_NAME":        g.config.Service.Name,
+		"DEPLOY_DIR":          g.config.Service.DeployDir,
+		"HEALTHCHECK_ENABLED": g.config.Runtime.Healthcheck.Enabled,
+		"HEALTHCHECK_TYPE":    g.config.Runtime.Healthcheck.Type,
+		"CUSTOM_SCRIPT":       g.config.Runtime.Healthcheck.CustomScript,
 	}
+
 	return g.RenderTemplate(g.getTemplate(), vars)
 }
 

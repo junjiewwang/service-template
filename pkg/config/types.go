@@ -10,6 +10,7 @@ type ServiceConfig struct {
 	LocalDev LocalDevConfig `yaml:"local_dev"`
 	Makefile MakefileConfig `yaml:"makefile,omitempty"`
 	Metadata MetadataConfig `yaml:"metadata"`
+	CI       CIConfig       `yaml:"ci,omitempty"`
 }
 
 // ServiceInfo contains basic service information
@@ -213,4 +214,15 @@ type MetadataConfig struct {
 	TemplateVersion string `yaml:"template_version"`
 	GeneratedAt     string `yaml:"generated_at,omitempty"`
 	Generator       string `yaml:"generator"`
+}
+
+// CIConfig CI/CD 相关路径配置
+type CIConfig struct {
+	// CI 脚本目录路径（相对于项目根目录）
+	// 默认: bk-ci/tcs
+	ScriptDir string `yaml:"script_dir,omitempty"`
+
+	// 构建配置目录（用于 K8s ConfigMap 等）
+	// 默认: bk-ci/tcs/build
+	BuildConfigDir string `yaml:"build_config_dir,omitempty"`
 }

@@ -85,7 +85,7 @@ help:
 	@echo "  K8S_VOLUME_TYPE            Volume type (default: {{ .K8S_VOLUME_TYPE }})"
 	@echo "                             Options: configMap, persistentVolumeClaim, emptyDir, hostPath"
 	@echo "  K8S_CONFIGMAP_NAME         ConfigMap name (default: \$${PROJECT_NAME}-config)"
-	@echo "  K8S_CONFIG_DIR             Config directory (default: ./bk-ci/tcs/build)"
+	@echo "  K8S_CONFIG_DIR             Config directory (default: ./{{ .CI_BUILD_CONFIG_DIR }})"
 	@echo "  MINIKUBE                   Minikube mode (default: 0)"
 	@echo "  DOCKER_ARCH                Docker architecture (auto-detected)"
 	@echo ""
@@ -209,7 +209,7 @@ docker-restart: docker-down docker-build docker-up
 K8S_OUTPUT_DIR ?= {{ .K8S_OUTPUT_DIR }}
 K8S_NAMESPACE ?= {{ .K8S_NAMESPACE }}
 K8S_CONFIGMAP_NAME ?= $(PROJECT_NAME)-config
-K8S_CONFIG_DIR ?= ./bk-ci/tcs/build
+K8S_CONFIG_DIR ?= ./{{ .CI_BUILD_CONFIG_DIR }}
 
 # Volume type for kompose conversion
 # Options: configMap (default), persistentVolumeClaim, emptyDir, hostPath

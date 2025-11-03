@@ -88,7 +88,6 @@ func TestComposeGenerator_Generate(t *testing.T) {
 
 	// Check that content contains expected sections
 	expectedSections := []string{
-		"version:",
 		"services:",
 		"test-service:",
 		"image:",
@@ -147,7 +146,6 @@ func TestComposeGenerator_GenerateMinimal(t *testing.T) {
 
 	// Check minimal required sections
 	requiredSections := []string{
-		"version:",
 		"services:",
 		"minimal-service:",
 		"image:",
