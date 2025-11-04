@@ -226,7 +226,7 @@ svcgen validate
 ### 4️⃣ Generate Infrastructure Code
 
 ```bash
-tcs-gen generate
+svcgen generate
 
 # Generates:
 # ✓ Dockerfile.my-api-service.amd64
@@ -298,7 +298,6 @@ service-template/
 │   ├── ARCHITECTURE.md       # Architecture docs
 │   ├── CONTRIBUTING.md       # Contributing guide
 │   └── INTERVIEW.md          # Interview guide
-├── demo-app/                 # Example generated project
 └── README.md                 # This file
 ```
 
@@ -368,6 +367,6 @@ If you find this project useful, please consider giving it a star ⭐️
 
 *Making microservice infrastructure setup effortless*
 
-[⬆ Back to Top](#-tcs-service-template-generator)
+[⬆ Back to Top](#svcgenservice-generator)
 
 </div>
