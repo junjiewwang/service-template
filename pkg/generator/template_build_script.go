@@ -60,6 +60,9 @@ func (g *BuildScriptTemplateGenerator) Generate() (string, error) {
 		})
 	}
 
+	// Get CI paths
+	ciPaths := NewCIPaths(g.config)
+
 	vars := map[string]interface{}{
 		"SERVICE_NAME":       g.config.Service.Name,
 		"DEPLOY_DIR":         g.config.Service.DeployDir,
@@ -70,6 +73,8 @@ func (g *BuildScriptTemplateGenerator) Generate() (string, error) {
 		"SERVICE_ROOT":       g.config.Service.DeployDir + "/" + g.config.Service.Name,
 		"PLUGIN_ROOT_DIR":    "/plugins",                       // 新增：插件根目录
 		"GENERATE_SCRIPTS":   g.config.Runtime.GenerateScripts, // 新增：是否生成运行时脚本
+		"CI_SCRIPT_DIR":      ciPaths.ScriptDir,                // CI 脚本目录（主机相对路径）
+		"CI_CONTAINER_DIR":   ciPaths.ContainerScriptDir,       // CI 脚本目录（容器绝对路径）
 	}
 
 	return g.RenderTemplate(g.getTemplate(), vars)

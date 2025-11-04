@@ -25,9 +25,7 @@ func TestMakefileGenerator_Generate(t *testing.T) {
 						{Port: 8080, Protocol: "tcp"},
 					},
 				},
-				Build: config.BuildConfig{
-					OutputDir: "build",
-				},
+				Build: config.BuildConfig{},
 				Language: config.LanguageConfig{
 					Type:    "golang",
 					Version: "1.21",
@@ -35,7 +33,6 @@ func TestMakefileGenerator_Generate(t *testing.T) {
 				LocalDev: config.LocalDevConfig{
 					Kubernetes: config.KubernetesConfig{
 						Namespace:  "default",
-						OutputDir:  "k8s-manifests",
 						VolumeType: "configMap",
 					},
 				},
@@ -60,9 +57,7 @@ func TestMakefileGenerator_Generate(t *testing.T) {
 						{Port: 9090, Protocol: "tcp"},
 					},
 				},
-				Build: config.BuildConfig{
-					OutputDir: "build",
-				},
+				Build: config.BuildConfig{},
 				Language: config.LanguageConfig{
 					Type:    "golang",
 					Version: "1.21",
@@ -70,8 +65,8 @@ func TestMakefileGenerator_Generate(t *testing.T) {
 				LocalDev: config.LocalDevConfig{
 					Kubernetes: config.KubernetesConfig{
 						Namespace:  "production",
-						OutputDir:  "k8s-output",
 						VolumeType: "persistentVolumeClaim",
+						OutputDir:  "k8s-output",
 					},
 				},
 			},

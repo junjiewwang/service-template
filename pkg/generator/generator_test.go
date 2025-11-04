@@ -27,7 +27,6 @@ func TestGenerator_Generate(t *testing.T) {
 			},
 		},
 		Build: config.BuildConfig{
-			OutputDir: "build",
 		},
 		Language: config.LanguageConfig{
 			Type:    "golang",
@@ -109,7 +108,6 @@ func TestGenerator_GenerateDockerfiles(t *testing.T) {
 			},
 		},
 		Build: config.BuildConfig{
-			OutputDir: "build",
 		},
 		Language: config.LanguageConfig{
 			Type:    "golang",
@@ -152,7 +150,6 @@ func TestGenerator_GenerateCompose(t *testing.T) {
 			},
 		},
 		Build: config.BuildConfig{
-			OutputDir: "build",
 		},
 		Language: config.LanguageConfig{
 			Type:    "golang",
@@ -189,7 +186,6 @@ func TestGenerator_GenerateMakefile(t *testing.T) {
 			},
 		},
 		Build: config.BuildConfig{
-			OutputDir: "build",
 		},
 		Language: config.LanguageConfig{
 			Type:    "golang",
@@ -226,7 +222,6 @@ func TestGenerator_GenerateScripts(t *testing.T) {
 			},
 		},
 		Build: config.BuildConfig{
-			OutputDir: "build",
 		},
 		Language: config.LanguageConfig{
 			Type:    "golang",
@@ -275,7 +270,6 @@ func TestGenerator_GenerateWithKubernetesConfig(t *testing.T) {
 			},
 		},
 		Build: config.BuildConfig{
-			OutputDir: "build",
 		},
 		Language: config.LanguageConfig{
 			Type:    "golang",

@@ -19,7 +19,6 @@ func TestScriptsGenerator_GenerateBuildScript(t *testing.T) {
 			},
 		},
 		Build: config.BuildConfig{
-			OutputDir: "build",
 			Commands: config.BuildCommandsConfig{
 				PreBuild:  "echo 'Pre-build'",
 				Build:     "go build",
@@ -89,7 +88,6 @@ func TestScriptsGenerator_GenerateDepsInstallScript(t *testing.T) {
 					DeployDir: "/opt/services",
 				},
 				Build: config.BuildConfig{
-					OutputDir: "build",
 				},
 				Language: config.LanguageConfig{
 					Type:    tt.langType,
@@ -125,7 +123,6 @@ func TestScriptsGenerator_GenerateRtPrepareScript(t *testing.T) {
 			DeployDir: "/opt/services",
 		},
 		Build: config.BuildConfig{
-			OutputDir: "build",
 		},
 		Language: config.LanguageConfig{
 			Type:    "golang",

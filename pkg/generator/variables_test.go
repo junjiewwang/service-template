@@ -23,7 +23,6 @@ func TestNewVariables(t *testing.T) {
 			Version: "1.21",
 		},
 		Build: config.BuildConfig{
-			OutputDir: "build",
 		},
 	}
 
@@ -50,7 +49,6 @@ func TestVariables_WithArchitecture(t *testing.T) {
 			DeployDir: "/usr/local/services",
 		},
 		Language: config.LanguageConfig{Type: "golang", Version: "1.21"},
-		Build:    config.BuildConfig{OutputDir: "build"},
 	}
 
 	vars := NewVariables(cfg)
@@ -85,7 +83,6 @@ func TestVariables_WithPlugin(t *testing.T) {
 			DeployDir: "/usr/local/services",
 		},
 		Language: config.LanguageConfig{Type: "go", Version: "1.23"},
-		Build:    config.BuildConfig{OutputDir: "dist"},
 	}
 
 	vars := NewVariables(cfg)
@@ -114,7 +111,6 @@ func TestVariables_ToMap(t *testing.T) {
 			DeployDir: "/usr/local/services",
 		},
 		Language: config.LanguageConfig{Type: "golang", Version: "1.21"},
-		Build:    config.BuildConfig{OutputDir: "build"},
 	}
 
 	vars := NewVariables(cfg)

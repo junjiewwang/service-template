@@ -99,10 +99,6 @@ func (v *Validator) validateBuild() {
 	if v.config.Build.Commands.Build == "" {
 		v.errors = append(v.errors, "build.commands.build is required")
 	}
-
-	if v.config.Build.OutputDir == "" {
-		v.errors = append(v.errors, "build.output_dir is required")
-	}
 }
 
 func (v *Validator) validatePlugins() {

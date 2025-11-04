@@ -54,7 +54,6 @@ func (g *MakefileTemplateGenerator) prepareTemplateVars() map[string]interface{}
 	vars["GENERATED_AT"] = g.config.Metadata.GeneratedAt
 	vars["SERVICE_NAME"] = g.config.Service.Name
 	vars["SERVICE_PORT"] = g.variables.ServicePort
-	vars["OUTPUT_DIR"] = g.config.Build.OutputDir
 
 	// Kubernetes config
 	vars["K8S_ENABLED"] = g.config.LocalDev.Kubernetes.Enabled

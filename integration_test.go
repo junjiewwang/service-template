@@ -75,8 +75,6 @@ func TestIntegration(t *testing.T) {
 			"bk-ci/tcs/deps_install.sh",
 			"bk-ci/tcs/rt_prepare.sh",
 			".tad/devops.yaml",
-			"hooks/healthchk.sh",
-			"hooks/start.sh",
 		}
 
 		for _, file := range expectedFiles {

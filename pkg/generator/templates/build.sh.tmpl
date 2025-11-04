@@ -1,30 +1,43 @@
 #!/bin/bash
+# build.sh - Service build script
+# This script is used to build the service and prepare deployment artifacts.
+#
+# Environment Variables (automatically set by Dockerfile):
+#   - BUILD_OUTPUT_DIR: Absolute path to build output directory (e.g., /opt/dist)
+#   - PROJECT_ROOT: Absolute path to project root (e.g., /opt)
+#
+# For local builds, these variables will be calculated automatically if not set.
 
-script_path=$(
-	cd $(dirname $0)
-	pwd
-)
+set -e # Exit on error
 
 SERVICE_NAME={{ .SERVICE_NAME }}
-
-# 到项目根目录并获取绝对路径
-cd $script_path/../../
 
 # ============================================
 # Build Output Directory Configuration
 # ============================================
 #
 # In Docker build: BUILD_OUTPUT_DIR=/opt/dist, PROJECT_ROOT=/opt (set by Dockerfile)
-# In local build: BUILD_OUTPUT_DIR=${PROJECT_ROOT}/dist (calculated here)
 #
 # DO NOT hardcode "dist" anywhere in your scripts - always use ${BUILD_OUTPUT_DIR}
 
-# If PROJECT_ROOT not set (local build), calculate it
+# Check required environment variables
 if [ -z "${PROJECT_ROOT}" ]; then
-	PROJECT_ROOT=$(pwd)
+	echo "ERROR: PROJECT_ROOT environment variable is not set!"
+	echo ""
+	echo "This script must be run in a Docker container where PROJECT_ROOT is set by Dockerfile."
+	echo "Expected: PROJECT_ROOT=/opt (or your configured project root)"
+	echo ""
+	echo "If you're seeing this error:"
+	echo "  1. Make sure you're building with Docker (not running the script directly)"
+	echo "  2. Check that your Dockerfile sets: ENV PROJECT_ROOT=/opt"
+	echo "  3. Verify the Dockerfile is using the correct base image"
+	exit 1
 fi
 
-# If BUILD_OUTPUT_DIR not set (local build), use PROJECT_ROOT/dist
+# Change to project root directory
+cd "${PROJECT_ROOT}"
+
+# If BUILD_OUTPUT_DIR not set, use PROJECT_ROOT/dist as default
 BUILD_OUTPUT_DIR="${BUILD_OUTPUT_DIR:-${PROJECT_ROOT}/dist}"
 
 export BUILD_OUTPUT_DIR
@@ -177,16 +190,19 @@ echo "Generating runtime scripts..."
 
 # 复制运行时脚本到服务目录
 SERVICE_DIR="{{ .SERVICE_ROOT }}"
+# Use container path (absolute path in container) instead of host relative path
+CI_CONTAINER_DIR="{{ .CI_CONTAINER_DIR }}"
+
 mkdir -p ${SERVICE_DIR}
 
-if [ -f "${script_path}/entrypoint.sh" ]; then
-	cp -f ${script_path}/entrypoint.sh ${SERVICE_DIR}/entrypoint.sh
+if [ -f "${CI_CONTAINER_DIR}/entrypoint.sh" ]; then
+	cp -f ${CI_CONTAINER_DIR}/entrypoint.sh ${SERVICE_DIR}/entrypoint.sh
 	chmod +x ${SERVICE_DIR}/entrypoint.sh
 	echo "✓ Generated ${SERVICE_DIR}/entrypoint.sh"
 fi
 
-if [ -f "${script_path}/healthchk.sh" ]; then
-	cp -f ${script_path}/healthchk.sh ${SERVICE_DIR}/healthcheck.sh
+if [ -f "${CI_CONTAINER_DIR}/healthchk.sh" ]; then
+	cp -f ${CI_CONTAINER_DIR}/healthchk.sh ${SERVICE_DIR}/healthcheck.sh
 	chmod +x ${SERVICE_DIR}/healthcheck.sh
 	echo "✓ Generated ${SERVICE_DIR}/healthcheck.sh"
 fi

@@ -24,7 +24,6 @@ func TestComposeGenerator_Generate(t *testing.T) {
 			Version: "1.21",
 		},
 		Build: config.BuildConfig{
-			OutputDir: "build",
 		},
 		Runtime: config.RuntimeConfig{
 			Healthcheck: config.HealthcheckConfig{
@@ -148,7 +147,6 @@ func TestComposeGenerator_GenerateMinimal(t *testing.T) {
 			Version: "1.21",
 		},
 		Build: config.BuildConfig{
-			OutputDir: "build",
 		},
 		Runtime: config.RuntimeConfig{
 			Healthcheck: config.HealthcheckConfig{Enabled: false},

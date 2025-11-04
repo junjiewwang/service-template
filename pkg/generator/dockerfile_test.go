@@ -42,7 +42,6 @@ func TestDockerfileGenerator_Generate(t *testing.T) {
 				Build:     "go build -o app",
 				PostBuild: "echo 'Post-build'",
 			},
-			OutputDir: "build",
 		},
 		Runtime: config.RuntimeConfig{
 			SystemDependencies: config.RuntimeSystemDependenciesConfig{

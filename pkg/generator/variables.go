@@ -15,9 +15,6 @@ type Variables struct {
 	ServiceRoot string
 	DeployDir   string
 
-	// Build variables
-	BuildOutputDir string
-
 	// Config variables
 	ConfigDir     string
 	ServiceBinDir string
@@ -55,7 +52,6 @@ func NewVariables(cfg *config.ServiceConfig) *Variables {
 		ServiceName:     cfg.Service.Name,
 		ServiceRoot:     fmt.Sprintf("%s/%s", cfg.Service.DeployDir, cfg.Service.Name),
 		DeployDir:       cfg.Service.DeployDir,
-		BuildOutputDir:  cfg.Build.OutputDir,
 		Language:        cfg.Language.Type,
 		LanguageVersion: cfg.Language.Version,
 		LanguageConfig:  cfg.Language.Config,
@@ -115,7 +111,6 @@ func (v *Variables) ToMap() map[string]interface{} {
 		"ServicePort":       v.ServicePort,
 		"ServiceRoot":       v.ServiceRoot,
 		"DeployDir":         v.DeployDir,
-		"BuildOutputDir":    v.BuildOutputDir,
 		"ConfigDir":         v.ConfigDir,
 		"ServiceBinDir":     v.ServiceBinDir,
 		"Language":          v.Language,
@@ -137,7 +132,6 @@ func (v *Variables) ToMap() map[string]interface{} {
 		"SERVICE_PORT":        v.ServicePort,
 		"SERVICE_ROOT":        v.ServiceRoot,
 		"DEPLOY_DIR":          v.DeployDir,
-		"BUILD_OUTPUT_DIR":    v.BuildOutputDir,
 		"CONFIG_DIR":          v.ConfigDir,
 		"SERVICE_BIN_DIR":     v.ServiceBinDir,
 		"PLUGIN_NAME":         v.PluginName,

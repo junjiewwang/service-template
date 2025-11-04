@@ -39,7 +39,6 @@ func TestValidator_Validate(t *testing.T) {
 					Commands: BuildCommandsConfig{
 						Build: "go build",
 					},
-					OutputDir: "dist",
 				},
 				Runtime: RuntimeConfig{
 					Healthcheck: HealthcheckConfig{
@@ -82,7 +81,6 @@ func TestValidator_Validate(t *testing.T) {
 					BuilderImage: ArchImageConfig{AMD64: "b", ARM64: "b"},
 					RuntimeImage: ArchImageConfig{AMD64: "r", ARM64: "r"},
 					Commands:     BuildCommandsConfig{Build: "build"},
-					OutputDir:    "dist",
 				},
 				Runtime: RuntimeConfig{
 					Startup: StartupConfig{Command: "./app"},
@@ -109,7 +107,6 @@ func TestValidator_Validate(t *testing.T) {
 					BuilderImage: ArchImageConfig{AMD64: "b", ARM64: "b"},
 					RuntimeImage: ArchImageConfig{AMD64: "r", ARM64: "r"},
 					Commands:     BuildCommandsConfig{Build: "build"},
-					OutputDir:    "dist",
 				},
 				Runtime: RuntimeConfig{
 					Startup: StartupConfig{Command: "./app"},
@@ -134,7 +131,6 @@ func TestValidator_Validate(t *testing.T) {
 					BuilderImage: ArchImageConfig{AMD64: "b", ARM64: "b"},
 					RuntimeImage: ArchImageConfig{AMD64: "r", ARM64: "r"},
 					Commands:     BuildCommandsConfig{Build: "build"},
-					OutputDir:    "dist",
 				},
 				Runtime: RuntimeConfig{
 					Startup: StartupConfig{Command: "./app"},
@@ -159,7 +155,6 @@ func TestValidator_Validate(t *testing.T) {
 					BuilderImage: ArchImageConfig{AMD64: "b", ARM64: "b"},
 					RuntimeImage: ArchImageConfig{AMD64: "r", ARM64: "r"},
 					Commands:     BuildCommandsConfig{Build: ""},
-					OutputDir:    "dist",
 				},
 				Runtime: RuntimeConfig{
 					Startup: StartupConfig{Command: "./app"},
@@ -254,7 +249,6 @@ func TestValidator_ValidateHealthcheck(t *testing.T) {
 					BuilderImage: ArchImageConfig{AMD64: "b", ARM64: "b"},
 					RuntimeImage: ArchImageConfig{AMD64: "r", ARM64: "r"},
 					Commands:     BuildCommandsConfig{Build: "build"},
-					OutputDir:    "dist",
 				},
 				Runtime: RuntimeConfig{
 					Healthcheck: tt.healthcheck,

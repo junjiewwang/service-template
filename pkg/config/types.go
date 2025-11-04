@@ -44,7 +44,6 @@ type BuildConfig struct {
 	RuntimeImage       ArchImageConfig               `yaml:"runtime_image"`
 	SystemDependencies BuildSystemDependenciesConfig `yaml:"system_dependencies,omitempty"`
 	Commands           BuildCommandsConfig           `yaml:"commands"`
-	OutputDir          string                        `yaml:"output_dir"`
 }
 
 // DependencyFilesConfig for dependency file detection
