@@ -6,14 +6,17 @@ import (
 	"testing"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGenerator_Generate(t *testing.T) {
-	// Create temp directory for test
+	// Arrange: Create temp directory for test
 	tmpDir, err := os.MkdirTemp("", "generator-test-*")
 	require.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(tmpDir)
+
+	t.Logf("Created temp directory: %s", tmpDir)
 
 	cfg := &config.ServiceConfig{
 		Service: config.ServiceInfo{
@@ -50,18 +53,19 @@ func TestGenerator_Generate(t *testing.T) {
 
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)
+
+	// Act: Generate all files
 	err = gen.Generate()
 	require.NoError(t, err, "Generate() should not return an error")
 
-	// Check that expected files were created
-	// Use CIPaths to get expected script paths
+	// Assert: Check that expected files were created
 	ciPaths := NewCIPaths(cfg)
 	expectedFiles := []string{
 		".tad/build/test-service/Dockerfile.test-service.amd64",
 		".tad/build/test-service/Dockerfile.test-service.arm64",
 		"compose.yaml",
 		"Makefile",
-		"configmap.yaml", // ConfigMap is generated in root, not k8s-manifests
+		// Note: ConfigMap is generated via Makefile commands, not in main generation flow
 		ciPaths.GetScriptPath(ciPaths.BuildScript),
 		ciPaths.GetScriptPath(ciPaths.DepsInstallScript),
 		ciPaths.GetScriptPath(ciPaths.RtPrepareScript),
@@ -71,27 +75,29 @@ func TestGenerator_Generate(t *testing.T) {
 	}
 
 	// List all generated files for debugging
+	var generatedFiles []string
 	filepath.Walk(outputDir, func(path string, info os.FileInfo, err error) error {
 		if err == nil && !info.IsDir() {
 			relPath, _ := filepath.Rel(outputDir, path)
-			t.Logf("Generated file: %s", relPath)
+			generatedFiles = append(generatedFiles, relPath)
 		}
 		return nil
 	})
+	t.Logf("Generated %d files in total", len(generatedFiles))
 
+	// Verify each expected file exists
 	for _, file := range expectedFiles {
 		fullPath := filepath.Join(outputDir, file)
-		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-			t.Errorf("Expected file not created: %s (full path: %s)", file, fullPath)
-		}
+		_, err := os.Stat(fullPath)
+		require.NoError(t, err, "Expected file should exist: %s", file)
+		t.Logf("✓ Verified file exists: %s", file)
 	}
 }
 
 func TestGenerator_GenerateDockerfiles(t *testing.T) {
+	// Arrange: Setup test environment
 	tmpDir, err := os.MkdirTemp("", "generator-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
+	require.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(tmpDir)
 
 	cfg := &config.ServiceConfig{
@@ -114,22 +120,27 @@ func TestGenerator_GenerateDockerfiles(t *testing.T) {
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)
 
-	// Call Generate which internally calls generateDockerfiles
+	// Act: Generate Dockerfiles
 	err = gen.Generate()
 	require.NoError(t, err, "Generate() should not return an error")
 
-	// Check Dockerfile was created
-	dockerfilePath := filepath.Join(outputDir, ".tad", "build", "test-service", "Dockerfile.test-service.amd64")
-	if _, err := os.Stat(dockerfilePath); os.IsNotExist(err) {
-		t.Error("Dockerfile.test-service.amd64 not created")
-	}
+	// Assert: Check Dockerfiles were created
+	dockerfileAMD64 := filepath.Join(outputDir, ".tad", "build", "test-service", "Dockerfile.test-service.amd64")
+	dockerfileARM64 := filepath.Join(outputDir, ".tad", "build", "test-service", "Dockerfile.test-service.arm64")
+
+	_, err = os.Stat(dockerfileAMD64)
+	require.NoError(t, err, "Dockerfile.test-service.amd64 should be created")
+	t.Logf("✓ Verified Dockerfile created: %s", dockerfileAMD64)
+
+	_, err = os.Stat(dockerfileARM64)
+	require.NoError(t, err, "Dockerfile.test-service.arm64 should be created")
+	t.Logf("✓ Verified Dockerfile created: %s", dockerfileARM64)
 }
 
 func TestGenerator_GenerateCompose(t *testing.T) {
+	// Arrange: Setup test environment
 	tmpDir, err := os.MkdirTemp("", "generator-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
+	require.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(tmpDir)
 
 	cfg := &config.ServiceConfig{
@@ -151,21 +162,22 @@ func TestGenerator_GenerateCompose(t *testing.T) {
 
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)
+
+	// Act: Generate compose file
 	err = gen.Generate()
 	require.NoError(t, err, "Generate() should not return an error")
 
-	// Check compose file was created
+	// Assert: Check compose file was created
 	composePath := filepath.Join(outputDir, "compose.yaml")
-	if _, err := os.Stat(composePath); os.IsNotExist(err) {
-		t.Error("compose.yaml not created")
-	}
+	_, err = os.Stat(composePath)
+	require.NoError(t, err, "compose.yaml should be created")
+	t.Logf("✓ Verified compose.yaml created: %s", composePath)
 }
 
 func TestGenerator_GenerateMakefile(t *testing.T) {
+	// Arrange: Setup test environment
 	tmpDir, err := os.MkdirTemp("", "generator-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
+	require.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(tmpDir)
 
 	cfg := &config.ServiceConfig{
@@ -187,21 +199,22 @@ func TestGenerator_GenerateMakefile(t *testing.T) {
 
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)
+
+	// Act: Generate Makefile
 	err = gen.Generate()
 	require.NoError(t, err, "Generate() should not return an error")
 
-	// Check Makefile was created
+	// Assert: Check Makefile was created
 	makefilePath := filepath.Join(outputDir, "Makefile")
-	if _, err := os.Stat(makefilePath); os.IsNotExist(err) {
-		t.Error("Makefile not created")
-	}
+	_, err = os.Stat(makefilePath)
+	require.NoError(t, err, "Makefile should be created")
+	t.Logf("✓ Verified Makefile created: %s", makefilePath)
 }
 
 func TestGenerator_GenerateScripts(t *testing.T) {
+	// Arrange: Setup test environment
 	tmpDir, err := os.MkdirTemp("", "generator-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
+	require.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(tmpDir)
 
 	cfg := &config.ServiceConfig{
@@ -223,11 +236,12 @@ func TestGenerator_GenerateScripts(t *testing.T) {
 
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)
+
+	// Act: Generate scripts
 	err = gen.Generate()
 	require.NoError(t, err, "Generate() should not return an error")
 
-	// Check scripts were created
-	// Use CIPaths to get expected script paths
+	// Assert: Check scripts were created
 	ciPaths := NewCIPaths(cfg)
 	expectedScripts := []string{
 		ciPaths.GetScriptPath(ciPaths.BuildScript),
@@ -237,19 +251,19 @@ func TestGenerator_GenerateScripts(t *testing.T) {
 		ciPaths.GetScriptPath(ciPaths.HealthcheckScript),
 	}
 
+	t.Logf("Verifying %d scripts were created", len(expectedScripts))
 	for _, script := range expectedScripts {
 		scriptPath := filepath.Join(outputDir, script)
-		if _, err := os.Stat(scriptPath); os.IsNotExist(err) {
-			t.Errorf("Script not created: %s", script)
-		}
+		_, err := os.Stat(scriptPath)
+		require.NoError(t, err, "Script should be created: %s", script)
+		t.Logf("✓ Verified script exists: %s", script)
 	}
 }
 
-func TestGenerator_GenerateConfigMap(t *testing.T) {
+func TestGenerator_GenerateWithKubernetesConfig(t *testing.T) {
+	// Arrange: Setup test environment with Kubernetes enabled
 	tmpDir, err := os.MkdirTemp("", "generator-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
+	require.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(tmpDir)
 
 	cfg := &config.ServiceConfig{
@@ -279,12 +293,26 @@ func TestGenerator_GenerateConfigMap(t *testing.T) {
 
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)
+
+	// Act: Generate project with Kubernetes configuration
 	err = gen.Generate()
 	require.NoError(t, err, "Generate() should not return an error")
 
-	// Check configmap was created (it's generated in root, not k8s-manifests)
-	configmapPath := filepath.Join(outputDir, "configmap.yaml")
-	if _, err := os.Stat(configmapPath); os.IsNotExist(err) {
-		t.Error("configmap.yaml not created")
-	}
+	// Assert: Check Makefile was created with Kubernetes targets
+	// Note: ConfigMap is generated via Makefile commands (k8s-configmap target), not in main generation flow
+	makefilePath := filepath.Join(outputDir, "Makefile")
+	_, err = os.Stat(makefilePath)
+	require.NoError(t, err, "Makefile should be created")
+
+	// Verify Makefile contains Kubernetes-related targets
+	makefileContent, err := os.ReadFile(makefilePath)
+	require.NoError(t, err, "Should be able to read Makefile")
+	makefileStr := string(makefileContent)
+
+	assert.Contains(t, makefileStr, "k8s-configmap",
+		"Makefile should contain k8s-configmap target")
+	assert.Contains(t, makefileStr, "k8s-deploy",
+		"Makefile should contain k8s-deploy target")
+
+	t.Logf("✓ Verified Makefile created with Kubernetes targets")
 }

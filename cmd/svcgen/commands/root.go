@@ -13,9 +13,9 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "tcs-gen",
-	Short: "TCS Service Template Generator",
-	Long: `TCS Service Template Generator - A configuration-driven tool to generate 
+	Use:   "svcgen",
+	Short: "Service Template Generator",
+	Long: `Service Template Generator - A configuration-driven tool to generate 
 service templates with Docker, Kubernetes, and CI/CD configurations.
 
 All templates are embedded in the binary, no external template files needed.`,
@@ -48,6 +48,6 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version information",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("tcs-gen version 2.0.0")
+		fmt.Println("svcgen version 2.0.0")
 	},
 }

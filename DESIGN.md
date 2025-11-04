@@ -15,7 +15,7 @@
 ```
 tcs-service-template/
 ├── cmd/
-│   └── tcs-gen/
+│   └── svcgen/
 │       └── main.go                    # CLI 入口
 │
 ├── pkg/
@@ -355,7 +355,7 @@ makefile:
 metadata:
   template_version: "2.0.0"
   generated_at: ""                      # 自动填充
-  generator: "tcs-gen"
+  generator: "svcgen"
 ```
 
 ---
@@ -394,7 +394,7 @@ curl -fsSL https://example.com/install.sh | bash
 cd /path/to/your-project
 
 # 生成配置文件模板
-tcs-gen init
+svcgen init
 
 # 这会创建 service.yaml 文件
 ```
@@ -410,13 +410,13 @@ vim service.yaml
 
 ```bash
 # 验证配置
-tcs-gen validate
+svcgen validate
 
 # 生成项目文件
-tcs-gen generate
+svcgen generate
 
 # 或一步到位
-tcs-gen generate --validate
+svcgen generate --validate
 ```
 
 ### 5. 构建和运行
@@ -586,7 +586,7 @@ graph TB
 mkdir my-service && cd my-service
 
 # 2. 初始化配置
-tcs-gen init
+svcgen init
 # 生成 service.yaml
 
 # 3. 编辑配置
@@ -594,11 +594,11 @@ vim service.yaml
 # 填写服务信息
 
 # 4. 验证配置
-tcs-gen validate
+svcgen validate
 # ✓ Configuration is valid
 
 # 5. 生成项目
-tcs-gen generate
+svcgen generate
 # ✓ Generated Dockerfile (amd64, arm64)
 # ✓ Generated compose.yaml
 # ✓ Generated Makefile
@@ -624,7 +624,7 @@ vim service.yaml
 # 修改端口或其他配置
 
 # 9. 重新生成（增量更新）
-tcs-gen generate
+svcgen generate
 # ✓ Updated compose.yaml
 # ✓ Updated Makefile
 # ✓ Preserved user customizations
@@ -639,7 +639,7 @@ make docker-build docker-up
 
 ### 🎯 用户体验
 - **配置简单**：只需编辑一个 service.yaml 文件
-- **一键生成**：运行 `tcs-gen generate` 即可
+- **一键生成**：运行 `svcgen generate` 即可
 - **增量更新**：修改配置后可安全重新生成
 - **保护自定义**：用户自定义内容不会被覆盖
 
@@ -678,7 +678,7 @@ make docker-build docker-up
 
 **核心价值**：
 - ✅ 用户只需维护一个 service.yaml 文件
-- ✅ 修改配置后运行 `tcs-gen generate` 即可更新所有物料
+- ✅ 修改配置后运行 `svcgen generate` 即可更新所有物料
 - ✅ 保护用户自定义内容不被覆盖
 - ✅ 提供完整的配置验证和错误提示
 - ✅ 支持多语言、多架构、多端口

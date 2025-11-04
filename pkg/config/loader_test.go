@@ -61,7 +61,7 @@ local_dev:
 
 metadata:
   template_version: "2.0.0"
-  generator: "tcs-gen"
+  generator: "svcgen"
 `,
 			wantErr: false,
 		},
@@ -143,7 +143,7 @@ local_dev:
 
 metadata:
   template_version: "2.0.0"
-  generator: "tcs-gen"
+  generator: "svcgen"
 `
 
 	cfg, err := LoadFromBytes([]byte(yaml))

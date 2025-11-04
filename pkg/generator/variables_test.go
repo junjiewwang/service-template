@@ -8,6 +8,7 @@ import (
 )
 
 func TestNewVariables(t *testing.T) {
+	// Arrange: Setup service configuration
 	cfg := &config.ServiceConfig{
 		Service: config.ServiceInfo{
 			Name: "test-service",
@@ -18,32 +19,38 @@ func TestNewVariables(t *testing.T) {
 			DeployDir: "/usr/local/services",
 		},
 		Language: config.LanguageConfig{
-			Type:    "go",
-			Version: "1.23",
+			Type:    "golang",
+			Version: "1.21",
 		},
 		Build: config.BuildConfig{
-			OutputDir: "dist",
+			OutputDir: "build",
 		},
 	}
 
+	// Act: Create variables from configuration
 	vars := NewVariables(cfg)
 
+	// Assert: Verify variables are correctly set
 	assert.Equal(t, "test-service", vars.ServiceName, "ServiceName should match")
 	assert.Equal(t, 8080, vars.ServicePort, "ServicePort should be 8080")
 	assert.Equal(t, "/usr/local/services/test-service", vars.ServiceRoot, "ServiceRoot should match")
 	assert.Equal(t, "8080,9090", vars.PortsList, "PortsList should match")
 	assert.Len(t, vars.Ports, 2, "Ports should have 2 items")
+
+	t.Logf("✓ Variables created: ServiceName=%s, ServicePort=%d, PortsList=%s",
+		vars.ServiceName, vars.ServicePort, vars.PortsList)
 }
 
 func TestVariables_WithArchitecture(t *testing.T) {
+	// Arrange: Setup service configuration
 	cfg := &config.ServiceConfig{
 		Service: config.ServiceInfo{
 			Name:      "test-service",
 			Ports:     []config.PortConfig{{Name: "http", Port: 8080, Protocol: "TCP"}},
 			DeployDir: "/usr/local/services",
 		},
-		Language: config.LanguageConfig{Type: "go", Version: "1.23"},
-		Build:    config.BuildConfig{OutputDir: "dist"},
+		Language: config.LanguageConfig{Type: "golang", Version: "1.21"},
+		Build:    config.BuildConfig{OutputDir: "build"},
 	}
 
 	vars := NewVariables(cfg)
@@ -59,10 +66,13 @@ func TestVariables_WithArchitecture(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.arch, func(t *testing.T) {
+			// Act: Create architecture-specific variables
 			archVars := vars.WithArchitecture(tt.arch)
 
+			// Assert: Verify architecture variables
 			assert.Equal(t, tt.wantGOARCH, archVars.GOARCH, "GOARCH should match")
 			assert.Equal(t, tt.wantGOOS, archVars.GOOS, "GOOS should match")
+			t.Logf("✓ Architecture %s: GOARCH=%s, GOOS=%s", tt.arch, archVars.GOARCH, archVars.GOOS)
 		})
 	}
 }
@@ -96,21 +106,28 @@ func TestVariables_WithPlugin(t *testing.T) {
 }
 
 func TestVariables_ToMap(t *testing.T) {
+	// Arrange: Setup service configuration
 	cfg := &config.ServiceConfig{
 		Service: config.ServiceInfo{
 			Name:      "test-service",
 			Ports:     []config.PortConfig{{Name: "http", Port: 8080, Protocol: "TCP"}},
 			DeployDir: "/usr/local/services",
 		},
-		Language: config.LanguageConfig{Type: "go", Version: "1.23"},
-		Build:    config.BuildConfig{OutputDir: "dist"},
+		Language: config.LanguageConfig{Type: "golang", Version: "1.21"},
+		Build:    config.BuildConfig{OutputDir: "build"},
 	}
 
 	vars := NewVariables(cfg)
+
+	// Act: Convert variables to map
 	m := vars.ToMap()
 
+	// Assert: Verify map contains expected keys and values
 	assert.Equal(t, "test-service", m["ServiceName"], "Map ServiceName should match")
 	assert.Equal(t, "test-service", m["SERVICE_NAME"], "Map SERVICE_NAME should match")
 	assert.Equal(t, 8080, m["ServicePort"], "Map ServicePort should be 8080")
 	assert.Equal(t, 8080, m["SERVICE_PORT"], "Map SERVICE_PORT should be 8080")
+
+	t.Logf("✓ Variables map contains %d keys", len(m))
+	t.Logf("✓ Verified both camelCase and UPPER_CASE keys present")
 }

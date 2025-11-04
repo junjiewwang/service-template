@@ -13,12 +13,12 @@ func TestIntegration(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Build the binary
-	buildCmd := exec.Command("go", "build", "-o", filepath.Join(tmpDir, "tcs-gen"), "./cmd/tcs-gen")
+	buildCmd := exec.Command("go", "build", "-o", filepath.Join(tmpDir, "svcgen"), "./cmd/svcgen")
 	if err := buildCmd.Run(); err != nil {
 		t.Fatalf("Failed to build binary: %v", err)
 	}
 
-	binary := filepath.Join(tmpDir, "tcs-gen")
+	binary := filepath.Join(tmpDir, "svcgen")
 	testDir := filepath.Join(tmpDir, "test-project")
 
 	// Create test directory

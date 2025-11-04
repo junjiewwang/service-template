@@ -9,14 +9,17 @@ import (
 )
 
 func TestNewCIPaths_DefaultValues(t *testing.T) {
+	// Arrange: Setup configuration with no CI settings (use defaults)
 	cfg := &config.ServiceConfig{
 		CI: config.CIConfig{
 			// 不设置任何值，使用默认值
 		},
 	}
 
+	// Act: Create CI paths
 	paths := NewCIPaths(cfg)
 
+	// Assert: Verify default values are used
 	assert.Equal(t, DefaultCIScriptDir, paths.ScriptDir)
 	assert.Equal(t, DefaultCIBuildConfigDir, paths.BuildConfigDir)
 	assert.Equal(t, ContainerCIScriptDir, paths.ContainerScriptDir)
@@ -25,6 +28,9 @@ func TestNewCIPaths_DefaultValues(t *testing.T) {
 	assert.Equal(t, "rt_prepare.sh", paths.RtPrepareScript)
 	assert.Equal(t, "entrypoint.sh", paths.EntrypointScript)
 	assert.Equal(t, "healthchk.sh", paths.HealthcheckScript)
+
+	t.Logf("✓ Default CI paths: ScriptDir=%s, BuildConfigDir=%s",
+		paths.ScriptDir, paths.BuildConfigDir)
 }
 
 func TestNewCIPaths_CustomValues(t *testing.T) {
@@ -91,6 +97,7 @@ func TestCIPaths_GetContainerScriptPath(t *testing.T) {
 }
 
 func TestCIPaths_GetAllScriptPaths(t *testing.T) {
+	// Arrange: Setup configuration with custom script directory
 	cfg := &config.ServiceConfig{
 		CI: config.CIConfig{
 			ScriptDir: "ci/scripts",
@@ -98,17 +105,29 @@ func TestCIPaths_GetAllScriptPaths(t *testing.T) {
 	}
 
 	paths := NewCIPaths(cfg)
+
+	// Act: Get all script paths
 	allPaths := paths.GetAllScriptPaths()
 
+	// Assert: Verify all script paths are present
 	require.NotNil(t, allPaths)
-	assert.Len(t, allPaths, 5)
+	assert.Len(t, allPaths, 5, "Should have 5 script paths")
 
 	// 验证所有脚本路径
-	assert.Equal(t, "ci/scripts/build.sh", allPaths["build-script"])
-	assert.Equal(t, "ci/scripts/build_deps_install.sh", allPaths["deps-install-script"])
-	assert.Equal(t, "ci/scripts/rt_prepare.sh", allPaths["rt-prepare-script"])
-	assert.Equal(t, "ci/scripts/entrypoint.sh", allPaths["entrypoint-script"])
-	assert.Equal(t, "ci/scripts/healthchk.sh", allPaths["healthcheck-script"])
+	expectedPaths := map[string]string{
+		"build-script":        "ci/scripts/build.sh",
+		"deps-install-script": "ci/scripts/build_deps_install.sh",
+		"rt-prepare-script":   "ci/scripts/rt_prepare.sh",
+		"entrypoint-script":   "ci/scripts/entrypoint.sh",
+		"healthcheck-script":  "ci/scripts/healthchk.sh",
+	}
+
+	for key, expectedPath := range expectedPaths {
+		assert.Equal(t, expectedPath, allPaths[key],
+			"Script path for %s should match", key)
+	}
+
+	t.Logf("✓ Verified all %d script paths", len(allPaths))
 }
 
 func TestCIPaths_ToTemplateVars(t *testing.T) {
@@ -146,7 +165,7 @@ func TestCIPaths_ToTemplateVars(t *testing.T) {
 }
 
 func TestCIPaths_Integration(t *testing.T) {
-	// 测试完整的集成场景
+	// Arrange: Setup complete integration scenario
 	cfg := &config.ServiceConfig{
 		Service: config.ServiceInfo{
 			Name:      "test-service",
@@ -160,17 +179,23 @@ func TestCIPaths_Integration(t *testing.T) {
 
 	paths := NewCIPaths(cfg)
 
-	// 验证可以正确生成所有路径
+	// Act & Assert: 验证可以正确生成所有路径
 	allPaths := paths.GetAllScriptPaths()
+	t.Logf("Generated %d script paths", len(allPaths))
+
 	for generatorType, scriptPath := range allPaths {
-		assert.NotEmpty(t, generatorType)
-		assert.NotEmpty(t, scriptPath)
-		assert.Contains(t, scriptPath, "devops/scripts")
+		assert.NotEmpty(t, generatorType, "Generator type should not be empty")
+		assert.NotEmpty(t, scriptPath, "Script path should not be empty")
+		assert.Contains(t, scriptPath, "devops/scripts",
+			"Script path should contain custom directory")
+		t.Logf("✓ %s: %s", generatorType, scriptPath)
 	}
 
 	// 验证模板变量可以正确生成
 	vars := paths.ToTemplateVars()
-	assert.NotEmpty(t, vars)
+	assert.NotEmpty(t, vars, "Template vars should not be empty")
 	assert.Equal(t, "devops/scripts", vars["CI_SCRIPT_DIR"])
 	assert.Equal(t, "devops/config", vars["CI_BUILD_CONFIG_DIR"])
+
+	t.Logf("✓ Template vars generated with %d keys", len(vars))
 }

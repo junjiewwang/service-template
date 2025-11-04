@@ -11,12 +11,13 @@ import (
 )
 
 func TestNewDevOpsGenerator(t *testing.T) {
+	// Arrange: Setup service configuration
 	cfg := &config.ServiceConfig{
 		Metadata: config.MetadataConfig{
 			GeneratedAt: time.Now().Format(time.RFC3339),
 		},
 		Language: config.LanguageConfig{
-			Type:    "go",
+			Type:    "golang",
 			Version: "1.21",
 		},
 		Build: config.BuildConfig{
@@ -36,21 +37,27 @@ func TestNewDevOpsGenerator(t *testing.T) {
 
 	engine := NewTemplateEngine()
 	vars := NewVariables(cfg)
-	gen := NewDevOpsGenerator(cfg, engine, vars)
-	require.NotNil(t, gen, "Expected non-nil generator")
 
-	// Test that generator can generate content
-	_, err := gen.Generate()
-	assert.NoError(t, err, "Failed to generate content")
+	// Act: Create DevOps generator
+	gen := NewDevOpsGenerator(cfg, engine, vars)
+	require.NotNil(t, gen, "DevOps generator should be created")
+	t.Logf("✓ DevOps generator created successfully")
+
+	// Assert: Test that generator can generate content
+	content, err := gen.Generate()
+	require.NoError(t, err, "Generate() should not return an error")
+	require.NotEmpty(t, content, "Generated content should not be empty")
+	t.Logf("✓ Generated DevOps config: %d bytes", len(content))
 }
 
 func TestDevOpsGenerator_Generate(t *testing.T) {
+	// Arrange: Setup service configuration with specific images
 	cfg := &config.ServiceConfig{
 		Metadata: config.MetadataConfig{
 			GeneratedAt: "2024-01-01T00:00:00Z",
 		},
 		Language: config.LanguageConfig{
-			Type:    "go",
+			Type:    "golang",
 			Version: "1.21",
 		},
 		Build: config.BuildConfig{
@@ -72,29 +79,35 @@ func TestDevOpsGenerator_Generate(t *testing.T) {
 	vars := NewVariables(cfg)
 	gen := NewDevOpsGenerator(cfg, engine, vars)
 
+	// Act: Generate DevOps configuration
 	content, err := gen.Generate()
-	require.NoError(t, err, "Generate should not fail")
+	require.NoError(t, err, "Generate() should not return an error")
+	require.NotEmpty(t, content, "Generated content should not be empty")
 
-	// Verify content contains expected sections
-	expectedStrings := []string{
-		"tad:",
-		"export_envs:",
-		"TLINUX_BASE_IMAGE_X86",
-		"TLINUX_TAG_X86",
-		"TLINUX_BASE_IMAGE_ARM",
-		"TLINUX_TAG_ARM",
-		"BUILDER_IMAGE_X86",
-		"BUILDER_IMAGE_ARM",
-		"DEPLOY_DIR",
-		"/data/app",
-		"mirrors.tencent.com/tlinux/tlinux3",
-		"3.1",
-		"mirrors.tencent.com/tcs-infra/golang:1.21-alpine",
+	t.Logf("Generated DevOps config: %d bytes", len(content))
+
+	// Assert: Verify content contains expected sections
+	expectedStrings := map[string]string{
+		"tad_section":      "tad:",
+		"export_envs":      "export_envs:",
+		"tlinux_x86_image": "TLINUX_BASE_IMAGE_X86",
+		"tlinux_x86_tag":   "TLINUX_TAG_X86",
+		"tlinux_arm_image": "TLINUX_BASE_IMAGE_ARM",
+		"tlinux_arm_tag":   "TLINUX_TAG_ARM",
+		"builder_x86":      "BUILDER_IMAGE_X86",
+		"builder_arm":      "BUILDER_IMAGE_ARM",
+		"deploy_dir":       "DEPLOY_DIR",
+		"deploy_dir_value": "/data/app",
+		"tlinux_base":      "mirrors.tencent.com/tlinux/tlinux3",
+		"tlinux_tag":       "3.1",
+		"builder_image":    "mirrors.tencent.com/tcs-infra/golang:1.21-alpine",
 	}
 
-	for _, expected := range expectedStrings {
-		assert.Contains(t, content, expected, "Expected content to contain %q", expected)
+	for name, expected := range expectedStrings {
+		assert.Contains(t, content, expected,
+			"DevOps config should contain %s: %q", name, expected)
 	}
+	t.Logf("✓ Verified all %d expected sections present", len(expectedStrings))
 }
 
 func TestDevOpsGenerator_GenerateWithCustomTemplate(t *testing.T) {

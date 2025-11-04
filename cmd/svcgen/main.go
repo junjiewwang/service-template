@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/junjiewwang/service-template/cmd/tcs-gen/commands"
+	"github.com/junjiewwang/service-template/cmd/svcgen/commands"
 )
 
 func main() {

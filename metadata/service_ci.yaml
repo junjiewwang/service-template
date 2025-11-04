@@ -185,4 +185,4 @@ makefile:
 metadata:
   template_version: "2.0.0"
   generated_at: ""
-  generator: "tcs-gen"
+  generator: "svcgen"

@@ -9,6 +9,7 @@ import (
 )
 
 func TestScriptsGenerator_GenerateBuildScript(t *testing.T) {
+	// Arrange: Setup service configuration with build commands
 	cfg := &config.ServiceConfig{
 		Service: config.ServiceInfo{
 			Name:      "test-service",
@@ -34,18 +35,26 @@ func TestScriptsGenerator_GenerateBuildScript(t *testing.T) {
 	engine := NewTemplateEngine()
 	vars := NewVariables(cfg)
 	g := NewScriptsGenerator(cfg, engine, vars)
+
+	// Act: Generate build script
 	content, err := g.GenerateBuildScript()
 	require.NoError(t, err, "GenerateBuildScript() should not return an error")
+	require.NotEmpty(t, content, "Build script should not be empty")
 
-	expectedStrings := []string{
-		"#!/bin/bash",
-		"TCS Service Build System",
-		"test-service",
+	t.Logf("Generated build script: %d bytes", len(content))
+
+	// Assert: Verify expected content
+	expectedStrings := map[string]string{
+		"shebang":      "#!/bin/bash",
+		"header":       "TCS Service Build System",
+		"service_name": "test-service",
 	}
 
-	for _, expected := range expectedStrings {
-		assert.Contains(t, content, expected, "Build script should contain expected string: %s", expected)
+	for name, expected := range expectedStrings {
+		assert.Contains(t, content, expected,
+			"Build script should contain %s: %s", name, expected)
 	}
+	t.Logf("✓ Verified all %d expected sections present", len(expectedStrings))
 }
 
 func TestScriptsGenerator_GenerateDepsInstallScript(t *testing.T) {
@@ -56,7 +65,7 @@ func TestScriptsGenerator_GenerateDepsInstallScript(t *testing.T) {
 	}{
 		{
 			name:     "golang dependencies",
-			langType: "go",
+			langType: "golang",
 			check:    "go mod download",
 		},
 		{
@@ -73,6 +82,7 @@ func TestScriptsGenerator_GenerateDepsInstallScript(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Arrange: Setup configuration for specific language
 			cfg := &config.ServiceConfig{
 				Service: config.ServiceInfo{
 					Name:      "test-service",
@@ -90,16 +100,25 @@ func TestScriptsGenerator_GenerateDepsInstallScript(t *testing.T) {
 			engine := NewTemplateEngine()
 			vars := NewVariables(cfg)
 			g := NewScriptsGenerator(cfg, engine, vars)
+
+			// Act: Generate dependency install script
 			content, err := g.GenerateDepsInstallScript()
 			require.NoError(t, err, "GenerateDepsInstallScript() should not return an error")
+			require.NotEmpty(t, content, "Deps install script should not be empty")
 
+			t.Logf("Generated deps install script for %s: %d bytes", tt.langType, len(content))
+
+			// Assert: Verify script content
 			assert.Contains(t, content, "#!/bin/bash", "Script should contain shebang")
-			assert.Contains(t, content, tt.check, "Script should contain expected command: %s", tt.check)
+			assert.Contains(t, content, tt.check,
+				"Script should contain expected command for %s: %s", tt.langType, tt.check)
+			t.Logf("✓ Verified %s dependency command present", tt.langType)
 		})
 	}
 }
 
 func TestScriptsGenerator_GenerateRtPrepareScript(t *testing.T) {
+	// Arrange: Setup configuration with plugins
 	cfg := &config.ServiceConfig{
 		Service: config.ServiceInfo{
 			Name:      "test-service",
@@ -126,17 +145,25 @@ func TestScriptsGenerator_GenerateRtPrepareScript(t *testing.T) {
 	engine := NewTemplateEngine()
 	vars := NewVariables(cfg)
 	g := NewScriptsGenerator(cfg, engine, vars)
+
+	// Act: Generate runtime preparation script
 	content, err := g.GenerateRtPrepareScript()
 	require.NoError(t, err, "GenerateRtPrepareScript() should not return an error")
+	require.NotEmpty(t, content, "Rt prepare script should not be empty")
 
-	expectedStrings := []string{
-		"#!/bin/sh",
-		"TCS Runtime Preparation",
+	t.Logf("Generated runtime preparation script: %d bytes", len(content))
+
+	// Assert: Verify expected content
+	expectedStrings := map[string]string{
+		"shebang": "#!/bin/sh",
+		"header":  "TCS Runtime Preparation",
 	}
 
-	for _, expected := range expectedStrings {
-		assert.Contains(t, content, expected, "Rt prepare script should contain expected string: %s", expected)
+	for name, expected := range expectedStrings {
+		assert.Contains(t, content, expected,
+			"Rt prepare script should contain %s: %s", name, expected)
 	}
+	t.Logf("✓ Verified all %d expected sections present", len(expectedStrings))
 }
 
 func TestHealthcheckScriptGenerator_Generate(t *testing.T) {
@@ -190,6 +217,7 @@ curl -f http://localhost:8080/health || exit 1`,
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Arrange: Setup configuration with specific healthcheck
 			cfg := &config.ServiceConfig{
 				Service: config.ServiceInfo{
 					Name:      "test-service",
@@ -203,10 +231,18 @@ curl -f http://localhost:8080/health || exit 1`,
 			engine := NewTemplateEngine()
 			vars := NewVariables(cfg)
 			g := NewHealthcheckScriptTemplateGenerator(cfg, engine, vars)
+
+			// Act: Generate healthcheck script
 			content, err := g.Generate()
 			require.NoError(t, err, "Generate() should not return an error")
+			require.NotEmpty(t, content, "Healthcheck script should not be empty")
 
-			assert.Contains(t, content, tt.expectCheck, "Healthcheck script should contain expected check: %s", tt.expectCheck)
+			t.Logf("Generated healthcheck script: %d bytes", len(content))
+
+			// Assert: Verify expected check is present
+			assert.Contains(t, content, tt.expectCheck,
+				"Healthcheck script should contain expected check: %s", tt.expectCheck)
+			t.Logf("✓ Verified healthcheck type: %s", tt.healthcheck.Type)
 		})
 	}
 }

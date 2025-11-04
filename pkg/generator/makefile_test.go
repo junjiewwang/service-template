@@ -61,7 +61,7 @@ func TestMakefileGenerator_Generate(t *testing.T) {
 					},
 				},
 				Build: config.BuildConfig{
-					OutputDir: "dist",
+					OutputDir: "build",
 				},
 				Language: config.LanguageConfig{
 					Type:    "golang",
@@ -87,18 +87,31 @@ func TestMakefileGenerator_Generate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Arrange: Setup generator with configuration
 			engine := NewTemplateEngine()
 			vars := NewVariables(tt.config)
 			g := NewMakefileGenerator(tt.config, engine, vars)
+			require.NotNil(t, g, "Makefile generator should be created")
+
+			// Act: Generate Makefile
 			content, err := g.Generate()
 
+			// Assert: Check results
 			if tt.wantErr {
 				assert.Error(t, err, "Generate() should return an error")
+				t.Logf("Expected error occurred: %v", err)
 			} else {
 				require.NoError(t, err, "Generate() should not return an error")
-				for _, check := range tt.checks {
-					assert.Contains(t, content, check, "Generated content should contain expected string: %s", check)
+				require.NotEmpty(t, content, "Generated Makefile should not be empty")
+
+				t.Logf("Generated Makefile: %d bytes", len(content))
+
+				// Verify all expected checks
+				for i, check := range tt.checks {
+					assert.Contains(t, content, check,
+						"Generated Makefile should contain expected string [%d]: %s", i+1, check)
 				}
+				t.Logf("✓ Verified all %d expected sections present", len(tt.checks))
 			}
 		})
 	}

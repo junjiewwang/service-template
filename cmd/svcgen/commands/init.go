@@ -32,8 +32,8 @@ func runInit(cmd *cobra.Command, args []string) error {
 	fmt.Printf("✓ Created %s\n", configFile)
 	fmt.Println("\nNext steps:")
 	fmt.Println("  1. Edit service.yaml to configure your service")
-	fmt.Println("  2. Run 'tcs-gen validate' to check your configuration")
-	fmt.Println("  3. Run 'tcs-gen generate' to generate project files")
+	fmt.Println("  2. Run 'svcgen validate' to check your configuration")
+	fmt.Println("  3. Run 'svcgen generate' to generate project files")
 
 	return nil
 }
@@ -45,7 +45,7 @@ func getServiceYamlExample() string {
 
 	// Fallback example if embed fails
 	return `# ============================================
-# TCS Service Configuration
+# Service Configuration
 # Version: 2.0
 # ============================================
 
@@ -109,6 +109,6 @@ local_dev:
 
 metadata:
   template_version: "2.0.0"
-  generator: "tcs-gen"
+generator: "svcgen"
 `
 }

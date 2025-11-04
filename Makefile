@@ -1,8 +1,8 @@
 .PHONY: help build install test clean lint fmt vet
 
 # Variables
-BINARY_NAME=tcs-gen
-MAIN_PATH=./cmd/tcs-gen
+BINARY_NAME=svcgen
+MAIN_PATH=./cmd/svcgen
 BUILD_DIR=./bin
 INSTALL_PATH=/usr/local/bin
 

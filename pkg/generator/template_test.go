@@ -3,10 +3,15 @@ package generator
 import (
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTemplateEngine_Render(t *testing.T) {
+	// Arrange: Create template engine
 	engine := NewTemplateEngine()
+	require.NotNil(t, engine, "Template engine should be created")
 
 	tests := []struct {
 		name     string
@@ -61,13 +66,17 @@ func TestTemplateEngine_Render(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Act: Render template
 			got, err := engine.Render(tt.template, tt.vars)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Render() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("Render() = %v, want %v", got, tt.want)
+
+			// Assert: Check results
+			if tt.wantErr {
+				assert.Error(t, err, "Render() should return an error for invalid template")
+				t.Logf("Expected error occurred: %v", err)
+			} else {
+				require.NoError(t, err, "Render() should not return an error")
+				assert.Equal(t, tt.want, got, "Rendered content should match expected")
+				t.Logf("✓ Template rendered successfully: %q", got)
 			}
 		})
 	}
@@ -125,30 +134,38 @@ exec /app/bin/myapp`,
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Act: Substitute variables
 			got := SubstituteVariables(tt.text, tt.vars)
-			if got != tt.want {
-				t.Errorf("SubstituteVariables() = %v, want %v", got, tt.want)
-			}
+
+			// Assert: Check result
+			assert.Equal(t, tt.want, got, "SubstituteVariables() should return expected result")
+			t.Logf("✓ Variable substitution successful: %q -> %q", tt.text, got)
 		})
 	}
 }
 
 func TestTemplateEngine_CustomFunctions(t *testing.T) {
+	// Arrange: Create template engine
 	engine := NewTemplateEngine()
+	require.NotNil(t, engine, "Template engine should be created")
 
 	t.Run("indentLines", func(t *testing.T) {
+		// Arrange: Setup template with indentLines function
 		template := `{{indentLines 2 "line1\nline2\nline3"}}`
 		vars := map[string]interface{}{}
 
+		// Act: Render template
 		got, err := engine.Render(template, vars)
-		if err != nil {
-			t.Fatalf("Render() error = %v", err)
-		}
+		require.NoError(t, err, "Render() should not return an error")
 
+		// Assert: Check that all lines are indented
 		lines := strings.Split(got, "\n")
+		t.Logf("Rendered %d lines", len(lines))
 		for i, line := range lines {
-			if line != "" && !strings.HasPrefix(line, "  ") {
-				t.Errorf("Line %d not indented: %q", i, line)
+			if line != "" {
+				assert.True(t, strings.HasPrefix(line, "  "),
+					"Line %d should be indented with 2 spaces: %q", i, line)
+				t.Logf("✓ Line %d correctly indented: %q", i, line)
 			}
 		}
 	})

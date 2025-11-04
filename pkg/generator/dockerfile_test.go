@@ -9,6 +9,7 @@ import (
 )
 
 func TestDockerfileGenerator_Generate(t *testing.T) {
+	// Arrange: Setup comprehensive service configuration
 	cfg := &config.ServiceConfig{
 		Service: config.ServiceInfo{
 			Name: "test-service",
@@ -18,16 +19,16 @@ func TestDockerfileGenerator_Generate(t *testing.T) {
 			DeployDir: "/usr/local/services",
 		},
 		Language: config.LanguageConfig{
-			Type:    "go",
-			Version: "1.23",
+			Type:    "golang",
+			Version: "1.21",
 		},
 		Build: config.BuildConfig{
 			DependencyFiles: config.DependencyFilesConfig{
 				AutoDetect: true,
 			},
 			BuilderImage: config.ArchImageConfig{
-				AMD64: "golang:1.23-alpine",
-				ARM64: "golang:1.23-alpine",
+				AMD64: "golang:1.21-alpine",
+				ARM64: "golang:1.21-alpine",
 			},
 			RuntimeImage: config.ArchImageConfig{
 				AMD64: "alpine:latest",
@@ -41,7 +42,7 @@ func TestDockerfileGenerator_Generate(t *testing.T) {
 				Build:     "go build -o app",
 				PostBuild: "echo 'Post-build'",
 			},
-			OutputDir: "dist",
+			OutputDir: "build",
 		},
 		Runtime: config.RuntimeConfig{
 			SystemDependencies: config.RuntimeSystemDependenciesConfig{
@@ -60,6 +61,7 @@ func TestDockerfileGenerator_Generate(t *testing.T) {
 	engine := NewTemplateEngine()
 	vars := NewVariables(cfg)
 	generator := NewDockerfileGenerator(cfg, engine, vars)
+	require.NotNil(t, generator, "Dockerfile generator should be created")
 
 	tests := []struct {
 		arch string
@@ -70,29 +72,40 @@ func TestDockerfileGenerator_Generate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.arch, func(t *testing.T) {
+			// Act: Generate Dockerfile for specific architecture
 			content, err := generator.Generate(tt.arch)
 			require.NoError(t, err, "Generate() should not return an error")
+			require.NotEmpty(t, content, "Generated Dockerfile should not be empty")
 
-			// Check that content contains expected sections
-			expectedSections := []string{
-				"FROM",
-				"WORKDIR",
-				"COPY",
-				"RUN",
-				"ENTRYPOINT",
+			t.Logf("Generated Dockerfile for %s: %d bytes", tt.arch, len(content))
+
+			// Assert: Check that content contains expected sections
+			expectedSections := map[string]string{
+				"FROM":       "FROM",
+				"WORKDIR":    "WORKDIR",
+				"COPY":       "COPY",
+				"RUN":        "RUN",
+				"ENTRYPOINT": "ENTRYPOINT",
 			}
 
-			for _, section := range expectedSections {
-				assert.Contains(t, content, section, "Generated Dockerfile should contain section: %s", section)
+			for name, section := range expectedSections {
+				assert.Contains(t, content, section,
+					"Generated Dockerfile should contain %s section: %s", name, section)
 			}
 
-			// Check architecture-specific image variables
+			// Assert: Check architecture-specific image variables
 			if tt.arch == "amd64" {
-				assert.Contains(t, content, "BUILDER_IMAGE_X86", "Dockerfile should contain BUILDER_IMAGE_X86 variable")
-				assert.Contains(t, content, "TLINUX_BASE_IMAGE_X86", "Dockerfile should contain TLINUX_BASE_IMAGE_X86 variable")
+				assert.Contains(t, content, "BUILDER_IMAGE_X86",
+					"Dockerfile should contain BUILDER_IMAGE_X86 variable for amd64")
+				assert.Contains(t, content, "TLINUX_BASE_IMAGE_X86",
+					"Dockerfile should contain TLINUX_BASE_IMAGE_X86 variable for amd64")
+				t.Logf("✓ Verified amd64-specific variables present")
 			} else if tt.arch == "arm64" {
-				assert.Contains(t, content, "BUILDER_IMAGE_ARM", "Dockerfile should contain BUILDER_IMAGE_ARM variable")
-				assert.Contains(t, content, "TLINUX_BASE_IMAGE_ARM", "Dockerfile should contain TLINUX_BASE_IMAGE_ARM variable")
+				assert.Contains(t, content, "BUILDER_IMAGE_ARM",
+					"Dockerfile should contain BUILDER_IMAGE_ARM variable for arm64")
+				assert.Contains(t, content, "TLINUX_BASE_IMAGE_ARM",
+					"Dockerfile should contain TLINUX_BASE_IMAGE_ARM variable for arm64")
+				t.Logf("✓ Verified arm64-specific variables present")
 			}
 		})
 	}
