@@ -39,7 +39,7 @@ func NewRtPrepareScriptTemplateGenerator(cfg *config.ServiceConfig, engine *Temp
 // Generate generates rt_prepare.sh content
 func (g *RtPrepareScriptTemplateGenerator) Generate() (string, error) {
 	vars := map[string]interface{}{
-		"RUNTIME_DEPS_PACKAGES": g.config.Runtime.SystemDependencies.Runtime.Packages,
+		"RUNTIME_DEPS_PACKAGES": g.config.Runtime.SystemDependencies.Packages,
 	}
 	return g.RenderTemplate(rtPrepareScriptTemplate, vars)
 }

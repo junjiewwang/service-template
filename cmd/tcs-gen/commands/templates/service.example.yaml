@@ -64,11 +64,10 @@ build:
   # 构建阶段系统依赖
   # 工具会自动检测包管理器（apt-get/yum/apk/dnf/zypper）
   system_dependencies:
-    build:
-      packages:
-      - git
-      - make
-      - gcc
+    packages:
+    - git
+    - make
+    - gcc
 
   # 构建命令（三阶段）
   # 可用变量：

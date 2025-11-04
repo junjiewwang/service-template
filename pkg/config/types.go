@@ -39,12 +39,12 @@ type LanguageConfig struct {
 
 // BuildConfig contains build-related settings
 type BuildConfig struct {
-	DependencyFiles    DependencyFilesConfig    `yaml:"dependency_files"`
-	BuilderImage       ArchImageConfig          `yaml:"builder_image"`
-	RuntimeImage       ArchImageConfig          `yaml:"runtime_image"`
-	SystemDependencies SystemDependenciesConfig `yaml:"system_dependencies,omitempty"`
-	Commands           BuildCommandsConfig      `yaml:"commands"`
-	OutputDir          string                   `yaml:"output_dir"`
+	DependencyFiles    DependencyFilesConfig         `yaml:"dependency_files"`
+	BuilderImage       ArchImageConfig               `yaml:"builder_image"`
+	RuntimeImage       ArchImageConfig               `yaml:"runtime_image"`
+	SystemDependencies BuildSystemDependenciesConfig `yaml:"system_dependencies,omitempty"`
+	Commands           BuildCommandsConfig           `yaml:"commands"`
+	OutputDir          string                        `yaml:"output_dir"`
 }
 
 // DependencyFilesConfig for dependency file detection
@@ -59,14 +59,15 @@ type ArchImageConfig struct {
 	ARM64 string `yaml:"arm64"`
 }
 
-// SystemDependenciesConfig for system packages
-type SystemDependenciesConfig struct {
-	Build   PackagesConfig `yaml:"build,omitempty"`
-	Runtime PackagesConfig `yaml:"runtime,omitempty"`
+// BuildSystemDependenciesConfig for build stage system packages
+// Matches structure: build.system_dependencies.packages
+type BuildSystemDependenciesConfig struct {
+	Packages []string `yaml:"packages,omitempty"`
 }
 
-// PackagesConfig for package lists
-type PackagesConfig struct {
+// RuntimeSystemDependenciesConfig for runtime stage system packages
+// Matches structure: runtime.system_dependencies.packages
+type RuntimeSystemDependenciesConfig struct {
 	Packages []string `yaml:"packages,omitempty"`
 }
 
@@ -97,9 +98,9 @@ type EnvironmentVariable struct {
 
 // RuntimeConfig contains runtime settings
 type RuntimeConfig struct {
-	SystemDependencies SystemDependenciesConfig `yaml:"system_dependencies,omitempty"`
-	Healthcheck        HealthcheckConfig        `yaml:"healthcheck"`
-	Startup            StartupConfig            `yaml:"startup"`
+	SystemDependencies RuntimeSystemDependenciesConfig `yaml:"system_dependencies,omitempty"`
+	Healthcheck        HealthcheckConfig               `yaml:"healthcheck"`
+	Startup            StartupConfig                   `yaml:"startup"`
 	// 控制是否生成运行时脚本的开关
 	GenerateScripts bool `yaml:"generate_scripts,omitempty"`
 }

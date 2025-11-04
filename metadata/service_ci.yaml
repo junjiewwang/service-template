@@ -45,12 +45,12 @@ build:
     amd64: "mirrors.tencent.com/tencentos/tencentos3-minimal:latest"
     arm64: "mirrors.tencent.com/tencentos/tencentos3-minimal:latest"
 
+  # 构建阶段系统依赖（可执行工具）
   system_dependencies:
-    build:
-      packages:
-      - gzip
-      - curl
-      - tar
+    packages:
+    - gzip
+    - curl
+    - tar
 
   commands:
     pre_build: |
@@ -95,6 +95,8 @@ plugins:
 # ============================================
 # 在build.sh中将运行时配置所生成的entrypoint.sh脚本和healthcheck.sh脚本放到服务目录中
 runtime:
+  # 运行时系统依赖（包括可执行工具和数据包）
+  # 例如: tzdata, ca-certificates, curl, wget 等
   system_dependencies:
     packages: []
 

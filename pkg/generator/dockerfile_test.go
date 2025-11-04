@@ -33,10 +33,8 @@ func TestDockerfileGenerator_Generate(t *testing.T) {
 				AMD64: "alpine:latest",
 				ARM64: "alpine:latest",
 			},
-			SystemDependencies: config.SystemDependenciesConfig{
-				Build: config.PackagesConfig{
-					Packages: []string{"git", "make"},
-				},
+			SystemDependencies: config.BuildSystemDependenciesConfig{
+				Packages: []string{"git", "make"},
 			},
 			Commands: config.BuildCommandsConfig{
 				PreBuild:  "echo 'Pre-build'",
@@ -46,10 +44,8 @@ func TestDockerfileGenerator_Generate(t *testing.T) {
 			OutputDir: "dist",
 		},
 		Runtime: config.RuntimeConfig{
-			SystemDependencies: config.SystemDependenciesConfig{
-				Runtime: config.PackagesConfig{
-					Packages: []string{"ca-certificates"},
-				},
+			SystemDependencies: config.RuntimeSystemDependenciesConfig{
+				Packages: []string{"ca-certificates"},
 			},
 			Healthcheck: config.HealthcheckConfig{
 				Enabled: true,

@@ -54,7 +54,7 @@ func (g *DepsInstallScriptTemplateGenerator) Generate() (string, error) {
 
 	vars := map[string]interface{}{
 		"LANGUAGE":            g.config.Language.Type,
-		"BUILD_DEPS_PACKAGES": g.config.Build.SystemDependencies.Build.Packages,
+		"BUILD_DEPS_PACKAGES": g.config.Build.SystemDependencies.Packages,
 		"GO_PROXY":            goProxy,
 		"GO_SUMDB":            goSumDB,
 	}

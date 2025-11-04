@@ -87,8 +87,8 @@ func (g *DockerfileTemplateGenerator) prepareTemplateVars() map[string]interface
 	vars["PKG_MANAGER"] = detectPackageManager(vars["BUILDER_IMAGE"].(string))
 
 	// Dependencies
-	vars["BUILD_DEPS_PACKAGES"] = g.config.Build.SystemDependencies.Build.Packages
-	vars["RUNTIME_DEPS_PACKAGES"] = g.config.Runtime.SystemDependencies.Runtime.Packages
+	vars["BUILD_DEPS_PACKAGES"] = g.config.Build.SystemDependencies.Packages
+	vars["RUNTIME_DEPS_PACKAGES"] = g.config.Runtime.SystemDependencies.Packages
 
 	// Dependency files
 	vars["DEPENDENCY_FILES"] = g.getDependencyFilesList()
