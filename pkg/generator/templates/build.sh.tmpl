@@ -40,11 +40,18 @@ cd "${PROJECT_ROOT}"
 # If BUILD_OUTPUT_DIR not set, use PROJECT_ROOT/dist as default
 BUILD_OUTPUT_DIR="${BUILD_OUTPUT_DIR:-${PROJECT_ROOT}/dist}"
 
+# Set SERVICE_ROOT (project root, same as PROJECT_ROOT in container context)
+# In container: PROJECT_ROOT=/opt, SERVICE_ROOT=/opt
+# This allows build commands to reference ${SERVICE_ROOT}
+SERVICE_ROOT="${PROJECT_ROOT}"
+
 export BUILD_OUTPUT_DIR
 export PROJECT_ROOT
 export SERVICE_NAME
+export SERVICE_ROOT
 
 echo "Project root: ${PROJECT_ROOT}"
+echo "Service root: ${SERVICE_ROOT}"
 echo "Build output directory: ${BUILD_OUTPUT_DIR}"
 
 
@@ -165,7 +172,7 @@ echo "Setting up runtime environment variables for {{ .Name }}..."
 
 # 创建插件环境变量文件
 ENV_FILE="${PLUGIN_WORK_DIR}/.env"
-cat > ${ENV_FILE} << 'EOF'
+cat > ${ENV_FILE} << EOF
 {{- range .RuntimeEnv }}
 export {{ .Name }}="{{ .Value }}"
 {{- end }}
@@ -177,11 +184,56 @@ echo "Environment variables written to ${ENV_FILE}"
 echo "Plugin {{ .Name }} setup completed"
 echo ""
 {{- end }}
+
+# ============================================
+# Generate unified plugin install script
+# ============================================
+echo "Generating plugin install script..."
+INSTALL_SCRIPT="{{ .PLUGIN_ROOT_DIR }}/install.sh"
+cat > ${INSTALL_SCRIPT} << 'INSTALL_EOF'
+#!/bin/bash
+# Plugin installation script
+# This script copies plugins from /plugins/<name> to their install directories
+set -e
+
+echo "========================================="
+echo "Installing Plugins"
+echo "========================================="
+
+{{- range .PLUGINS }}
+# Install plugin: {{ .Name }}
+echo "Installing {{ .Name }} to {{ .InstallDir }}..."
+mkdir -p {{ .InstallDir }}
+if [ -d "{{ $.PLUGIN_ROOT_DIR }}/{{ .Name }}" ]; then
+	cp -rf {{ $.PLUGIN_ROOT_DIR }}/{{ .Name }}/* {{ .InstallDir }}/
+	echo "✓ {{ .Name }} installed successfully"
+else
+	echo "ERROR: Plugin directory {{ $.PLUGIN_ROOT_DIR }}/{{ .Name }} not found"
+	exit 1
+fi
+
+{{- if .RuntimeEnv }}
+# Setup runtime environment for {{ .Name }}
+ENV_FILE="{{ .InstallDir }}/.env"
+cat > ${ENV_FILE} << ENV_EOF
+{{- range .RuntimeEnv }}
+export {{ .Name }}="{{ .Value }}"
+{{- end }}
+ENV_EOF
+echo "✓ Environment variables written to ${ENV_FILE}"
 {{- end }}
 
-# Set default TCE_DIR if no plugins defined
-TCE_DIR=${TCE_DIR:-/tce}
-mkdir -p ${TCE_DIR}
+{{- end }}
+
+echo "========================================="
+echo "All plugins installed successfully"
+echo "========================================="
+INSTALL_EOF
+
+chmod +x ${INSTALL_SCRIPT}
+echo "✓ Generated ${INSTALL_SCRIPT}"
+{{- end }}
+
 
 # ============================================
 # Generate runtime scripts

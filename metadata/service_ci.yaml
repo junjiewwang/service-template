@@ -80,9 +80,9 @@ plugins:
   download_url: "https://mirrors.tencent.com/repository/generic/selfMonitor/download_tool.sh"
   install_dir: /tce
   install_command: |
-    echo "Installing ${PLUGIN_NAME} to ${PLUGIN_INSTALL_DIR}..."
-    curl -fsSL "${PLUGIN_DOWNLOAD_URL}" | bash -s "${PLUGIN_INSTALL_DIR}"
-    echo "${PLUGIN_NAME} installed successfully"
+    echo "Downloading ${PLUGIN_NAME} to ${PLUGIN_WORK_DIR}..."
+    curl -fsSL "${PLUGIN_DOWNLOAD_URL}" | bash -s "${PLUGIN_WORK_DIR}"
+    echo "${PLUGIN_NAME} downloaded successfully"
   # 运行时环境变量
   runtime_env:
   - name: TCESTAURY_TOOL_PATH

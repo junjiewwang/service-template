@@ -51,12 +51,23 @@ func (g *BuildScriptTemplateGenerator) Generate() (string, error) {
 	}
 	var plugins []PluginInfo
 	for _, plugin := range g.config.Plugins {
+		// Process runtime environment variables - replace ${PLUGIN_INSTALL_DIR} with actual install dir
+		processedEnv := make([]config.EnvironmentVariable, len(plugin.RuntimeEnv))
+		for i, env := range plugin.RuntimeEnv {
+			processedEnv[i] = config.EnvironmentVariable{
+				Name: env.Name,
+				Value: g.templateEngine.ReplaceVariables(env.Value, map[string]string{
+					"PLUGIN_INSTALL_DIR": plugin.InstallDir,
+				}),
+			}
+		}
+
 		plugins = append(plugins, PluginInfo{
 			Name:           plugin.Name,
 			DownloadURL:    plugin.DownloadURL,
 			InstallDir:     plugin.InstallDir,
 			InstallCommand: plugin.InstallCommand, // Keep original command with variables
-			RuntimeEnv:     plugin.RuntimeEnv,     // 新增：运行时环境变量
+			RuntimeEnv:     processedEnv,          // 使用处理后的环境变量
 		})
 	}
 

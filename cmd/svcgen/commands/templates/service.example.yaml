@@ -72,9 +72,10 @@ build:
   # 构建命令（三阶段）
   # 可用变量：
   #   ${SERVICE_NAME}       - 服务名称
-  #   ${SERVICE_ROOT}       - 服务根目录
-  #   ${BUILD_OUTPUT_DIR}   - 构建输出目录
-  #   ${DEPLOY_DIR}         - 部署目录
+  #   ${SERVICE_ROOT}       - 项目根目录（容器内为 /opt，等同于 PROJECT_ROOT）
+  #   ${PROJECT_ROOT}       - 项目根目录（容器内为 /opt，等同于 SERVICE_ROOT）
+  #   ${BUILD_OUTPUT_DIR}   - 构建输出目录（容器内为 /opt/dist）
+  #   ${DEPLOY_DIR}         - 部署目录（默认 /usr/local/services）
   #   ${GOARCH}             - Go 架构（仅 Go）
   #   ${GOOS}               - Go 操作系统（仅 Go）
   commands:
@@ -83,7 +84,6 @@ build:
       go version
 
     build: |
-      cd ${SERVICE_ROOT}
       CGO_ENABLED=0 go build -ldflags="-s -w" -o ${BUILD_OUTPUT_DIR}/bin/${SERVICE_NAME} ./cmd/server
       cp -r configs ${BUILD_OUTPUT_DIR}/
       cp -r scripts ${BUILD_OUTPUT_DIR}/

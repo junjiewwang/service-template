@@ -99,3 +99,13 @@ func SubstituteVariables(text string, vars map[string]interface{}) string {
 	}
 	return result
 }
+
+// ReplaceVariables replaces variables in text with string values
+func (e *TemplateEngine) ReplaceVariables(text string, vars map[string]string) string {
+	result := text
+	for key, value := range vars {
+		placeholder := fmt.Sprintf("${%s}", key)
+		result = strings.ReplaceAll(result, placeholder, value)
+	}
+	return result
+}
