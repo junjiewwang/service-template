@@ -121,6 +121,9 @@ func (g *ScriptsGenerator) GenerateEntrypointScript() (string, error) {
 
 // GenerateHealthchkScript generates healthchk.sh (legacy)
 func (g *ScriptsGenerator) GenerateHealthchkScript() (string, error) {
-	gen := NewHealthcheckScriptTemplateGenerator(g.config, g.templateEngine, g.variables)
+	gen, err := NewHealthcheckScriptTemplateGenerator(g.config, g.templateEngine, g.variables)
+	if err != nil {
+		return "", err
+	}
 	return gen.Generate()
 }

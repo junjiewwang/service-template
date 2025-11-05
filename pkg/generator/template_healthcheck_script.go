@@ -17,15 +17,30 @@ func init() {
 // HealthcheckScriptTemplateGenerator generates healthchk.sh script
 type HealthcheckScriptTemplateGenerator struct {
 	BaseTemplateGenerator
+	strategy HealthcheckStrategy
 }
 
 // createHealthcheckScriptGenerator is the creator function for HealthcheckScript generator
 func createHealthcheckScriptGenerator(cfg *config.ServiceConfig, engine *TemplateEngine, vars *Variables, options ...interface{}) (TemplateGenerator, error) {
-	return NewHealthcheckScriptTemplateGenerator(cfg, engine, vars), nil
+	return NewHealthcheckScriptTemplateGenerator(cfg, engine, vars)
 }
 
 // NewHealthcheckScriptTemplateGenerator creates a new healthcheck script generator
-func NewHealthcheckScriptTemplateGenerator(cfg *config.ServiceConfig, engine *TemplateEngine, vars *Variables) *HealthcheckScriptTemplateGenerator {
+func NewHealthcheckScriptTemplateGenerator(cfg *config.ServiceConfig, engine *TemplateEngine, vars *Variables) (*HealthcheckScriptTemplateGenerator, error) {
+	// Create strategy factory
+	factory := NewHealthcheckStrategyFactory(cfg)
+
+	// Create appropriate strategy
+	strategy, err := factory.CreateStrategy()
+	if err != nil {
+		return nil, err
+	}
+
+	// Validate strategy configuration
+	if err := strategy.Validate(); err != nil {
+		return nil, err
+	}
+
 	return &HealthcheckScriptTemplateGenerator{
 		BaseTemplateGenerator: BaseTemplateGenerator{
 			config:         cfg,
@@ -33,26 +48,38 @@ func NewHealthcheckScriptTemplateGenerator(cfg *config.ServiceConfig, engine *Te
 			variables:      vars,
 			name:           GeneratorTypeHealthcheckScript,
 		},
-	}
+		strategy: strategy,
+	}, nil
 }
 
 //go:embed templates/healthcheck.sh.tmpl
 var healthcheckScriptTemplate string
 
-// Generate generates healthchk.sh content
+// Generate generates healthchk.sh content using the selected strategy
 func (g *HealthcheckScriptTemplateGenerator) Generate() (string, error) {
+	// Prepare template variables
 	vars := map[string]interface{}{
-		"SERVICE_NAME":        g.config.Service.Name,
-		"DEPLOY_DIR":          g.config.Service.DeployDir,
-		"HEALTHCHECK_ENABLED": g.config.Runtime.Healthcheck.Enabled,
-		"HEALTHCHECK_TYPE":    g.config.Runtime.Healthcheck.Type,
-		"CUSTOM_SCRIPT":       g.config.Runtime.Healthcheck.CustomScript,
+		"SERVICE_NAME":  g.config.Service.Name,
+		"DEPLOY_DIR":    g.config.Service.DeployDir,
+		"CUSTOM_SCRIPT": g.config.Runtime.Healthcheck.CustomScript,
 	}
 
-	return g.RenderTemplate(g.getTemplate(), vars)
+	// Get script template from strategy
+	scriptTemplate, err := g.strategy.GenerateScript(vars)
+	if err != nil {
+		return "", err
+	}
+
+	// Render the template with variables
+	return g.RenderTemplate(scriptTemplate, vars)
 }
 
 // getTemplate returns the healthcheck script template
 func (g *HealthcheckScriptTemplateGenerator) getTemplate() string {
 	return healthcheckScriptTemplate
+}
+
+// GetStrategy returns the current healthcheck strategy
+func (g *HealthcheckScriptTemplateGenerator) GetStrategy() HealthcheckStrategy {
+	return g.strategy
 }

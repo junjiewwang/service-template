@@ -65,11 +65,7 @@ services:
 {{- end }}
 {{- if .HEALTHCHECK_ENABLED }}
     healthcheck:
-{{- if eq .HEALTHCHECK_TYPE "http" }}
-      test: ["CMD", "curl", "-f", "http://localhost:{{ .HEALTHCHECK_HTTP_PORT }}{{ .HEALTHCHECK_HTTP_PATH }}"]
-{{- else }}
       test: ["CMD", "/bin/sh", "{{ .SERVICE_ROOT }}/healthcheck.sh"]
-{{- end }}
 {{- if .HEALTHCHECK_INTERVAL }}
       interval: {{ .HEALTHCHECK_INTERVAL }}
 {{- end }}

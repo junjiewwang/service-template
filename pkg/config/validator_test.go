@@ -43,12 +43,7 @@ func TestValidator_Validate(t *testing.T) {
 				Runtime: RuntimeConfig{
 					Healthcheck: HealthcheckConfig{
 						Enabled: true,
-						Type:    "http",
-						HTTP: HTTPHealthConfig{
-							Path:    "/health",
-							Port:    8080,
-							Timeout: 3,
-						},
+						Type:    "default",
 					},
 					Startup: StartupConfig{
 						Command: "./app",
@@ -192,15 +187,27 @@ func TestValidator_ValidateHealthcheck(t *testing.T) {
 		errMsg      string
 	}{
 		{
-			name: "valid http healthcheck",
+			name: "valid default healthcheck",
 			healthcheck: HealthcheckConfig{
 				Enabled: true,
-				Type:    "http",
-				HTTP: HTTPHealthConfig{
-					Path:    "/health",
-					Port:    8080,
-					Timeout: 3,
-				},
+				Type:    "default",
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid empty type defaults to default",
+			healthcheck: HealthcheckConfig{
+				Enabled: true,
+				Type:    "",
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid custom healthcheck",
+			healthcheck: HealthcheckConfig{
+				Enabled:      true,
+				Type:         "custom",
+				CustomScript: "#!/bin/sh\nexit 0",
 			},
 			wantErr: false,
 		},
@@ -208,22 +215,10 @@ func TestValidator_ValidateHealthcheck(t *testing.T) {
 			name: "invalid healthcheck type",
 			healthcheck: HealthcheckConfig{
 				Enabled: true,
-				Type:    "invalid",
+				Type:    "http",
 			},
 			wantErr: true,
 			errMsg:  "is not valid",
-		},
-		{
-			name: "http healthcheck missing path",
-			healthcheck: HealthcheckConfig{
-				Enabled: true,
-				Type:    "http",
-				HTTP: HTTPHealthConfig{
-					Port: 8080,
-				},
-			},
-			wantErr: true,
-			errMsg:  "path is required",
 		},
 		{
 			name: "custom healthcheck missing script",

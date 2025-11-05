@@ -155,41 +155,34 @@ runtime:
     - tzdata
 
   # 健康检查配置
-  # 工具会根据 type 自动生成 healthcheck.sh 脚本
+  # 工具使用策略模式生成 healthcheck.sh 脚本
   #
-  # 生成逻辑：
-  # 1. 当 enabled=false 时，生成默认的进程检查脚本
-  # 2. 当 enabled=true 且 type=custom 时：
-  #    - 如果提供了 custom_script，则使用 custom_script 的内容
-  #    - 如果未提供 custom_script，则生成默认的进程检查脚本
-  # 3. 当 enabled=true 且 type 为其他类型（http/tcp/exec）时，生成默认的进程检查脚本
+  # 支持的策略类型：
+  # 1. default - 默认策略：检查服务进程是否运行
+  # 2. custom  - 自定义策略：使用用户提供的 custom_script
+  #
+  # 策略选择逻辑：
+  # - 当 enabled=false 时，使用 default 策略
+  # - 当 enabled=true 且 type="" 或 type="default" 时，使用 default 策略
+  # - 当 enabled=true 且 type="custom" 时，使用 custom 策略（必须提供 custom_script）
   #
   healthcheck:
     enabled: true
-    type: http # http | tcp | exec | custom
+    type: default # default | custom
 
-    # HTTP 健康检查（当 type=http 时使用）
-    # 注意：此配置主要用于 Docker Compose 的 healthcheck 配置
-    # 实际的 healthchk.sh 脚本仍使用默认的进程检查逻辑
-    http:
-      path: /health
-      port: 8080
-      timeout: 3
-
-    # 自定义健康检查脚本（当 type=custom 时使用）
-    # 重要：只有当 type=custom 且提供了 custom_script 时，才会替换默认的 healthchk.sh 内容
+    # 自定义健康检查脚本（当 type=custom 时必需）
     #
-    # 可用变量：
+    # 可用环境变量（脚本中自动导出）：
     #   ${SERVICE_NAME}       - 服务名称
-    #   ${SERVICE_PORT}       - 主服务端口
     #   ${SERVICE_ROOT}       - 服务根目录
-    #   ${CONFIG_DIR}         - 配置目录
     #   ${SERVICE_BIN_DIR}    - 二进制目录
-    #   ${DEPLOY_DIR}         - 部署目录
-    custom_script: |
-      #!/bin/sh
-      # Custom health check logic
-      curl -f http://localhost:${SERVICE_PORT}/health || exit 1
+    #
+    # 示例：
+    # custom_script: |
+    #   #!/bin/sh
+    #   # Custom health check logic
+    #   curl -f http://localhost:8080/health || exit 1
+    custom_script: ""
 
   # 启动配置
   # 工具会根据此配置生成 entrypoint.sh 脚本

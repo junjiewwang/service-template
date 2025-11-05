@@ -111,8 +111,6 @@ func (g *ComposeTemplateGenerator) prepareTemplateVars() map[string]interface{} 
 	// Health check
 	vars["HEALTHCHECK_ENABLED"] = g.config.Runtime.Healthcheck.Enabled
 	vars["HEALTHCHECK_TYPE"] = g.config.Runtime.Healthcheck.Type
-	vars["HEALTHCHECK_HTTP_PORT"] = g.config.Runtime.Healthcheck.HTTP.Port
-	vars["HEALTHCHECK_HTTP_PATH"] = g.config.Runtime.Healthcheck.HTTP.Path
 	vars["HEALTHCHECK_INTERVAL"] = g.config.LocalDev.Compose.Healthcheck.Interval
 	vars["HEALTHCHECK_TIMEOUT"] = g.config.LocalDev.Compose.Healthcheck.Timeout
 	vars["HEALTHCHECK_RETRIES"] = g.config.LocalDev.Compose.Healthcheck.Retries

@@ -119,32 +119,33 @@ func (v *Validator) validatePlugins() {
 }
 
 func (v *Validator) validateRuntime() {
+	// Validate healthcheck configuration
 	if v.config.Runtime.Healthcheck.Enabled {
+		// Validate healthcheck type
 		validTypes := map[string]bool{
-			"http":   true,
-			"tcp":    true,
-			"exec":   true,
-			"custom": true,
+			"default": true,
+			"custom":  true,
+			"":        true, // Empty defaults to "default"
 		}
 
-		if !validTypes[v.config.Runtime.Healthcheck.Type] {
-			v.errors = append(v.errors, fmt.Sprintf("runtime.healthcheck.type '%s' is not valid (valid: http, tcp, exec, custom)", v.config.Runtime.Healthcheck.Type))
+		hcType := v.config.Runtime.Healthcheck.Type
+		if hcType == "" {
+			hcType = "default" // Set default value
 		}
 
-		if v.config.Runtime.Healthcheck.Type == "http" {
-			if v.config.Runtime.Healthcheck.HTTP.Path == "" {
-				v.errors = append(v.errors, "runtime.healthcheck.http.path is required when type is 'http'")
+		if !validTypes[hcType] {
+			v.errors = append(v.errors, fmt.Sprintf("runtime.healthcheck.type '%s' is not valid (valid: default, custom)", hcType))
+		}
+
+		// Validate custom healthcheck requirements
+		if hcType == "custom" {
+			if v.config.Runtime.Healthcheck.CustomScript == "" {
+				v.errors = append(v.errors, "runtime.healthcheck.custom_script is required when type is 'custom'")
 			}
-			if v.config.Runtime.Healthcheck.HTTP.Port <= 0 {
-				v.errors = append(v.errors, "runtime.healthcheck.http.port is required when type is 'http'")
-			}
-		}
-
-		if v.config.Runtime.Healthcheck.Type == "custom" && v.config.Runtime.Healthcheck.CustomScript == "" {
-			v.errors = append(v.errors, "runtime.healthcheck.custom_script is required when type is 'custom'")
 		}
 	}
 
+	// Validate startup command
 	if v.config.Runtime.Startup.Command == "" {
 		v.errors = append(v.errors, "runtime.startup.command is required")
 	}

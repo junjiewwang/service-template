@@ -87,8 +87,7 @@ func TestScriptsGenerator_GenerateDepsInstallScript(t *testing.T) {
 					Name:      "test-service",
 					DeployDir: "/opt/services",
 				},
-				Build: config.BuildConfig{
-				},
+				Build: config.BuildConfig{},
 				Language: config.LanguageConfig{
 					Type:    tt.langType,
 					Version: "1.21",
@@ -122,8 +121,7 @@ func TestScriptsGenerator_GenerateRtPrepareScript(t *testing.T) {
 			Name:      "test-service",
 			DeployDir: "/opt/services",
 		},
-		Build: config.BuildConfig{
-		},
+		Build: config.BuildConfig{},
 		Language: config.LanguageConfig{
 			Type:    "golang",
 			Version: "1.21",
@@ -173,29 +171,23 @@ func TestHealthcheckScriptGenerator_Generate(t *testing.T) {
 			name: "default process check when disabled",
 			healthcheck: config.HealthcheckConfig{
 				Enabled: false,
-				Type:    "http",
+				Type:    "default",
 			},
 			expectCheck: "ps=$(ls -l /proc/*/exe",
 		},
 		{
-			name: "default process check when type is http",
+			name: "default process check when type is default",
 			healthcheck: config.HealthcheckConfig{
 				Enabled: true,
-				Type:    "http",
-				HTTP: config.HTTPHealthConfig{
-					Path:    "/health",
-					Port:    8080,
-					Timeout: 3,
-				},
+				Type:    "default",
 			},
 			expectCheck: "ps=$(ls -l /proc/*/exe",
 		},
 		{
-			name: "default process check when type is custom but no custom_script",
+			name: "default process check when type is empty",
 			healthcheck: config.HealthcheckConfig{
-				Enabled:      true,
-				Type:         "custom",
-				CustomScript: "",
+				Enabled: true,
+				Type:    "",
 			},
 			expectCheck: "ps=$(ls -l /proc/*/exe",
 		},
@@ -227,7 +219,8 @@ curl -f http://localhost:8080/health || exit 1`,
 
 			engine := NewTemplateEngine()
 			vars := NewVariables(cfg)
-			g := NewHealthcheckScriptTemplateGenerator(cfg, engine, vars)
+			g, err := NewHealthcheckScriptTemplateGenerator(cfg, engine, vars)
+			require.NoError(t, err, "Should create generator without error")
 
 			// Act: Generate healthcheck script
 			content, err := g.Generate()

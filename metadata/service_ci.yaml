@@ -102,7 +102,7 @@ runtime:
 
   healthcheck:
     enabled: true
-    type: exec
+    type: default
 
   startup:
     command: |

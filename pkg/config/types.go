@@ -106,17 +106,9 @@ type RuntimeConfig struct {
 
 // HealthcheckConfig for health check settings
 type HealthcheckConfig struct {
-	Enabled      bool             `yaml:"enabled"`
-	Type         string           `yaml:"type"` // http | tcp | exec | custom
-	HTTP         HTTPHealthConfig `yaml:"http,omitempty"`
-	CustomScript string           `yaml:"custom_script,omitempty"`
-}
-
-// HTTPHealthConfig for HTTP health checks
-type HTTPHealthConfig struct {
-	Path    string `yaml:"path"`
-	Port    int    `yaml:"port"`
-	Timeout int    `yaml:"timeout"`
+	Enabled      bool   `yaml:"enabled"`
+	Type         string `yaml:"type"`                    // default | custom
+	CustomScript string `yaml:"custom_script,omitempty"` // Required when type is 'custom'
 }
 
 // StartupConfig for startup settings

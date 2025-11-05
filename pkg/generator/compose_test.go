@@ -23,17 +23,11 @@ func TestComposeGenerator_Generate(t *testing.T) {
 			Type:    "golang",
 			Version: "1.21",
 		},
-		Build: config.BuildConfig{
-		},
+		Build: config.BuildConfig{},
 		Runtime: config.RuntimeConfig{
 			Healthcheck: config.HealthcheckConfig{
 				Enabled: true,
-				Type:    "http",
-				HTTP: config.HTTPHealthConfig{
-					Path:    "/health",
-					Port:    8080,
-					Timeout: 3,
-				},
+				Type:    "default",
 			},
 			Startup: config.StartupConfig{
 				Command: "./app",
@@ -146,8 +140,7 @@ func TestComposeGenerator_GenerateMinimal(t *testing.T) {
 			Type:    "golang",
 			Version: "1.21",
 		},
-		Build: config.BuildConfig{
-		},
+		Build: config.BuildConfig{},
 		Runtime: config.RuntimeConfig{
 			Healthcheck: config.HealthcheckConfig{Enabled: false},
 			Startup:     config.StartupConfig{Command: "./app"},
