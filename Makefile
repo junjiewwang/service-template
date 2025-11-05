@@ -4,7 +4,7 @@
 BINARY_NAME=svcgen
 MAIN_PATH=./cmd/svcgen
 BUILD_DIR=./bin
-INSTALL_PATH=/usr/local/bin
+INSTALL_PATH=~/bin
 
 # Go parameters
 GOCMD=go
