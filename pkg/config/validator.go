@@ -102,18 +102,23 @@ func (v *Validator) validateBuild() {
 }
 
 func (v *Validator) validatePlugins() {
-	for i, plugin := range v.config.Plugins {
+	// 如果有插件配置，验证 install_dir
+	if len(v.config.Plugins.Items) > 0 {
+		if v.config.Plugins.InstallDir == "" {
+			v.errors = append(v.errors, "plugins.install_dir is required when plugins are configured")
+		}
+	}
+
+	// 验证每个插件
+	for i, plugin := range v.config.Plugins.Items {
 		if plugin.Name == "" {
-			v.errors = append(v.errors, fmt.Sprintf("plugins[%d].name is required", i))
+			v.errors = append(v.errors, fmt.Sprintf("plugins.items[%d].name is required", i))
 		}
 		if plugin.DownloadURL == "" {
-			v.errors = append(v.errors, fmt.Sprintf("plugins[%d].download_url is required", i))
-		}
-		if plugin.InstallDir == "" {
-			v.errors = append(v.errors, fmt.Sprintf("plugins[%d].install_dir is required", i))
+			v.errors = append(v.errors, fmt.Sprintf("plugins.items[%d].download_url is required", i))
 		}
 		if plugin.InstallCommand == "" {
-			v.errors = append(v.errors, fmt.Sprintf("plugins[%d].install_command is required", i))
+			v.errors = append(v.errors, fmt.Sprintf("plugins.items[%d].install_command is required", i))
 		}
 	}
 }

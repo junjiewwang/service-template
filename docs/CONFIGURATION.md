@@ -442,30 +442,68 @@ local_dev:
 
 ## CI/CD Path Configuration
 
-Customize CI/CD script locations.
+Customize CI/CD script locations. All build-related files (scripts, Dockerfiles, configs) are organized in a single directory.
 
 ```yaml
 ci:
-  script_dir: bk-ci/tcs              # CI script directory
-  build_config_dir: bk-ci/tcs/build  # Build config directory
+  # CI script directory (relative to project root)
+  # Default: .tad/build/{service-name}
+  # Leave empty to use default
+  script_dir: ""
+
+  # Build config directory (for K8s ConfigMap, etc.)
+  # Default: {script_dir}/build
+  # Leave empty to use default
+  build_config_dir: ""
+
+  # Config template directory (for user custom config templates)
+  # Default: {script_dir}/config_template
+  # Leave empty to use default
+  config_template_dir: ""
+```
+
+### Default Directory Structure
+
+```
+.tad/build/{service-name}/          # CI script directory
+├── build.sh                        # Build script
+├── build_deps_install.sh           # Dependency install script
+├── rt_prepare.sh                   # Runtime prepare script
+├── entrypoint.sh                   # Entrypoint script
+├── healthchk.sh                    # Health check script
+├── Dockerfile.{service}.amd64      # AMD64 Dockerfile
+├── Dockerfile.{service}.arm64      # ARM64 Dockerfile
+├── build/                          # Build config directory
+│   ├── config.yaml                 # Config files
+│   └── sdk.json                    # SDK config
+└── config_template/                # Config template directory
+    └── *.yaml.tmpl                 # Config template files
 ```
 
 ### Default Paths
 
 | Path | Default Value | Description |
 |------|--------------|-------------|
-| `script_dir` | `bk-ci/tcs` | CI script directory |
-| `build_config_dir` | `bk-ci/tcs/build` | Build config directory |
+| `script_dir` | `.tad/build/{service-name}` | CI script directory, contains all build-related files |
+| `build_config_dir` | `{script_dir}/build` | Build config directory, for runtime configs |
+| `config_template_dir` | `{script_dir}/config_template` | Config template directory, for user custom templates |
+
+### Path Calculation Rules
+
+1. If `script_dir` is not set, defaults to `.tad/build/{service-name}`
+2. If `build_config_dir` is not set, defaults to `{script_dir}/build`
+3. If `config_template_dir` is not set, defaults to `{script_dir}/config_template`
+4. All paths are relative to project root
 
 ### Affected Files
 
 Changing CI paths affects:
 
-- `build.sh` location
-- `build_deps_install.sh` location
-- `rt_prepare.sh` location
-- `entrypoint.sh` location
+- All build scripts location (`build.sh`, `build_deps_install.sh`, etc.)
+- Dockerfile location
+- Runtime scripts location (`entrypoint.sh`, `healthchk.sh`)
 - ConfigMap source paths in Kubernetes manifests
+- Volume mount paths in Docker Compose
 
 ## Variable Substitution
 
@@ -504,8 +542,9 @@ The following variables are available in all templates and commands:
 
 | Variable | Description | Example |
 |----------|-------------|------------|
-| `${CI_SCRIPT_DIR}` | CI script directory | `bk-ci/tcs` |
-| `${CI_BUILD_CONFIG_DIR}` | Build config directory | `bk-ci/tcs/build` |
+| `${CI_SCRIPT_DIR}` | CI script directory | `.tad/build/my-service` |
+| `${CI_BUILD_CONFIG_DIR}` | Build config directory | `.tad/build/my-service/build` |
+| `${CI_CONFIG_TEMPLATE_DIR}` | Config template directory | `.tad/build/my-service/config_template` |
 
 ## Complete Example
 

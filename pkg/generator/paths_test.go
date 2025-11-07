@@ -11,6 +11,9 @@ import (
 func TestNewCIPaths_DefaultValues(t *testing.T) {
 	// Arrange: Setup configuration with no CI settings (use defaults)
 	cfg := &config.ServiceConfig{
+		Service: config.ServiceInfo{
+			Name: "test-service",
+		},
 		CI: config.CIConfig{
 			// 不设置任何值，使用默认值
 		},
@@ -20,24 +23,29 @@ func TestNewCIPaths_DefaultValues(t *testing.T) {
 	paths := NewCIPaths(cfg)
 
 	// Assert: Verify default values are used
-	assert.Equal(t, DefaultCIScriptDir, paths.ScriptDir)
-	assert.Equal(t, DefaultCIBuildConfigDir, paths.BuildConfigDir)
-	assert.Equal(t, ContainerCIScriptDir, paths.ContainerScriptDir)
+	assert.Equal(t, ".tad/build/test-service", paths.ScriptDir)
+	assert.Equal(t, ".tad/build/test-service/build", paths.BuildConfigDir)
+	assert.Equal(t, ".tad/build/test-service/config_template", paths.ConfigTemplateDir)
+	assert.Equal(t, "/opt/.tad/build/test-service", paths.ContainerScriptDir, "Container path should be /opt + script_dir")
 	assert.Equal(t, "build.sh", paths.BuildScript)
 	assert.Equal(t, "build_deps_install.sh", paths.DepsInstallScript)
 	assert.Equal(t, "rt_prepare.sh", paths.RtPrepareScript)
 	assert.Equal(t, "entrypoint.sh", paths.EntrypointScript)
 	assert.Equal(t, "healthchk.sh", paths.HealthcheckScript)
 
-	t.Logf("✓ Default CI paths: ScriptDir=%s, BuildConfigDir=%s",
-		paths.ScriptDir, paths.BuildConfigDir)
+	t.Logf("✓ Default CI paths: ScriptDir=%s, BuildConfigDir=%s, ConfigTemplateDir=%s",
+		paths.ScriptDir, paths.BuildConfigDir, paths.ConfigTemplateDir)
 }
 
 func TestNewCIPaths_CustomValues(t *testing.T) {
 	cfg := &config.ServiceConfig{
+		Service: config.ServiceInfo{
+			Name: "test-service",
+		},
 		CI: config.CIConfig{
-			ScriptDir:      "custom/ci/scripts",
-			BuildConfigDir: "custom/ci/config",
+			ScriptDir:         "custom/ci/scripts",
+			BuildConfigDir:    "custom/ci/config",
+			ConfigTemplateDir: "custom/ci/templates",
 		},
 	}
 
@@ -45,7 +53,8 @@ func TestNewCIPaths_CustomValues(t *testing.T) {
 
 	assert.Equal(t, "custom/ci/scripts", paths.ScriptDir)
 	assert.Equal(t, "custom/ci/config", paths.BuildConfigDir)
-	assert.Equal(t, ContainerCIScriptDir, paths.ContainerScriptDir) // 容器路径固定
+	assert.Equal(t, "custom/ci/templates", paths.ConfigTemplateDir)
+	assert.Equal(t, "/opt/custom/ci/scripts", paths.ContainerScriptDir, "Container path should be /opt + script_dir")
 }
 
 func TestCIPaths_GetScriptPath(t *testing.T) {
@@ -76,7 +85,11 @@ func TestCIPaths_GetScriptPath(t *testing.T) {
 }
 
 func TestCIPaths_GetContainerScriptPath(t *testing.T) {
-	cfg := &config.ServiceConfig{}
+	cfg := &config.ServiceConfig{
+		Service: config.ServiceInfo{
+			Name: "test-service",
+		},
+	}
 	paths := NewCIPaths(cfg)
 
 	tests := []struct {
@@ -84,8 +97,8 @@ func TestCIPaths_GetContainerScriptPath(t *testing.T) {
 		scriptName string
 		expected   string
 	}{
-		{"build script", "build.sh", "/opt/bk-ci/tcs/build.sh"},
-		{"deps install script", "build_deps_install.sh", "/opt/bk-ci/tcs/build_deps_install.sh"},
+		{"build script", "build.sh", "/opt/.tad/build/test-service/build.sh"},
+		{"deps install script", "build_deps_install.sh", "/opt/.tad/build/test-service/build_deps_install.sh"},
 	}
 
 	for _, tt := range tests {
@@ -132,9 +145,13 @@ func TestCIPaths_GetAllScriptPaths(t *testing.T) {
 
 func TestCIPaths_ToTemplateVars(t *testing.T) {
 	cfg := &config.ServiceConfig{
+		Service: config.ServiceInfo{
+			Name: "test-service",
+		},
 		CI: config.CIConfig{
-			ScriptDir:      "ci/scripts",
-			BuildConfigDir: "ci/config",
+			ScriptDir:         "ci/scripts",
+			BuildConfigDir:    "ci/config",
+			ConfigTemplateDir: "ci/templates",
 		},
 	}
 
@@ -146,7 +163,8 @@ func TestCIPaths_ToTemplateVars(t *testing.T) {
 	// 验证基本路径变量
 	assert.Equal(t, "ci/scripts", vars["CI_SCRIPT_DIR"])
 	assert.Equal(t, "ci/config", vars["CI_BUILD_CONFIG_DIR"])
-	assert.Equal(t, ContainerCIScriptDir, vars["CI_CONTAINER_DIR"])
+	assert.Equal(t, "ci/templates", vars["CI_CONFIG_TEMPLATE_DIR"])
+	assert.Equal(t, "/opt/ci/scripts", vars["CI_CONTAINER_DIR"], "Container dir should be /opt + script_dir")
 
 	// 验证脚本文件名
 	assert.Equal(t, "build.sh", vars["BUILD_SCRIPT"])
@@ -160,8 +178,8 @@ func TestCIPaths_ToTemplateVars(t *testing.T) {
 	assert.Equal(t, "ci/scripts/build_deps_install.sh", vars["DEPS_INSTALL_SCRIPT_PATH"])
 
 	// 验证完整路径（容器）
-	assert.Equal(t, "/opt/bk-ci/tcs/build.sh", vars["BUILD_SCRIPT_CONTAINER_PATH"])
-	assert.Equal(t, "/opt/bk-ci/tcs/build_deps_install.sh", vars["DEPS_INSTALL_SCRIPT_CONTAINER_PATH"])
+	assert.Equal(t, "/opt/ci/scripts/build.sh", vars["BUILD_SCRIPT_CONTAINER_PATH"])
+	assert.Equal(t, "/opt/ci/scripts/build_deps_install.sh", vars["DEPS_INSTALL_SCRIPT_CONTAINER_PATH"])
 }
 
 func TestCIPaths_Integration(t *testing.T) {

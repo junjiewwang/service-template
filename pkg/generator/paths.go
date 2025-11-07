@@ -1,28 +1,31 @@
 package generator
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/junjiewwang/service-template/pkg/config"
 )
 
 const (
-	// 默认 CI 路径配置
-	DefaultCIScriptDir      = "bk-ci/tcs"
-	DefaultCIBuildConfigDir = "bk-ci/tcs/build"
+	// 默认 CI 路径模式
+	DefaultCIScriptDirPattern       = ".tad/build/%s"      // %s = service-name
+	DefaultCIBuildConfigDirPattern  = "%s/build"           // %s = script_dir
+	DefaultConfigTemplateDirPattern = "%s/config_template" // %s = script_dir
 
-	// 容器内路径（固定）
-	ContainerCIScriptDir = "/opt/bk-ci/tcs"
+	// 容器内项目根目录
+	ContainerProjectRoot = "/opt"
 )
 
 // CIPaths 管理所有 CI 相关路径
 type CIPaths struct {
 	// 主机路径（相对于项目根目录）
-	ScriptDir      string // bk-ci/tcs
-	BuildConfigDir string // bk-ci/tcs/build
+	ScriptDir         string // .tad/build/{service-name}
+	BuildConfigDir    string // {script_dir}/build
+	ConfigTemplateDir string // {script_dir}/config_template
 
 	// 容器内路径（绝对路径）
-	ContainerScriptDir string // /opt/bk-ci/tcs
+	ContainerScriptDir string // /opt/.tad/build
 
 	// 脚本文件名
 	BuildScript       string // build.sh
@@ -34,21 +37,44 @@ type CIPaths struct {
 
 // NewCIPaths 创建 CI 路径管理器
 func NewCIPaths(cfg *config.ServiceConfig) *CIPaths {
-	scriptDir := DefaultCIScriptDir
-	buildConfigDir := DefaultCIBuildConfigDir
+	serviceName := cfg.Service.Name
 
-	// 如果配置了自定义路径，使用自定义路径
+	// 计算默认路径
+	defaultScriptDir := fmt.Sprintf(DefaultCIScriptDirPattern, serviceName)
+
+	scriptDir := defaultScriptDir
+	buildConfigDir := ""
+	configTemplateDir := ""
+
+	// 如果配置了自定义 script_dir，使用自定义路径
 	if cfg.CI.ScriptDir != "" {
 		scriptDir = cfg.CI.ScriptDir
 	}
+
+	// 计算 build_config_dir 默认值
 	if cfg.CI.BuildConfigDir != "" {
 		buildConfigDir = cfg.CI.BuildConfigDir
+	} else {
+		buildConfigDir = fmt.Sprintf(DefaultCIBuildConfigDirPattern, scriptDir)
 	}
+
+	// 计算 config_template_dir 默认值
+	if cfg.CI.ConfigTemplateDir != "" {
+		configTemplateDir = cfg.CI.ConfigTemplateDir
+	} else {
+		configTemplateDir = fmt.Sprintf(DefaultConfigTemplateDirPattern, scriptDir)
+	}
+
+	// 容器内路径：基于主机路径动态计算
+	// 因为 Dockerfile 中 COPY . /opt/ 会保持目录结构
+	// 所以容器内路径 = /opt + 主机相对路径
+	containerScriptDir := filepath.Join(ContainerProjectRoot, scriptDir)
 
 	return &CIPaths{
 		ScriptDir:          scriptDir,
 		BuildConfigDir:     buildConfigDir,
-		ContainerScriptDir: ContainerCIScriptDir,
+		ConfigTemplateDir:  configTemplateDir,
+		ContainerScriptDir: containerScriptDir, // 动态计算的容器内路径
 		BuildScript:        "build.sh",
 		DepsInstallScript:  "build_deps_install.sh",
 		RtPrepareScript:    "rt_prepare.sh",
@@ -81,9 +107,10 @@ func (p *CIPaths) GetAllScriptPaths() map[string]string {
 // ToTemplateVars 转换为模板变量
 func (p *CIPaths) ToTemplateVars() map[string]interface{} {
 	return map[string]interface{}{
-		"CI_SCRIPT_DIR":       p.ScriptDir,
-		"CI_BUILD_CONFIG_DIR": p.BuildConfigDir,
-		"CI_CONTAINER_DIR":    p.ContainerScriptDir,
+		"CI_SCRIPT_DIR":          p.ScriptDir,
+		"CI_BUILD_CONFIG_DIR":    p.BuildConfigDir,
+		"CI_CONFIG_TEMPLATE_DIR": p.ConfigTemplateDir,
+		"CI_CONTAINER_DIR":       p.ContainerScriptDir,
 
 		// 脚本文件名
 		"BUILD_SCRIPT":        p.BuildScript,

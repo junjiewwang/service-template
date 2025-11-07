@@ -81,7 +81,7 @@ func (g *ComposeTemplateGenerator) prepareTemplateVars() map[string]interface{} 
 		// 扩展变量映射以支持SERVICE_ROOT和PLUGIN_INSTALL_DIR
 		variableMap := g.variables.ToMap()
 		variableMap["SERVICE_ROOT"] = g.config.Service.DeployDir + "/" + g.config.Service.Name
-		variableMap["PLUGIN_INSTALL_DIR"] = "/plugins"
+		variableMap["PLUGIN_INSTALL_DIR"] = g.config.Plugins.InstallDir
 
 		// 支持本地开发配置中定义的其他变量
 		if len(g.config.LocalDev.SupportedVariables) > 0 {
@@ -90,7 +90,7 @@ func (g *ComposeTemplateGenerator) prepareTemplateVars() map[string]interface{} 
 				case "SERVICE_ROOT":
 					variableMap[supportedVar] = g.config.Service.DeployDir + "/" + g.config.Service.Name
 				case "PLUGIN_INSTALL_DIR":
-					variableMap[supportedVar] = "/plugins"
+					variableMap[supportedVar] = g.config.Plugins.InstallDir
 				}
 			}
 		}

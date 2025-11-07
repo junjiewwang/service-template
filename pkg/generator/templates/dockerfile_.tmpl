@@ -38,7 +38,8 @@ COPY {{ . }} ./
 {{- end }}
 
 # Copy build scripts needed for dependency installation
-COPY {{ .CI_SCRIPT_DIR }}/{{ .DEPS_INSTALL_SCRIPT }} {{ .CI_CONTAINER_DIR }}/
+# Note: CI_SCRIPT_DIR is relative to project root, will be at /opt/{{ .CI_SCRIPT_DIR }} in container
+COPY {{ .CI_SCRIPT_DIR }}/{{ .DEPS_INSTALL_SCRIPT }} {{ .CI_SCRIPT_DIR }}/
 
 # ============================================
 # Layer 2: Install dependencies (cacheable if deps files unchanged)

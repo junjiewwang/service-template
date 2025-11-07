@@ -101,17 +101,18 @@ func (g *DockerfileTemplateGenerator) prepareTemplateVars() map[string]interface
 
 	// Plugins
 	var plugins []map[string]interface{}
-	for _, plugin := range g.config.Plugins {
-		pluginVars := g.variables.WithPlugin(plugin)
+	sharedInstallDir := g.config.Plugins.InstallDir
+	for _, plugin := range g.config.Plugins.Items {
+		pluginVars := g.variables.WithPlugin(plugin, sharedInstallDir)
 		plugins = append(plugins, map[string]interface{}{
 			"InstallCommand": SubstituteVariables(plugin.InstallCommand, pluginVars.ToMap()),
 			"Name":           plugin.Name,
-			"InstallDir":     plugin.InstallDir,
+			"InstallDir":     sharedInstallDir, // 使用共享的安装目录
 			"RuntimeEnv":     plugin.RuntimeEnv,
 		})
 	}
 	vars["PLUGINS"] = plugins
-	vars["HAS_PLUGINS"] = len(g.config.Plugins) > 0
+	vars["HAS_PLUGINS"] = len(g.config.Plugins.Items) > 0
 
 	// Ports
 	var exposePorts []int

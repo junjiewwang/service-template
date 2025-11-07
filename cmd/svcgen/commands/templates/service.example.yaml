@@ -103,39 +103,43 @@ build:
 # 6. 在 entrypoint.sh 中加载各插件的环境变量
 # ============================================
 plugins:
-- name: selfMonitor
-  description: "TCE Self Monitor Tool"
-  download_url: "https://mirrors.tencent.com/repository/generic/selfMonitor/download_tool.sh"
+  # 所有插件共享的安装目录
   install_dir: /tce
 
-  # 安装命令（在 builder 阶段执行）
-  # 注意：install_command 应该将插件下载到 ${PLUGIN_WORK_DIR}（即 /plugins/selfMonitor）
-  # 而不是直接安装到 ${PLUGIN_INSTALL_DIR}（最终安装目录在 runtime 阶段由 install.sh 处理）
-  #
-  # 可用变量：
-  #   ${PLUGIN_NAME}           - 插件名称
-  #   ${PLUGIN_DESCRIPTION}    - 插件描述
-  #   ${PLUGIN_DOWNLOAD_URL}   - 下载地址
-  #   ${PLUGIN_WORK_DIR}       - 插件工作目录（/plugins/<name>）
-  #   ${PLUGIN_INSTALL_DIR}    - 最终安装目录（runtime 阶段）
-  #   ${SERVICE_NAME}          - 服务名称
-  #   ${SERVICE_ROOT}          - 服务根目录
-  #   ${BUILD_OUTPUT_DIR}      - 构建输出目录
-  install_command: |
-    echo "Downloading ${PLUGIN_NAME} to ${PLUGIN_WORK_DIR}..."
-    curl -fsSL "${PLUGIN_DOWNLOAD_URL}" | bash -s "${PLUGIN_WORK_DIR}"
-    echo "${PLUGIN_NAME} downloaded successfully"
+  # 插件列表
+  items:
+  - name: selfMonitor
+    description: "TCE Self Monitor Tool"
+    download_url: "https://mirrors.tencent.com/repository/generic/selfMonitor/download_tool.sh"
 
-  # 运行时环境变量（会写入到 .env 文件）
-  # 这些环境变量会在 entrypoint.sh 中加载，使其在服务运行时生效
-  # 注意：value 中可以使用 ${PLUGIN_INSTALL_DIR} 变量，会在生成时替换为实际路径
-  runtime_env:
-  - name: TCESTAURY_TOOL_PATH
-    value: ${PLUGIN_INSTALL_DIR}
-  - name: TCESTAURY_CONFIG_PATH
-    value: ${PLUGIN_INSTALL_DIR}/config
+    # 安装命令（在 builder 阶段执行）
+    # 注意：install_command 应该将插件下载到 ${PLUGIN_WORK_DIR}（即 /plugins/selfMonitor）
+    # 而不是直接安装到 ${PLUGIN_INSTALL_DIR}（最终安装目录在 runtime 阶段由 install.sh 处理）
+    #
+    # 可用变量：
+    #   ${PLUGIN_NAME}           - 插件名称
+    #   ${PLUGIN_DESCRIPTION}    - 插件描述
+    #   ${PLUGIN_DOWNLOAD_URL}   - 下载地址
+    #   ${PLUGIN_WORK_DIR}       - 插件工作目录（/plugins/<name>）
+    #   ${PLUGIN_INSTALL_DIR}    - 最终安装目录（runtime 阶段，从 plugins.install_dir 获取）
+    #   ${SERVICE_NAME}          - 服务名称
+    #   ${SERVICE_ROOT}          - 服务根目录
+    #   ${BUILD_OUTPUT_DIR}      - 构建输出目录
+    install_command: |
+      echo "Downloading ${PLUGIN_NAME} to ${PLUGIN_WORK_DIR}..."
+      curl -fsSL "${PLUGIN_DOWNLOAD_URL}" | bash -s "${PLUGIN_WORK_DIR}"
+      echo "${PLUGIN_NAME} downloaded successfully"
 
-  required: true
+    # 运行时环境变量（会写入到 .env 文件）
+    # 这些环境变量会在 entrypoint.sh 中加载，使其在服务运行时生效
+    # 注意：value 中可以使用 ${PLUGIN_INSTALL_DIR} 变量，会在生成时替换为实际路径
+    runtime_env:
+    - name: TCESTAURY_TOOL_PATH
+      value: ${PLUGIN_INSTALL_DIR}
+    - name: TCESTAURY_CONFIG_PATH
+      value: ${PLUGIN_INSTALL_DIR}/config
+
+    required: true
 
 # ============================================
 # 运行时配置
@@ -230,16 +234,19 @@ local_dev:
     #   3. 自动识别配置文件目录并生成 ConfigMap
     #
     # 支持的变量替换：
-    #   ${SERVICE_NAME}       - 服务名称
-    #   ${SERVICE_ROOT}       - 服务根目录（${DEPLOY_DIR}/${SERVICE_NAME}）
-    #   ${PLUGIN_INSTALL_DIR} - 插件安装目录（从 plugins 配置中获取）
+    #   ${SERVICE_NAME}          - 服务名称
+    #   ${SERVICE_ROOT}          - 服务根目录（${DEPLOY_DIR}/${SERVICE_NAME}）
+    #   ${PLUGIN_INSTALL_DIR}    - 插件安装目录（从 plugins 配置中获取）
+    #   ${CI_SCRIPT_DIR}         - CI 脚本目录
+    #   ${CI_BUILD_CONFIG_DIR}   - 构建配置目录
+    #   ${CI_CONFIG_TEMPLATE_DIR} - 配置模板目录
     volumes:
-    - source: ./bk-ci/tcs/build/config.yaml
+    - source: ${CI_BUILD_CONFIG_DIR}/config.yaml
       target: ${SERVICE_ROOT}/config.yaml
       type: bind
       description: "Service config"
 
-    - source: ./bk-ci/tcs/build/sdk.json
+    - source: ${CI_BUILD_CONFIG_DIR}/sdk.json
       target: ${PLUGIN_INSTALL_DIR}/config/sdk.json
       type: bind
       description: "TCE SDK config"
@@ -301,16 +308,40 @@ makefile:
 # ============================================
 # 用于统一管理 CI/CD 相关脚本和配置文件的路径
 # 如果不配置，将使用默认值
+#
+# 默认目录结构：
+#   .tad/build/{service-name}/          # CI 脚本目录
+#   ├── build.sh                        # 构建脚本
+#   ├── build_deps_install.sh           # 依赖安装脚本
+#   ├── rt_prepare.sh                   # 运行时准备脚本
+#   ├── entrypoint.sh                   # 入口脚本
+#   ├── healthchk.sh                    # 健康检查脚本
+#   ├── Dockerfile.{service}.amd64      # AMD64 Dockerfile
+#   ├── Dockerfile.{service}.arm64      # ARM64 Dockerfile
+#   ├── build/                          # 构建配置目录
+#   │   ├── config.yaml                 # 配置文件
+#   │   └── sdk.json                    # SDK 配置
+#   └── config_template/                # 配置模板目录（用户自定义）
+#       └── *.yaml.tmpl                 # 配置模板文件
+#
 ci:
   # CI 脚本目录（相对于项目根目录）
-  # 默认: bk-ci/tcs
-  # 该目录用于存放构建脚本、部署脚本等
-  script_dir: bk-ci/tcs
+  # 默认: .tad/build/{service-name}
+  # 该目录用于存放构建脚本、Dockerfile 等，所有构建相关文件集中管理
+  # 留空使用默认值
+  script_dir: ""
 
   # 构建配置目录（用于 K8s ConfigMap 等）
-  # 默认: bk-ci/tcs/build
+  # 默认: {script_dir}/build
   # 该目录用于存放配置文件，会被挂载到容器中
-  build_config_dir: bk-ci/tcs/build
+  # 留空使用默认值
+  build_config_dir: ""
+
+  # 配置模板目录（用于用户自定义配置模板）
+  # 默认: {script_dir}/config_template
+  # 该目录用于存放配置模板文件，可在构建时渲染
+  # 留空使用默认值
+  config_template_dir: ""
 
 # ============================================
 # 元数据

@@ -43,11 +43,12 @@ var entrypointScriptTemplate string
 func (g *EntrypointScriptTemplateGenerator) Generate() (string, error) {
 	// 准备插件环境变量信息
 	var pluginEnvs []map[string]interface{}
-	for _, plugin := range g.config.Plugins {
+	sharedInstallDir := g.config.Plugins.InstallDir
+	for _, plugin := range g.config.Plugins.Items {
 		if len(plugin.RuntimeEnv) > 0 {
 			pluginEnvs = append(pluginEnvs, map[string]interface{}{
 				"Name":       plugin.Name,
-				"InstallDir": plugin.InstallDir,
+				"InstallDir": sharedInstallDir, // 使用共享的安装目录
 				"RuntimeEnv": plugin.RuntimeEnv,
 			})
 		}

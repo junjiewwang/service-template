@@ -75,21 +75,25 @@ build:
 # 1、在build.sh脚本中将插件放置在/plugins目录下，在dockerfile中以/plugins目录来将插件从builder镜像中copy到runtime镜像中,然后再根据插件的install_dir来将插件copy到对应的目录中
 # 2、插件需要支持运行时的环境变量设置runtime_env，即将runtime_env配置放置在对应插件的目录下，然后再runtime镜像中使插件的环境变量生效，可以在/plugins目录下集成一个install.sh来实现
 plugins:
-- name: selfMonitor
-  description: "TCE Self Monitor Tool"
-  download_url: "https://mirrors.tencent.com/repository/generic/selfMonitor/download_tool.sh"
+  # 所有插件共享的安装目录
   install_dir: /tce
-  install_command: |
-    echo "Downloading ${PLUGIN_NAME} to ${PLUGIN_WORK_DIR}..."
-    curl -fsSL "${PLUGIN_DOWNLOAD_URL}" | bash -s "${PLUGIN_WORK_DIR}"
-    echo "${PLUGIN_NAME} downloaded successfully"
-  # 运行时环境变量
-  runtime_env:
-  - name: TCESTAURY_TOOL_PATH
-    value: ${PLUGIN_INSTALL_DIR}
-  - name: TCESTAURY_CONFIG_PATH
-    value: ${PLUGIN_INSTALL_DIR}/config
-  required: true
+
+  # 插件列表
+  items:
+  - name: selfMonitor
+    description: "TCE Self Monitor Tool"
+    download_url: "https://mirrors.tencent.com/repository/generic/selfMonitor/download_tool.sh"
+    install_command: |
+      echo "Downloading ${PLUGIN_NAME} to ${PLUGIN_WORK_DIR}..."
+      curl -fsSL "${PLUGIN_DOWNLOAD_URL}" | bash -s "${PLUGIN_WORK_DIR}"
+      echo "${PLUGIN_NAME} downloaded successfully"
+    # 运行时环境变量
+    runtime_env:
+    - name: TCESTAURY_TOOL_PATH
+      value: ${PLUGIN_INSTALL_DIR}
+    - name: TCESTAURY_CONFIG_PATH
+      value: ${PLUGIN_INSTALL_DIR}/config
+    required: true
 # ============================================
 # 运行时配置
 # ============================================
@@ -129,13 +133,13 @@ local_dev:
         memory: 512M
 
     volumes:
-    - source: ./bk-ci/tcs/build/config.yaml
+    - source: ${CI_BUILD_CONFIG_DIR}/config.yaml
       # 支持${SERVICE_ROOT}变量的替换
       target: ${SERVICE_ROOT}/config.yaml
       type: bind
       description: "Service config"
 
-    - source: ./bk-ci/tcs/build/sdk.json
+    - source: ${CI_BUILD_CONFIG_DIR}/sdk.json
       # 支持${PLUGIN_INSTALL_DIR}变量的替换
       target: ${PLUGIN_INSTALL_DIR}/config/sdk.json
       type: bind

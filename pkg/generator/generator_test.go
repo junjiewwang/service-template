@@ -26,8 +26,7 @@ func TestGenerator_Generate(t *testing.T) {
 				{Port: 8080, Protocol: "tcp"},
 			},
 		},
-		Build: config.BuildConfig{
-		},
+		Build: config.BuildConfig{},
 		Language: config.LanguageConfig{
 			Type:    "golang",
 			Version: "1.21",
@@ -40,12 +39,14 @@ func TestGenerator_Generate(t *testing.T) {
 				},
 			},
 		},
-		Plugins: []config.PluginConfig{
-			{
-				Name:        "test-plugin",
-				Description: "Test plugin",
-				DownloadURL: "https://example.com/plugin.tar.gz",
-				InstallDir:  "/opt/plugins",
+		Plugins: config.PluginsConfig{
+			InstallDir: "/opt/plugins",
+			Items: []config.PluginConfig{
+				{
+					Name:        "test-plugin",
+					Description: "Test plugin",
+					DownloadURL: "https://example.com/plugin.tar.gz",
+				},
 			},
 		},
 	}
@@ -107,8 +108,7 @@ func TestGenerator_GenerateDockerfiles(t *testing.T) {
 				{Port: 8080, Protocol: "tcp"},
 			},
 		},
-		Build: config.BuildConfig{
-		},
+		Build: config.BuildConfig{},
 		Language: config.LanguageConfig{
 			Type:    "golang",
 			Version: "1.21",
@@ -149,8 +149,7 @@ func TestGenerator_GenerateCompose(t *testing.T) {
 				{Port: 8080, Protocol: "tcp"},
 			},
 		},
-		Build: config.BuildConfig{
-		},
+		Build: config.BuildConfig{},
 		Language: config.LanguageConfig{
 			Type:    "golang",
 			Version: "1.21",
@@ -185,8 +184,7 @@ func TestGenerator_GenerateMakefile(t *testing.T) {
 				{Port: 8080, Protocol: "tcp"},
 			},
 		},
-		Build: config.BuildConfig{
-		},
+		Build: config.BuildConfig{},
 		Language: config.LanguageConfig{
 			Type:    "golang",
 			Version: "1.21",
@@ -221,8 +219,7 @@ func TestGenerator_GenerateScripts(t *testing.T) {
 				{Port: 8080, Protocol: "tcp"},
 			},
 		},
-		Build: config.BuildConfig{
-		},
+		Build: config.BuildConfig{},
 		Language: config.LanguageConfig{
 			Type:    "golang",
 			Version: "1.21",
@@ -269,8 +266,7 @@ func TestGenerator_GenerateWithKubernetesConfig(t *testing.T) {
 				{Port: 8080, Protocol: "tcp"},
 			},
 		},
-		Build: config.BuildConfig{
-		},
+		Build: config.BuildConfig{},
 		Language: config.LanguageConfig{
 			Type:    "golang",
 			Version: "1.21",

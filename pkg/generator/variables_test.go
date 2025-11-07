@@ -22,8 +22,7 @@ func TestNewVariables(t *testing.T) {
 			Type:    "golang",
 			Version: "1.21",
 		},
-		Build: config.BuildConfig{
-		},
+		Build: config.BuildConfig{},
 	}
 
 	// Act: Create variables from configuration
@@ -91,10 +90,10 @@ func TestVariables_WithPlugin(t *testing.T) {
 		Name:        "selfMonitor",
 		Description: "TCE Self Monitor",
 		DownloadURL: "https://example.com/download.sh",
-		InstallDir:  "/tce",
 	}
 
-	pluginVars := vars.WithPlugin(plugin)
+	installDir := "/tce"
+	pluginVars := vars.WithPlugin(plugin, installDir)
 
 	assert.Equal(t, "selfMonitor", pluginVars.PluginName, "PluginName should match")
 	assert.Equal(t, "TCE Self Monitor", pluginVars.PluginDescription, "PluginDescription should match")

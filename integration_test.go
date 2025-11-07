@@ -61,19 +61,32 @@ func TestIntegration(t *testing.T) {
 	t.Run("generate", func(t *testing.T) {
 		cmd := exec.Command(binary, "generate", "-c", filepath.Join(testDir, "service.yaml"), "-o", testDir)
 		cmd.Dir = testDir
-		if err := cmd.Run(); err != nil {
-			t.Fatalf("Generate command failed: %v", err)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("Generate command failed: %v\nOutput: %s", err, string(output))
 		}
+		t.Logf("Generate output:\n%s", string(output))
+
+		// List all generated files for debugging
+		filepath.Walk(testDir, func(path string, info os.FileInfo, err error) error {
+			if err == nil && !info.IsDir() {
+				relPath, _ := filepath.Rel(testDir, path)
+				t.Logf("Generated file: %s", relPath)
+			}
+			return nil
+		})
 
 		// Check if expected files were generated
 		expectedFiles := []string{
-			".tad/build/apm-async-task/Dockerfile.apm-async-task.amd64",
-			".tad/build/apm-async-task/Dockerfile.apm-async-task.arm64",
+			".tad/build/example-service/Dockerfile.example-service.amd64",
+			".tad/build/example-service/Dockerfile.example-service.arm64",
+			".tad/build/example-service/build.sh",
+			".tad/build/example-service/build_deps_install.sh",
+			".tad/build/example-service/rt_prepare.sh",
+			".tad/build/example-service/entrypoint.sh",
+			".tad/build/example-service/healthchk.sh",
 			"compose.yaml",
 			"Makefile",
-			"bk-ci/tcs/build.sh",
-			"bk-ci/tcs/deps_install.sh",
-			"bk-ci/tcs/rt_prepare.sh",
 			".tad/devops.yaml",
 		}
 

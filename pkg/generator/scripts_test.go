@@ -126,13 +126,15 @@ func TestScriptsGenerator_GenerateRtPrepareScript(t *testing.T) {
 			Type:    "golang",
 			Version: "1.21",
 		},
-		Plugins: []config.PluginConfig{
-			{
-				Name:           "test-plugin",
-				Description:    "Test plugin",
-				DownloadURL:    "https://example.com/plugin.tar.gz",
-				InstallDir:     "/opt/plugins",
-				InstallCommand: "echo 'Installing plugin'",
+		Plugins: config.PluginsConfig{
+			InstallDir: "/opt/plugins",
+			Items: []config.PluginConfig{
+				{
+					Name:           "test-plugin",
+					Description:    "Test plugin",
+					DownloadURL:    "https://example.com/plugin.tar.gz",
+					InstallCommand: "echo 'Installing plugin'",
+				},
 			},
 		},
 	}

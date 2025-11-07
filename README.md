@@ -229,15 +229,16 @@ svcgen validate
 svcgen generate
 
 # Generates:
-# ✓ Dockerfile.my-api-service.amd64
-# ✓ Dockerfile.my-api-service.arm64
+# ✓ .tad/build/my-api-service/Dockerfile.my-api-service.amd64
+# ✓ .tad/build/my-api-service/Dockerfile.my-api-service.arm64
+# ✓ .tad/build/my-api-service/build.sh
+# ✓ .tad/build/my-api-service/build_deps_install.sh
+# ✓ .tad/build/my-api-service/rt_prepare.sh
+# ✓ .tad/build/my-api-service/entrypoint.sh
+# ✓ .tad/build/my-api-service/healthchk.sh
+# ✓ .tad/devops.yaml
 # ✓ compose.yaml
 # ✓ Makefile
-# ✓ bk-ci/tcs/build.sh
-# ✓ bk-ci/tcs/build_deps_install.sh
-# ✓ bk-ci/tcs/rt_prepare.sh
-# ✓ bk-ci/tcs/entrypoint.sh
-# ✓ hooks/healthchk.sh
 # ✓ k8s-manifests/*.yaml (if enabled)
 ```
 

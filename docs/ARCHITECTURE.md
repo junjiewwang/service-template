@@ -278,21 +278,26 @@ func (v *Variables) ToMap() map[string]interface{} {
 **Code Location**: [`pkg/generator/paths.go`](../pkg/generator/paths.go)
 
 ```go
-// Default path constants
+// Default path patterns
 const (
-    DefaultCIScriptDir      = "bk-ci/tcs"
-    DefaultCIBuildConfigDir = "bk-ci/tcs/build"
+    DefaultCIScriptDirPattern       = ".tad/build/%s"      // %s = service-name
+    DefaultCIBuildConfigDirPattern  = "%s/build"           // %s = script_dir
+    DefaultConfigTemplateDirPattern = "%s/config_template" // %s = script_dir
 )
 
 type CIPaths struct {
-    ScriptDir      string
-    BuildConfigDir string
+    ScriptDir         string
+    BuildConfigDir    string
+    ConfigTemplateDir string
 }
 
 // Create with defaults or custom config
-func NewCIPaths(cfg *config.CIConfig) *CIPaths {
+func NewCIPaths(cfg *config.ServiceConfig) *CIPaths {
+    serviceName := cfg.Service.Name
+    defaultScriptDir := fmt.Sprintf(DefaultCIScriptDirPattern, serviceName)
+    
     paths := &CIPaths{
-        ScriptDir:      DefaultCIScriptDir,
+        ScriptDir:      defaultScriptDir,
         BuildConfigDir: DefaultCIBuildConfigDir,
     }
     

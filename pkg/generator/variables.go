@@ -95,12 +95,13 @@ func (v *Variables) WithArchitecture(arch string) *Variables {
 }
 
 // WithPlugin sets plugin-specific variables
-func (v *Variables) WithPlugin(plugin config.PluginConfig) *Variables {
+// installDir should be passed from the shared plugins.install_dir configuration
+func (v *Variables) WithPlugin(plugin config.PluginConfig, installDir string) *Variables {
 	newVars := *v
 	newVars.PluginName = plugin.Name
 	newVars.PluginDescription = plugin.Description
 	newVars.PluginDownloadURL = plugin.DownloadURL
-	newVars.PluginInstallDir = plugin.InstallDir
+	newVars.PluginInstallDir = installDir
 	return &newVars
 }
 

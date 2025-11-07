@@ -50,14 +50,17 @@ func (g *BuildScriptTemplateGenerator) Generate() (string, error) {
 		RuntimeEnv     []config.EnvironmentVariable // 新增：运行时环境变量
 	}
 	var plugins []PluginInfo
-	for _, plugin := range g.config.Plugins {
+	// 获取共享的安装目录
+	sharedInstallDir := g.config.Plugins.InstallDir
+
+	for _, plugin := range g.config.Plugins.Items {
 		// Process runtime environment variables - replace ${PLUGIN_INSTALL_DIR} with actual install dir
 		processedEnv := make([]config.EnvironmentVariable, len(plugin.RuntimeEnv))
 		for i, env := range plugin.RuntimeEnv {
 			processedEnv[i] = config.EnvironmentVariable{
 				Name: env.Name,
 				Value: g.templateEngine.ReplaceVariables(env.Value, map[string]string{
-					"PLUGIN_INSTALL_DIR": plugin.InstallDir,
+					"PLUGIN_INSTALL_DIR": sharedInstallDir,
 				}),
 			}
 		}
@@ -65,7 +68,7 @@ func (g *BuildScriptTemplateGenerator) Generate() (string, error) {
 		plugins = append(plugins, PluginInfo{
 			Name:           plugin.Name,
 			DownloadURL:    plugin.DownloadURL,
-			InstallDir:     plugin.InstallDir,
+			InstallDir:     sharedInstallDir,      // 使用共享的安装目录
 			InstallCommand: plugin.InstallCommand, // Keep original command with variables
 			RuntimeEnv:     processedEnv,          // 使用处理后的环境变量
 		})

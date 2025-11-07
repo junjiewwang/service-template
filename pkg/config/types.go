@@ -5,7 +5,7 @@ type ServiceConfig struct {
 	Service  ServiceInfo    `yaml:"service"`
 	Language LanguageConfig `yaml:"language"`
 	Build    BuildConfig    `yaml:"build"`
-	Plugins  []PluginConfig `yaml:"plugins,omitempty"`
+	Plugins  PluginsConfig  `yaml:"plugins,omitempty"`
 	Runtime  RuntimeConfig  `yaml:"runtime"`
 	LocalDev LocalDevConfig `yaml:"local_dev"`
 	Makefile MakefileConfig `yaml:"makefile,omitempty"`
@@ -77,12 +77,19 @@ type BuildCommandsConfig struct {
 	PostBuild string `yaml:"post_build,omitempty"`
 }
 
+// PluginsConfig for plugins configuration
+type PluginsConfig struct {
+	// 所有插件共用的安装目录
+	InstallDir string `yaml:"install_dir"`
+	// 插件列表
+	Items []PluginConfig `yaml:"items,omitempty"`
+}
+
 // PluginConfig for plugin installation
 type PluginConfig struct {
 	Name           string `yaml:"name"`
 	Description    string `yaml:"description"`
 	DownloadURL    string `yaml:"download_url"`
-	InstallDir     string `yaml:"install_dir"`
 	InstallCommand string `yaml:"install_command"`
 	Required       bool   `yaml:"required"`
 	// 运行时环境变量配置
@@ -211,10 +218,14 @@ type MetadataConfig struct {
 // CIConfig CI/CD 相关路径配置
 type CIConfig struct {
 	// CI 脚本目录路径（相对于项目根目录）
-	// 默认: bk-ci/tcs
+	// 默认: .tad/build/{service-name}
 	ScriptDir string `yaml:"script_dir,omitempty"`
 
 	// 构建配置目录（用于 K8s ConfigMap 等）
-	// 默认: bk-ci/tcs/build
+	// 默认: {script_dir}/build
 	BuildConfigDir string `yaml:"build_config_dir,omitempty"`
+
+	// 配置模板目录（用于用户自定义配置模板）
+	// 默认: {script_dir}/config_template
+	ConfigTemplateDir string `yaml:"config_template_dir,omitempty"`
 }
