@@ -6,6 +6,7 @@ import (
 
 	"github.com/junjiewwang/service-template/pkg/generator/context"
 	"github.com/junjiewwang/service-template/pkg/generator/core"
+	"github.com/junjiewwang/service-template/pkg/generator/domain/services"
 )
 
 const GeneratorType = "dockerfile"
@@ -66,27 +67,19 @@ func (g *Generator) prepareTemplateVars() map[string]interface{} {
 		builderImage = val.(string)
 	}
 
+	// Use language service for language-specific logic
+	langService := services.NewLanguageService()
+
 	// Add Dockerfile-specific custom variables
 	composer.
 		WithCustom("PKG_MANAGER", detectPackageManager(builderImage)).
 		WithCustom("DEPENDENCY_FILES", getDependencyFilesList(ctx.Config)).
-		WithCustom("DEPS_INSTALL_COMMAND", getDepsInstallCommand(ctx.Config.Language.Type))
+		WithCustom("DEPS_INSTALL_COMMAND", langService.GetDepsInstallCommand(ctx.Config.Language.Type))
 
-	// Process plugins with install commands
-	var plugins []map[string]interface{}
-	sharedInstallDir := ctx.Config.Plugins.InstallDir
-	for _, plugin := range ctx.Config.Plugins.Items {
-		pluginVars := ctx.Variables.WithPlugin(plugin, sharedInstallDir)
-		plugins = append(plugins, map[string]interface{}{
-			"InstallCommand": core.SubstituteVariables(plugin.InstallCommand, pluginVars.ToMap()),
-			"Name":           plugin.Name,
-			"InstallDir":     sharedInstallDir,
-			"RuntimeEnv":     plugin.RuntimeEnv,
-		})
-	}
-
-	// Override plugins with processed version
-	if len(plugins) > 0 {
+	// Use plugin service to process plugins
+	pluginService := services.NewPluginService(ctx, g.GetEngine())
+	if pluginService.HasPlugins() {
+		plugins := pluginService.PrepareForDockerfile()
 		composer.Override("PLUGINS", plugins)
 	}
 

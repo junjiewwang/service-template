@@ -5,6 +5,7 @@ import (
 
 	"github.com/junjiewwang/service-template/pkg/generator/context"
 	"github.com/junjiewwang/service-template/pkg/generator/core"
+	"github.com/junjiewwang/service-template/pkg/generator/domain/services"
 )
 
 const GeneratorType = "entrypoint-script"
@@ -38,18 +39,9 @@ func (g *Generator) Generate() (string, error) {
 	// Use preset for script
 	composer := ctx.GetVariablePreset().ForScript()
 
-	// 准备插件环境变量信息
-	var pluginEnvs []map[string]interface{}
-	sharedInstallDir := ctx.Config.Plugins.InstallDir
-	for _, plugin := range ctx.Config.Plugins.Items {
-		if len(plugin.RuntimeEnv) > 0 {
-			pluginEnvs = append(pluginEnvs, map[string]interface{}{
-				"Name":       plugin.Name,
-				"InstallDir": sharedInstallDir, // 使用共享的安装目录
-				"RuntimeEnv": plugin.RuntimeEnv,
-			})
-		}
-	}
+	// Use plugin service to prepare plugin environment variables
+	pluginService := services.NewPluginService(ctx, g.GetEngine())
+	pluginEnvs := pluginService.PrepareForEntrypoint()
 
 	// Add script-specific custom variables
 	composer.
