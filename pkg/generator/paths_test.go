@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	"github.com/junjiewwang/service-template/pkg/generator/context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +21,7 @@ func TestNewCIPaths_DefaultValues(t *testing.T) {
 	}
 
 	// Act: Create CI paths
-	paths := NewCIPaths(cfg)
+	paths := context.NewCIPaths(cfg)
 
 	// Assert: Verify default values are used
 	assert.Equal(t, ".tad/build/test-service", paths.ScriptDir)
@@ -49,7 +50,7 @@ func TestNewCIPaths_CustomValues(t *testing.T) {
 		},
 	}
 
-	paths := NewCIPaths(cfg)
+	paths := context.NewCIPaths(cfg)
 
 	assert.Equal(t, "custom/ci/scripts", paths.ScriptDir)
 	assert.Equal(t, "custom/ci/config", paths.BuildConfigDir)
@@ -64,7 +65,7 @@ func TestCIPaths_GetScriptPath(t *testing.T) {
 		},
 	}
 
-	paths := NewCIPaths(cfg)
+	paths := context.NewCIPaths(cfg)
 
 	tests := []struct {
 		name       string
@@ -90,7 +91,7 @@ func TestCIPaths_GetContainerScriptPath(t *testing.T) {
 			Name: "test-service",
 		},
 	}
-	paths := NewCIPaths(cfg)
+	paths := context.NewCIPaths(cfg)
 
 	tests := []struct {
 		name       string
@@ -117,7 +118,7 @@ func TestCIPaths_GetAllScriptPaths(t *testing.T) {
 		},
 	}
 
-	paths := NewCIPaths(cfg)
+	paths := context.NewCIPaths(cfg)
 
 	// Act: Get all script paths
 	allPaths := paths.GetAllScriptPaths()
@@ -155,7 +156,7 @@ func TestCIPaths_ToTemplateVars(t *testing.T) {
 		},
 	}
 
-	paths := NewCIPaths(cfg)
+	paths := context.NewCIPaths(cfg)
 	vars := paths.ToTemplateVars()
 
 	require.NotNil(t, vars)
@@ -195,7 +196,7 @@ func TestCIPaths_Integration(t *testing.T) {
 		},
 	}
 
-	paths := NewCIPaths(cfg)
+	paths := context.NewCIPaths(cfg)
 
 	// Act & Assert: 验证可以正确生成所有路径
 	allPaths := paths.GetAllScriptPaths()

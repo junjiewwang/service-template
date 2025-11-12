@@ -4,13 +4,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/junjiewwang/service-template/pkg/generator/core"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestTemplateEngine_Render(t *testing.T) {
 	// Arrange: Create template engine
-	engine := NewTemplateEngine()
+	engine := core.NewTemplateEngine()
 	require.NotNil(t, engine, "Template engine should be created")
 
 	tests := []struct {
@@ -135,7 +136,7 @@ exec /app/bin/myapp`,
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Act: Substitute variables
-			got := SubstituteVariables(tt.text, tt.vars)
+			got := core.SubstituteVariables(tt.text, tt.vars)
 
 			// Assert: Check result
 			assert.Equal(t, tt.want, got, "SubstituteVariables() should return expected result")
@@ -145,14 +146,12 @@ exec /app/bin/myapp`,
 }
 
 func TestTemplateEngine_CustomFunctions(t *testing.T) {
-	// Arrange: Create template engine
-	engine := NewTemplateEngine()
-	require.NotNil(t, engine, "Template engine should be created")
-
 	t.Run("indentLines", func(t *testing.T) {
-		// Arrange: Setup template with indentLines function
+		// Arrange: Create template engine and setup template with indentLines function
 		template := `{{indentLines 2 "line1\nline2\nline3"}}`
 		vars := map[string]interface{}{}
+		engine := core.NewTemplateEngine()
+		require.NotNil(t, engine, "Template engine should be created")
 
 		// Act: Render template
 		got, err := engine.Render(template, vars)

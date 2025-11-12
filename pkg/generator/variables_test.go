@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	"github.com/junjiewwang/service-template/pkg/generator/context"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,7 +27,8 @@ func TestNewVariables(t *testing.T) {
 	}
 
 	// Act: Create variables from configuration
-	vars := NewVariables(cfg)
+	paths := context.NewPaths(cfg)
+	vars := context.NewVariables(cfg, paths)
 
 	// Assert: Verify variables are correctly set
 	assert.Equal(t, "test-service", vars.ServiceName, "ServiceName should match")
@@ -50,7 +52,8 @@ func TestVariables_WithArchitecture(t *testing.T) {
 		Language: config.LanguageConfig{Type: "golang", Version: "1.21"},
 	}
 
-	vars := NewVariables(cfg)
+	paths := context.NewPaths(cfg)
+	vars := context.NewVariables(cfg, paths)
 
 	tests := []struct {
 		arch       string
@@ -84,7 +87,8 @@ func TestVariables_WithPlugin(t *testing.T) {
 		Language: config.LanguageConfig{Type: "go", Version: "1.23"},
 	}
 
-	vars := NewVariables(cfg)
+	paths := context.NewPaths(cfg)
+	vars := context.NewVariables(cfg, paths)
 
 	plugin := config.PluginConfig{
 		Name:        "selfMonitor",
@@ -112,7 +116,8 @@ func TestVariables_ToMap(t *testing.T) {
 		Language: config.LanguageConfig{Type: "golang", Version: "1.21"},
 	}
 
-	vars := NewVariables(cfg)
+	paths := context.NewPaths(cfg)
+	vars := context.NewVariables(cfg, paths)
 
 	// Act: Convert variables to map
 	m := vars.ToMap()

@@ -7,36 +7,45 @@ import (
 	"time"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	"github.com/junjiewwang/service-template/pkg/generator/context"
+	"github.com/junjiewwang/service-template/pkg/generator/core"
 	"github.com/junjiewwang/service-template/pkg/utils"
+
+	// Import all generators to register them
+	_ "github.com/junjiewwang/service-template/pkg/generator/generators/build_tools/makefile"
+	_ "github.com/junjiewwang/service-template/pkg/generator/generators/docker/compose"
+	_ "github.com/junjiewwang/service-template/pkg/generator/generators/docker/devops"
+	_ "github.com/junjiewwang/service-template/pkg/generator/generators/docker/dockerfile"
+	_ "github.com/junjiewwang/service-template/pkg/generator/generators/scripts/build"
+	_ "github.com/junjiewwang/service-template/pkg/generator/generators/scripts/deps_install"
+	_ "github.com/junjiewwang/service-template/pkg/generator/generators/scripts/entrypoint"
+	_ "github.com/junjiewwang/service-template/pkg/generator/generators/scripts/healthcheck"
+	_ "github.com/junjiewwang/service-template/pkg/generator/generators/scripts/rt_prepare"
 )
 
 // Generator is the main generator that orchestrates all generation tasks
 type Generator struct {
-	config         *config.ServiceConfig
-	templateEngine *TemplateEngine
-	variables      *Variables
-	factory        *GeneratorFactory
-	outputDir      string
+	config    *config.ServiceConfig
+	ctx       *context.GeneratorContext
+	outputDir string
 }
 
 // NewGenerator creates a new generator instance
 func NewGenerator(cfg *config.ServiceConfig, outputDir string) *Generator {
-	engine := NewTemplateEngine()
-	vars := NewVariables(cfg)
+	ctx := context.NewGeneratorContext(cfg, outputDir)
+
+	// Update metadata
+	cfg.Metadata.GeneratedAt = time.Now().Format(time.RFC3339)
+
 	return &Generator{
-		config:         cfg,
-		templateEngine: engine,
-		variables:      vars,
-		factory:        NewGeneratorFactory(cfg, engine, vars),
-		outputDir:      outputDir,
+		config:    cfg,
+		ctx:       ctx,
+		outputDir: outputDir,
 	}
 }
 
 // Generate generates all project files
 func (g *Generator) Generate() error {
-	// Update metadata
-	g.config.Metadata.GeneratedAt = time.Now().Format(time.RFC3339)
-
 	// Create output directory
 	if err := os.MkdirAll(g.outputDir, 0755); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
@@ -82,10 +91,15 @@ func (g *Generator) generateDockerfiles() error {
 	}
 
 	for _, arch := range architectures {
-		// Use factory to create generator
-		generator, err := g.factory.CreateGenerator("dockerfile", arch)
+		// Create generator using new registry
+		creator, exists := core.DefaultRegistry.Get("dockerfile")
+		if !exists {
+			return fmt.Errorf("generator type dockerfile not found")
+		}
+
+		generator, err := creator(g.ctx, arch)
 		if err != nil {
-			return fmt.Errorf("failed to create dockerfile generator: %w", err)
+			return fmt.Errorf("failed to create dockerfile generator for %s: %w", arch, err)
 		}
 
 		content, err := generator.Generate()
@@ -108,7 +122,7 @@ func (g *Generator) generateDockerfiles() error {
 
 // generateCompose generates docker-compose.yaml
 func (g *Generator) generateCompose() error {
-	generator, err := g.factory.CreateGenerator("compose")
+	generator, err := g.createGenerator("compose")
 	if err != nil {
 		return fmt.Errorf("failed to create compose generator: %w", err)
 	}
@@ -129,7 +143,7 @@ func (g *Generator) generateCompose() error {
 
 // generateMakefile generates Makefile
 func (g *Generator) generateMakefile() error {
-	generator, err := g.factory.CreateGenerator("makefile")
+	generator, err := g.createGenerator("makefile")
 	if err != nil {
 		return fmt.Errorf("failed to create makefile generator: %w", err)
 	}
@@ -150,11 +164,17 @@ func (g *Generator) generateMakefile() error {
 
 // generateScripts generates build and deployment scripts
 func (g *Generator) generateScripts() error {
-	// 使用 CIPaths 获取所有脚本路径
-	scriptPaths := g.variables.CIPaths.GetAllScriptPaths()
+	// Script types and their output paths
+	scripts := map[string]string{
+		"build-script":        g.ctx.Paths.CI.GetScriptPath(g.ctx.Paths.CI.BuildScript),
+		"deps-install-script": g.ctx.Paths.CI.GetScriptPath(g.ctx.Paths.CI.DepsInstallScript),
+		"rt-prepare-script":   g.ctx.Paths.CI.GetScriptPath(g.ctx.Paths.CI.RtPrepareScript),
+		"entrypoint-script":   g.ctx.Paths.CI.GetScriptPath(g.ctx.Paths.CI.EntrypointScript),
+		"healthcheck-script":  g.ctx.Paths.CI.GetScriptPath(g.ctx.Paths.CI.HealthcheckScript),
+	}
 
-	for generatorType, scriptPath := range scriptPaths {
-		generator, err := g.factory.CreateGenerator(generatorType)
+	for generatorType, scriptPath := range scripts {
+		generator, err := g.createGenerator(generatorType)
 		if err != nil {
 			return fmt.Errorf("failed to create %s generator: %w", generatorType, err)
 		}
@@ -188,7 +208,7 @@ func (g *Generator) generateScripts() error {
 
 // generateDevOps generates DevOps configuration
 func (g *Generator) generateDevOps() error {
-	generator, err := g.factory.CreateGenerator("devops")
+	generator, err := g.createGenerator("devops")
 	if err != nil {
 		return fmt.Errorf("failed to create devops generator: %w", err)
 	}
@@ -210,4 +230,15 @@ func (g *Generator) generateDevOps() error {
 
 	fmt.Println("✓ Generated .tad/devops.yaml")
 	return nil
+}
+
+// createGenerator creates a generator using the new registry
+func (g *Generator) createGenerator(generatorType string) (core.Generator, error) {
+	creator, exists := core.DefaultRegistry.Get(generatorType)
+	if !exists {
+		return nil, fmt.Errorf("generator type %s not found (available: %v)",
+			generatorType, core.DefaultRegistry.GetAll())
+	}
+
+	return creator(g.ctx)
 }

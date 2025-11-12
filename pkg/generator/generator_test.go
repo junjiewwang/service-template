@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	"github.com/junjiewwang/service-template/pkg/generator/context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -59,7 +60,7 @@ func TestGenerator_Generate(t *testing.T) {
 	require.NoError(t, err, "Generate() should not return an error")
 
 	// Assert: Check that expected files were created
-	ciPaths := NewCIPaths(cfg)
+	ciPaths := context.NewCIPaths(cfg)
 	expectedFiles := []string{
 		".tad/build/test-service/Dockerfile.test-service.amd64",
 		".tad/build/test-service/Dockerfile.test-service.arm64",
@@ -234,7 +235,7 @@ func TestGenerator_GenerateScripts(t *testing.T) {
 	require.NoError(t, err, "Generate() should not return an error")
 
 	// Assert: Check scripts were created
-	ciPaths := NewCIPaths(cfg)
+	ciPaths := context.NewCIPaths(cfg)
 	expectedScripts := []string{
 		ciPaths.GetScriptPath(ciPaths.BuildScript),
 		ciPaths.GetScriptPath(ciPaths.DepsInstallScript),
