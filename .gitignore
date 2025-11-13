@@ -2,3 +2,4 @@ test-output/
 expect/
 demo-app/
 bin/
+.vscode

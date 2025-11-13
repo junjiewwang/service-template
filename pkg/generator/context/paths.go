@@ -65,11 +65,12 @@ type CIPaths struct {
 	ContainerScriptDir string // /opt/.tad/build/{service-name}
 
 	// 脚本文件名
-	BuildScript       string // build.sh
-	DepsInstallScript string // build_deps_install.sh
-	RtPrepareScript   string // rt_prepare.sh
-	EntrypointScript  string // entrypoint.sh
-	HealthcheckScript string // healthchk.sh
+	BuildScript        string // build.sh
+	DepsInstallScript  string // build_deps_install.sh
+	RtPrepareScript    string // rt_prepare.sh
+	EntrypointScript   string // entrypoint.sh
+	HealthcheckScript  string // healthchk.sh
+	BuildPluginsScript string // build_plugins.sh
 }
 
 // NewCIPaths 创建 CI 路径管理器
@@ -117,6 +118,7 @@ func NewCIPaths(cfg *config.ServiceConfig) *CIPaths {
 		RtPrepareScript:    RtPrepareScriptName,
 		EntrypointScript:   EntrypointScriptName,
 		HealthcheckScript:  HealthcheckScriptName,
+		BuildPluginsScript: BuildPluginsScriptName,
 	}
 }
 
@@ -133,11 +135,12 @@ func (p *CIPaths) GetContainerScriptPath(scriptName string) string {
 // GetAllScriptPaths 获取所有脚本路径（用于生成）
 func (p *CIPaths) GetAllScriptPaths() map[string]string {
 	return map[string]string{
-		"build-script":        p.GetScriptPath(p.BuildScript),
-		"deps-install-script": p.GetScriptPath(p.DepsInstallScript),
-		"rt-prepare-script":   p.GetScriptPath(p.RtPrepareScript),
-		"entrypoint-script":   p.GetScriptPath(p.EntrypointScript),
-		"healthcheck-script":  p.GetScriptPath(p.HealthcheckScript),
+		"build-script":         p.GetScriptPath(p.BuildScript),
+		"deps-install-script":  p.GetScriptPath(p.DepsInstallScript),
+		"rt-prepare-script":    p.GetScriptPath(p.RtPrepareScript),
+		"entrypoint-script":    p.GetScriptPath(p.EntrypointScript),
+		"healthcheck-script":   p.GetScriptPath(p.HealthcheckScript),
+		"build-plugins-script": p.GetScriptPath(p.BuildPluginsScript),
 	}
 }
 
@@ -150,24 +153,27 @@ func (p *CIPaths) ToTemplateVars() map[string]interface{} {
 		"CI_CONTAINER_DIR":       p.ContainerScriptDir,
 
 		// 脚本文件名
-		"BUILD_SCRIPT":        p.BuildScript,
-		"DEPS_INSTALL_SCRIPT": p.DepsInstallScript,
-		"RT_PREPARE_SCRIPT":   p.RtPrepareScript,
-		"ENTRYPOINT_SCRIPT":   p.EntrypointScript,
-		"HEALTHCHECK_SCRIPT":  p.HealthcheckScript,
+		"BUILD_SCRIPT":         p.BuildScript,
+		"DEPS_INSTALL_SCRIPT":  p.DepsInstallScript,
+		"RT_PREPARE_SCRIPT":    p.RtPrepareScript,
+		"ENTRYPOINT_SCRIPT":    p.EntrypointScript,
+		"HEALTHCHECK_SCRIPT":   p.HealthcheckScript,
+		"BUILD_PLUGINS_SCRIPT": p.BuildPluginsScript,
 
 		// 完整路径（主机）
-		"BUILD_SCRIPT_PATH":        p.GetScriptPath(p.BuildScript),
-		"DEPS_INSTALL_SCRIPT_PATH": p.GetScriptPath(p.DepsInstallScript),
-		"RT_PREPARE_SCRIPT_PATH":   p.GetScriptPath(p.RtPrepareScript),
-		"ENTRYPOINT_SCRIPT_PATH":   p.GetScriptPath(p.EntrypointScript),
-		"HEALTHCHECK_SCRIPT_PATH":  p.GetScriptPath(p.HealthcheckScript),
+		"BUILD_SCRIPT_PATH":         p.GetScriptPath(p.BuildScript),
+		"DEPS_INSTALL_SCRIPT_PATH":  p.GetScriptPath(p.DepsInstallScript),
+		"RT_PREPARE_SCRIPT_PATH":    p.GetScriptPath(p.RtPrepareScript),
+		"ENTRYPOINT_SCRIPT_PATH":    p.GetScriptPath(p.EntrypointScript),
+		"HEALTHCHECK_SCRIPT_PATH":   p.GetScriptPath(p.HealthcheckScript),
+		"BUILD_PLUGINS_SCRIPT_PATH": p.GetScriptPath(p.BuildPluginsScript),
 
 		// 完整路径（容器）
-		"BUILD_SCRIPT_CONTAINER_PATH":        p.GetContainerScriptPath(p.BuildScript),
-		"DEPS_INSTALL_SCRIPT_CONTAINER_PATH": p.GetContainerScriptPath(p.DepsInstallScript),
-		"RT_PREPARE_SCRIPT_CONTAINER_PATH":   p.GetContainerScriptPath(p.RtPrepareScript),
-		"ENTRYPOINT_SCRIPT_CONTAINER_PATH":   p.GetContainerScriptPath(p.EntrypointScript),
-		"HEALTHCHECK_SCRIPT_CONTAINER_PATH":  p.GetContainerScriptPath(p.HealthcheckScript),
+		"BUILD_SCRIPT_CONTAINER_PATH":         p.GetContainerScriptPath(p.BuildScript),
+		"DEPS_INSTALL_SCRIPT_CONTAINER_PATH":  p.GetContainerScriptPath(p.DepsInstallScript),
+		"RT_PREPARE_SCRIPT_CONTAINER_PATH":    p.GetContainerScriptPath(p.RtPrepareScript),
+		"ENTRYPOINT_SCRIPT_CONTAINER_PATH":    p.GetContainerScriptPath(p.EntrypointScript),
+		"HEALTHCHECK_SCRIPT_CONTAINER_PATH":   p.GetContainerScriptPath(p.HealthcheckScript),
+		"BUILD_PLUGINS_SCRIPT_CONTAINER_PATH": p.GetContainerScriptPath(p.BuildPluginsScript),
 	}
 }

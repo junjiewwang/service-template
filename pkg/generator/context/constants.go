@@ -27,11 +27,12 @@ const (
 
 // Script file names - 脚本文件名常量
 const (
-	BuildScriptName       = "build.sh"
-	DepsInstallScriptName = "build_deps_install.sh"
-	RtPrepareScriptName   = "rt_prepare.sh"
-	EntrypointScriptName  = "entrypoint.sh"
-	HealthcheckScriptName = "healthchk.sh"
+	BuildScriptName        = "build.sh"
+	DepsInstallScriptName  = "build_deps_install.sh"
+	RtPrepareScriptName    = "rt_prepare.sh"
+	EntrypointScriptName   = "entrypoint.sh"
+	HealthcheckScriptName  = "healthchk.sh"
+	BuildPluginsScriptName = "build_plugins.sh"
 )
 
 // Directory names - 目录名常量

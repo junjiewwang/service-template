@@ -68,18 +68,6 @@ func (g *Generator) prepareTemplateVars() map[string]interface{} {
 		variableMap := composer.Build()
 		variableMap["PLUGIN_INSTALL_DIR"] = ctx.Config.Plugins.InstallDir
 
-		// Support additional variables from local dev config
-		if len(ctx.Config.LocalDev.SupportedVariables) > 0 {
-			for _, supportedVar := range ctx.Config.LocalDev.SupportedVariables {
-				switch supportedVar {
-				case "SERVICE_ROOT":
-					variableMap[supportedVar] = ctx.Config.Service.DeployDir + "/" + ctx.Config.Service.Name
-				case "PLUGIN_INSTALL_DIR":
-					variableMap[supportedVar] = ctx.Config.Plugins.InstallDir
-				}
-			}
-		}
-
 		volumes = append(volumes, VolumeMapping{
 			Source: vol.Source,
 			Target: core.SubstituteVariables(vol.Target, variableMap),

@@ -165,16 +165,15 @@ func (g *Generator) generateMakefile() error {
 
 // generateScripts generates build and deployment scripts
 func (g *Generator) generateScripts() error {
-	// Script types and their output paths
-	scripts := map[string]string{
-		"build-script":        g.ctx.Paths.CI.GetScriptPath(g.ctx.Paths.CI.BuildScript),
-		"deps-install-script": g.ctx.Paths.CI.GetScriptPath(g.ctx.Paths.CI.DepsInstallScript),
-		"rt-prepare-script":   g.ctx.Paths.CI.GetScriptPath(g.ctx.Paths.CI.RtPrepareScript),
-		"entrypoint-script":   g.ctx.Paths.CI.GetScriptPath(g.ctx.Paths.CI.EntrypointScript),
-		"healthcheck-script":  g.ctx.Paths.CI.GetScriptPath(g.ctx.Paths.CI.HealthcheckScript),
-	}
+	// Use CIPaths to get all script paths
+	scripts := g.ctx.Paths.CI.GetAllScriptPaths()
 
 	for generatorType, scriptPath := range scripts {
+		// Skip build_plugins.sh if no plugins configured
+		if generatorType == "build-plugins-script" && len(g.config.Plugins.Items) == 0 {
+			continue
+		}
+
 		generator, err := g.createGenerator(generatorType)
 		if err != nil {
 			return fmt.Errorf("failed to create %s generator: %w", generatorType, err)
@@ -183,6 +182,11 @@ func (g *Generator) generateScripts() error {
 		content, err := generator.Generate()
 		if err != nil {
 			return fmt.Errorf("failed to generate %s: %w", scriptPath, err)
+		}
+
+		// Skip if generator returned empty content (e.g., healthcheck disabled or no plugins)
+		if content == "" {
+			continue
 		}
 
 		outputPath := filepath.Join(g.outputDir, scriptPath)
@@ -204,51 +208,6 @@ func (g *Generator) generateScripts() error {
 		fmt.Printf("✓ Generated %s\n", scriptPath)
 	}
 
-	// Generate build_plugins.sh if plugins exist
-	if len(g.config.Plugins.Items) > 0 {
-		if err := g.generateBuildPluginsScript(); err != nil {
-			return fmt.Errorf("failed to generate build_plugins.sh: %w", err)
-		}
-	}
-
-	return nil
-}
-
-// generateBuildPluginsScript generates build_plugins.sh script
-func (g *Generator) generateBuildPluginsScript() error {
-	generator, err := g.createGenerator("build-plugins-script")
-	if err != nil {
-		return fmt.Errorf("failed to create build-plugins-script generator: %w", err)
-	}
-
-	content, err := generator.Generate()
-	if err != nil {
-		return fmt.Errorf("failed to generate content: %w", err)
-	}
-
-	// If no plugins, skip file generation
-	if content == "" {
-		return nil
-	}
-
-	// Output to .tad/build/{service-name}/build_plugins.sh
-	scriptDir := filepath.Join(g.outputDir, ".tad", "build", g.config.Service.Name)
-	outputPath := filepath.Join(scriptDir, "build_plugins.sh")
-
-	if err := os.MkdirAll(scriptDir, 0755); err != nil {
-		return fmt.Errorf("failed to create directory: %w", err)
-	}
-
-	if err := utils.WriteFile(outputPath, content); err != nil {
-		return fmt.Errorf("failed to write file: %w", err)
-	}
-
-	// Make script executable
-	if err := os.Chmod(outputPath, 0755); err != nil {
-		return fmt.Errorf("failed to make executable: %w", err)
-	}
-
-	fmt.Printf("✓ Generated .tad/build/%s/build_plugins.sh\n", g.config.Service.Name)
 	return nil
 }
 

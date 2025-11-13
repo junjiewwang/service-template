@@ -197,8 +197,6 @@ type EnvConfig struct {
 type LocalDevConfig struct {
 	Compose    ComposeConfig    `yaml:"compose"`
 	Kubernetes KubernetesConfig `yaml:"kubernetes"`
-	// 支持的变量列表
-	SupportedVariables []string `yaml:"supported_variables,omitempty"`
 }
 
 // ComposeConfig for Docker Compose settings
