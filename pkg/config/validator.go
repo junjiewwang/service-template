@@ -56,9 +56,7 @@ func (v *Validator) validateService() {
 		}
 	}
 
-	if v.config.Service.DeployDir == "" {
-		v.errors = append(v.errors, "service.deploy_dir is required")
-	}
+	// deploy_dir has a default value, so no validation needed
 }
 
 func (v *Validator) validateLanguage() {
@@ -76,9 +74,7 @@ func (v *Validator) validateLanguage() {
 		v.errors = append(v.errors, fmt.Sprintf("language.type '%s' is not supported (valid: go, python, nodejs, java, rust)", v.config.Language.Type))
 	}
 
-	if v.config.Language.Version == "" {
-		v.errors = append(v.errors, "language.version is required")
-	}
+	// Config is optional, no validation needed
 }
 
 func (v *Validator) validateBuild() {

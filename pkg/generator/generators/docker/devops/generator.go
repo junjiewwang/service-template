@@ -58,7 +58,7 @@ func (g *Generator) prepareTemplateVars() map[string]interface{} {
 		WithCustom("BUILDER_IMAGE_X86", ctx.Config.Build.BuilderImage.AMD64).
 		WithCustom("BUILDER_IMAGE_ARM", ctx.Config.Build.BuilderImage.ARM64).
 		WithCustom("LANGUAGE_TYPE", ctx.Config.Language.Type).
-		WithCustom("LANGUAGE_DISPLAY_NAME", getLanguageDisplayName(ctx.Config.Language.Type, ctx.Config.Language.Version))
+		WithCustom("LANGUAGE_DISPLAY_NAME", getLanguageDisplayName(ctx.Config.Language.Type))
 
 	return composer.Build()
 }
@@ -73,16 +73,18 @@ func parseImageAndTag(fullImage string) (string, string) {
 }
 
 // getLanguageDisplayName returns display name for the language
-func getLanguageDisplayName(langType, version string) string {
+func getLanguageDisplayName(langType string) string {
 	switch langType {
 	case "go":
-		return "Go " + version
+		return "Go"
 	case "python":
-		return "Python " + version
+		return "Python"
 	case "nodejs":
-		return "Node.js " + version
+		return "Node.js"
 	case "java":
-		return "Java " + version
+		return "Java"
+	case "rust":
+		return "Rust"
 	default:
 		return langType
 	}

@@ -35,6 +35,12 @@ services:
       - {{ .Name }}={{ .Value }}
 {{- end }}
 {{- end }}
+{{- if .ENTRYPOINT }}
+    entrypoint:
+{{- range .ENTRYPOINT }}
+      - {{ . }}
+{{- end }}
+{{- end }}
 {{- if .VOLUMES }}
     volumes:
 {{- range .VOLUMES }}

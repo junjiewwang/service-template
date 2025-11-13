@@ -25,7 +25,6 @@ service:
 
 language:
   type: go
-  version: "1.23"
 
 build:
   dependency_files:
@@ -107,7 +106,6 @@ service:
 
 language:
   type: go
-  version: "1.23"
 
 build:
   dependency_files:

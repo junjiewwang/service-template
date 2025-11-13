@@ -16,9 +16,8 @@ func NewTestConfig() *config.ServiceConfig {
 			},
 		},
 		Language: config.LanguageConfig{
-			Type:    "go",
-			Version: "1.21",
-			Config:  map[string]string{},
+			Type:   "go",
+			Config: map[string]interface{}{},
 		},
 		Build: config.BuildConfig{
 			Commands: config.BuildCommandsConfig{

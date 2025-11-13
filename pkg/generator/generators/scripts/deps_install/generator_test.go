@@ -11,7 +11,7 @@ import (
 func TestGenerator_Generate(t *testing.T) {
 	cfg := testutil.NewTestConfig()
 	cfg.Language.Type = "go"
-	cfg.Language.Config = map[string]string{
+	cfg.Language.Config = map[string]interface{}{
 		"goproxy": "https://goproxy.cn",
 		"gosumdb": "sum.golang.org",
 	}

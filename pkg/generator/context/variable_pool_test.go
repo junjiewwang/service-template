@@ -46,7 +46,7 @@ func TestVariablePool_GetSharedVariables(t *testing.T) {
 		{
 			name:     "language variables",
 			category: CategoryLanguage,
-			wantKeys: []string{VarLanguage, VarLanguageVersion},
+			wantKeys: []string{VarLanguage},
 		},
 	}
 
@@ -130,9 +130,8 @@ func createTestConfig() *config.ServiceConfig {
 			},
 		},
 		Language: config.LanguageConfig{
-			Type:    "go",
-			Version: "1.21",
-			Config:  map[string]string{"GO111MODULE": "on"},
+			Type:   "go",
+			Config: map[string]interface{}{"GO111MODULE": "on"},
 		},
 		Build: config.BuildConfig{
 			Commands: config.BuildCommandsConfig{

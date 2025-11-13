@@ -24,32 +24,75 @@ service:
     protocol: TCP
     expose: false
     description: "Prometheus metrics"
+  # 服务部署目录
+  # 默认值：/usr/local/services
+  # 如需自定义，取消注释并修改：
+  # deploy_dir: /usr/local/services
 
-  deploy_dir: /usr/local/services
-
-# ============================================
-# 语言和版本配置
-# ============================================
+  # ============================================
+  # 语言配置
+  # ============================================
 language:
   type: go # go | python | nodejs | java | rust
-  version: "1.23"
+
+  # 语言特定配置（可选）
+  # 不同语言支持不同的配置项，根据实际需要配置
   config:
-    # Go 特定配置
+    # ========================================
+    # Go 语言配置
+    # ========================================
     goproxy: "https://goproxy.cn,direct"
     gosumdb: "sum.golang.org"
-    # Python 特定配置（示例）
+    # goprivate: "github.com/myorg/*"  # 私有仓库配置
+
+    # ========================================
+    # Python 语言配置（示例）
+    # ========================================
     # pip_index_url: "https://mirrors.tencent.com/pypi/simple"
     # pip_trusted_host: "mirrors.tencent.com"
+    # pip_extra_index_url: "https://pypi.org/simple"
 
-    # Node.js 特定配置（示例）
+    # ========================================
+    # Node.js 语言配置（示例）
+    # ========================================
     # npm_registry: "https://mirrors.tencent.com/npm/"
+    # npm_token: "your-npm-token"
+
+    # ========================================
+    # Java 语言配置（示例）
+    # ========================================
+    # maven_settings: "/path/to/settings.xml"
+    # gradle_props: "/path/to/gradle.properties"
+
+    # ========================================
+    # Rust 语言配置（示例）
+    # ========================================
+    # cargo_registry: "https://mirrors.tencent.com/crates.io-index"
 
     # ============================================
     # 构建配置
     # ============================================
 build:
-  dependency_files:
-    auto_detect: true # 自动检测依赖文件
+  # 依赖文件配置
+  # auto_detect: 自动检测依赖文件（默认：true，无需显式配置）
+  #   - true（默认）: 根据语言类型自动检测依赖文件
+  #     * go: go.mod, go.sum
+  #     * python: requirements.txt
+  #     * nodejs: package.json, package-lock.json
+  #     * java (maven): pom.xml
+  #     * java (gradle): build.gradle, settings.gradle
+  #     * rust: Cargo.toml, Cargo.lock
+  #   - false: 使用 files 字段指定的自定义依赖文件列表
+  #
+  # 默认情况下无需配置此字段，工具会自动检测
+  # 仅当需要自定义依赖文件列表时才需要配置：
+  #
+  # dependency_files:
+  #   auto_detect: false
+  #   files:
+  #     - requirements.txt
+  #     - requirements-dev.txt
+  #     - custom-deps.txt
 
   # 构建基础镜像（按架构）
   builder_image:
@@ -81,12 +124,9 @@ build:
   commands:
     pre_build: |
       echo "Pre-build stage"
-      go version
 
     build: |
-      CGO_ENABLED=0 go build -ldflags="-s -w" -o ${BUILD_OUTPUT_DIR}/bin/${SERVICE_NAME} ./cmd/server
-      cp -r configs ${BUILD_OUTPUT_DIR}/
-      cp -r scripts ${BUILD_OUTPUT_DIR}/
+      echo "Build stage"
 
     post_build: |
       echo "Post-build completed"
@@ -173,7 +213,6 @@ runtime:
   healthcheck:
     enabled: true
     type: default # default | custom
-
     # 自定义健康检查脚本（当 type=custom 时必需）
     #
     # 可用环境变量（脚本中自动导出）：
@@ -186,10 +225,9 @@ runtime:
     #   #!/bin/sh
     #   # Custom health check logic
     #   curl -f http://localhost:8080/health || exit 1
-    custom_script: ""
 
-  # 启动配置
-  # 工具会根据此配置生成 entrypoint.sh 脚本
+    # 启动配置
+    # 工具会根据此配置生成 entrypoint.sh 脚本
   startup:
     # 启动命令（会被写入 entrypoint.sh）
     # 可用变量：
@@ -226,6 +264,37 @@ local_dev:
       reservations:
         cpus: "0.25"
         memory: 512M
+
+    # 环境变量配置（可选）
+    # 用于本地开发环境特定的环境变量
+    # 这些环境变量会与 runtime.startup.env 合并，compose 的环境变量优先级更高
+    # 如果同名，会覆盖 runtime.startup.env 中的值
+    # environment: 
+    # # - name: DEBUG
+    # #   value: "true"
+
+    # Entrypoint 配置（可选）
+    # 用于覆盖容器的默认 entrypoint
+    # 支持数组格式，每个元素是命令的一部分
+    #
+    # 使用场景：
+    # 1. 调试模式：使用 shell 进入容器
+    # 2. 自定义启动脚本：使用不同的启动方式
+    # 3. 开发模式：添加额外的启动参数
+    #
+    # 示例：
+    # entrypoint:
+    #   - /bin/sh
+    #   - -c
+    #   - |
+    #     echo "Starting in debug mode..."
+    #     exec /usr/local/services/example-service/bin/example-service --debug
+    #
+    # 或者简单的 shell 模式（用于调试）：
+    # entrypoint:
+    #   - /bin/sh
+    #
+    # 注意：如果设置了 entrypoint，容器将不会执行 Dockerfile 中定义的 CMD 或 ENTRYPOINT
 
     # 卷挂载配置（唯一配置源）
     # 工具会自动：
@@ -277,12 +346,7 @@ local_dev:
     # 卷类型配置（kompose 转换时使用）
     volume_type: configMap # configMap | persistentVolumeClaim | emptyDir | hostPath
 
-    # ConfigMap 配置（自动推导）
-    configmap:
-      auto_detect: true # 自动从 compose.volumes 推导
-      # name: custom-config             # 可选：自定义 ConfigMap 名称
-
-      # 部署等待配置
+    # 部署等待配置
     wait:
       enabled: true
       timeout: 300s

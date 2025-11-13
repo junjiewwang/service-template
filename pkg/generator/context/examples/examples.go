@@ -210,7 +210,6 @@ func createSampleConfig() *config.ServiceConfig {
 		},
 		Language: config.LanguageConfig{
 			Type:    "go",
-			Version: "1.21",
 		},
 		Build: config.BuildConfig{
 			Commands: config.BuildCommandsConfig{

@@ -2,6 +2,8 @@ package services
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 )
 
 // LanguageStrategy defines the interface for language-specific logic
@@ -17,6 +19,10 @@ type LanguageStrategy interface {
 
 	// GetPackageManager returns the package manager name
 	GetPackageManager() string
+
+	// GetDependencyFilesWithDetection returns dependency files that actually exist in the project
+	// projectDir: the root directory of the project to scan
+	GetDependencyFilesWithDetection(projectDir string) []string
 }
 
 // LanguageService manages language-specific logic
@@ -66,6 +72,20 @@ func (s *LanguageService) GetDependencyFiles(language string, autoDetect bool, c
 	}
 
 	return strategy.GetDependencyFiles()
+}
+
+// GetDependencyFilesWithDetection returns dependency files that actually exist in the project
+func (s *LanguageService) GetDependencyFilesWithDetection(language string, projectDir string, autoDetect bool, customFiles []string) []string {
+	if !autoDetect {
+		return customFiles
+	}
+
+	strategy, err := s.GetStrategy(language)
+	if err != nil {
+		return []string{}
+	}
+
+	return strategy.GetDependencyFilesWithDetection(projectDir)
 }
 
 // GetDepsInstallCommand returns the dependency installation command
@@ -121,6 +141,10 @@ func (s *GoStrategy) GetDependencyFiles() []string {
 	return []string{"go.mod", "go.sum"}
 }
 
+func (s *GoStrategy) GetDependencyFilesWithDetection(projectDir string) []string {
+	return filterExistingFiles(projectDir, s.GetDependencyFiles())
+}
+
 func (s *GoStrategy) GetDepsInstallCommand() string {
 	return "go mod download"
 }
@@ -145,6 +169,10 @@ func (s *PythonStrategy) GetName() string {
 
 func (s *PythonStrategy) GetDependencyFiles() []string {
 	return []string{"requirements.txt"}
+}
+
+func (s *PythonStrategy) GetDependencyFilesWithDetection(projectDir string) []string {
+	return filterExistingFiles(projectDir, s.GetDependencyFiles())
 }
 
 func (s *PythonStrategy) GetDepsInstallCommand() string {
@@ -173,6 +201,10 @@ func (s *NodeJSStrategy) GetDependencyFiles() []string {
 	return []string{"package.json", "package-lock.json"}
 }
 
+func (s *NodeJSStrategy) GetDependencyFilesWithDetection(projectDir string) []string {
+	return filterExistingFiles(projectDir, s.GetDependencyFiles())
+}
+
 func (s *NodeJSStrategy) GetDepsInstallCommand() string {
 	return "npm install"
 }
@@ -184,6 +216,7 @@ func (s *NodeJSStrategy) GetPackageManager() string {
 // --- Java Language Strategy ---
 
 // JavaStrategy implements LanguageStrategy for Java
+// Supports both Maven and Gradle build tools
 type JavaStrategy struct{}
 
 // NewJavaStrategy creates a new Java strategy
@@ -196,11 +229,45 @@ func (s *JavaStrategy) GetName() string {
 }
 
 func (s *JavaStrategy) GetDependencyFiles() []string {
-	return []string{"pom.xml"}
+	// Support both Maven and Gradle
+	// Maven: pom.xml
+	// Gradle: build.gradle, settings.gradle
+	return []string{"pom.xml", "build.gradle", "settings.gradle"}
+}
+
+func (s *JavaStrategy) GetDependencyFilesWithDetection(projectDir string) []string {
+	var detectedFiles []string
+
+	// Check for Maven (pom.xml)
+	pomPath := filepath.Join(projectDir, "pom.xml")
+	if fileExists(pomPath) {
+		detectedFiles = append(detectedFiles, "pom.xml")
+	}
+
+	// Check for Gradle (build.gradle and settings.gradle)
+	buildGradlePath := filepath.Join(projectDir, "build.gradle")
+	settingsGradlePath := filepath.Join(projectDir, "settings.gradle")
+
+	if fileExists(buildGradlePath) {
+		detectedFiles = append(detectedFiles, "build.gradle")
+	}
+	if fileExists(settingsGradlePath) {
+		detectedFiles = append(detectedFiles, "settings.gradle")
+	}
+
+	// If no files detected, return all possible files as fallback
+	if len(detectedFiles) == 0 {
+		return s.GetDependencyFiles()
+	}
+
+	return detectedFiles
 }
 
 func (s *JavaStrategy) GetDepsInstallCommand() string {
-	return "mvn dependency:go-offline"
+	// Return Maven command by default
+	// Note: In practice, the build script should detect which build tool is present
+	// and use the appropriate command (mvn or gradle)
+	return "mvn dependency:go-offline || gradle dependencies --refresh-dependencies"
 }
 
 func (s *JavaStrategy) GetPackageManager() string {
@@ -225,10 +292,41 @@ func (s *RustStrategy) GetDependencyFiles() []string {
 	return []string{"Cargo.toml", "Cargo.lock"}
 }
 
+func (s *RustStrategy) GetDependencyFilesWithDetection(projectDir string) []string {
+	return filterExistingFiles(projectDir, s.GetDependencyFiles())
+}
+
 func (s *RustStrategy) GetDepsInstallCommand() string {
 	return "cargo fetch"
 }
 
 func (s *RustStrategy) GetPackageManager() string {
 	return "cargo"
+}
+
+// --- Helper Functions ---
+
+// fileExists checks if a file exists
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return !info.IsDir()
+}
+
+// filterExistingFiles filters the list of files to only include those that exist
+func filterExistingFiles(projectDir string, files []string) []string {
+	var existingFiles []string
+	for _, file := range files {
+		filePath := filepath.Join(projectDir, file)
+		if fileExists(filePath) {
+			existingFiles = append(existingFiles, file)
+		}
+	}
+	// If no files exist, return the original list as fallback
+	if len(existingFiles) == 0 {
+		return files
+	}
+	return existingFiles
 }

@@ -15,7 +15,6 @@ func TestGenerator_Generate(t *testing.T) {
 	cfg.Build.RuntimeImage.AMD64 = "alpine:3.18"
 	cfg.Build.RuntimeImage.ARM64 = "alpine:3.18"
 	cfg.Language.Type = "go"
-	cfg.Language.Version = "1.21"
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	gen, err := New(ctx)
@@ -94,21 +93,21 @@ func TestParseImageAndTag(t *testing.T) {
 func TestGetLanguageDisplayName(t *testing.T) {
 	tests := []struct {
 		langType string
-		version  string
 		want     string
 	}{
-		{"go", "1.21", "Go 1.21"},
-		{"python", "3.11", "Python 3.11"},
-		{"nodejs", "18", "Node.js 18"},
-		{"java", "17", "Java 17"},
-		{"unknown", "1.0", "unknown"},
+		{"go", "Go"},
+		{"python", "Python"},
+		{"nodejs", "Node.js"},
+		{"java", "Java"},
+		{"rust", "Rust"},
+		{"unknown", "unknown"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.langType, func(t *testing.T) {
-			got := getLanguageDisplayName(tt.langType, tt.version)
+			got := getLanguageDisplayName(tt.langType)
 			if got != tt.want {
-				t.Errorf("getLanguageDisplayName(%s, %s) = %s, want %s", tt.langType, tt.version, got, tt.want)
+				t.Errorf("getLanguageDisplayName(%s) = %s, want %s", tt.langType, got, tt.want)
 			}
 		})
 	}

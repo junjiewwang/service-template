@@ -73,7 +73,7 @@ func (g *Generator) prepareTemplateVars() map[string]interface{} {
 	// Add Dockerfile-specific custom variables
 	composer.
 		WithCustom("PKG_MANAGER", detectPackageManager(builderImage)).
-		WithCustom("DEPENDENCY_FILES", getDependencyFilesList(ctx.Config)).
+		WithCustom("DEPENDENCY_FILES", getDependencyFilesList(ctx.Config, ctx.OutputDir)).
 		WithCustom("DEPS_INSTALL_COMMAND", langService.GetDepsInstallCommand(ctx.Config.Language.Type))
 
 	// Use plugin service to process plugins

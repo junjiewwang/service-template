@@ -38,15 +38,11 @@ func (g *Generator) Generate() (string, error) {
 	// Use preset for script
 	composer := ctx.GetVariablePreset().ForScript()
 
-	// Get language-specific config
+	// Get language-specific config using helper methods
 	var goProxy, goSumDB string
 	if ctx.Config.Language.Type == "go" {
-		if goproxy, ok := ctx.Config.Language.Config["goproxy"]; ok {
-			goProxy = goproxy
-		}
-		if gosumdb, ok := ctx.Config.Language.Config["gosumdb"]; ok {
-			goSumDB = gosumdb
-		}
+		goProxy = ctx.Config.Language.GetString("goproxy", "")
+		goSumDB = ctx.Config.Language.GetString("gosumdb", "")
 	}
 
 	// Add script-specific custom variables

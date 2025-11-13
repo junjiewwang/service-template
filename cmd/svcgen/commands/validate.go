@@ -30,7 +30,7 @@ func runValidate(cmd *cobra.Command, args []string) error {
 
 	fmt.Println("✓ Configuration is valid")
 	fmt.Printf("\nService: %s\n", cfg.Service.Name)
-	fmt.Printf("Language: %s %s\n", cfg.Language.Type, cfg.Language.Version)
+	fmt.Printf("Language: %s\n", cfg.Language.Type)
 	fmt.Printf("Ports: %d configured\n", len(cfg.Service.Ports))
 	if len(cfg.Plugins.Items) > 0 {
 		fmt.Printf("Plugins: %d configured\n", len(cfg.Plugins.Items))

@@ -86,10 +86,16 @@ func (g *Generator) prepareTemplateVars() map[string]interface{} {
 		})
 	}
 
+	// Merge environment variables from runtime.startup.env and local_dev.compose.environment
+	// Compose environment variables have higher priority (can override runtime env vars)
+	envVars := g.mergeEnvironmentVariables(ctx)
+
 	// Add compose-specific custom variables
 	composer.
 		Override("PORTS", ports).
+		Override("ENV_VARS", envVars). // Override with merged environment variables
 		WithCustom("VOLUMES", volumes).
+		WithCustom("ENTRYPOINT", ctx.Config.LocalDev.Compose.Entrypoint).
 		WithCustom("LIMITS_CPUS", ctx.Config.LocalDev.Compose.Resources.Limits.CPUs).
 		WithCustom("LIMITS_MEMORY", ctx.Config.LocalDev.Compose.Resources.Limits.Memory).
 		WithCustom("RESERVATIONS_CPUS", ctx.Config.LocalDev.Compose.Resources.Reservations.CPUs).
@@ -101,6 +107,34 @@ func (g *Generator) prepareTemplateVars() map[string]interface{} {
 		WithCustom("LABELS", ctx.Config.LocalDev.Compose.Labels)
 
 	return composer.Build()
+}
+
+// mergeEnvironmentVariables merges environment variables from runtime.startup.env and local_dev.compose.environment
+// Compose environment variables have higher priority and can override runtime env vars
+func (g *Generator) mergeEnvironmentVariables(ctx *context.GeneratorContext) []interface{} {
+	// Create a map to store merged environment variables (for deduplication)
+	envMap := make(map[string]string)
+
+	// First, add runtime environment variables
+	for _, env := range ctx.Config.Runtime.Startup.Env {
+		envMap[env.Name] = env.Value
+	}
+
+	// Then, add/override with compose environment variables
+	for _, env := range ctx.Config.LocalDev.Compose.Environment {
+		envMap[env.Name] = env.Value
+	}
+
+	// Convert map back to slice for template rendering
+	var result []interface{}
+	for name, value := range envMap {
+		result = append(result, map[string]interface{}{
+			"Name":  name,
+			"Value": value,
+		})
+	}
+
+	return result
 }
 
 //go:embed templates/compose.yaml.tmpl

@@ -29,15 +29,11 @@ func TestGenerator_Generate(t *testing.T) {
 		},
 		Build: config.BuildConfig{},
 		Language: config.LanguageConfig{
-			Type:    "golang",
-			Version: "1.21",
+			Type: "golang",
 		},
 		LocalDev: config.LocalDevConfig{
 			Kubernetes: config.KubernetesConfig{
 				Enabled: true,
-				ConfigMap: config.ConfigMapConfig{
-					AutoDetect: true,
-				},
 			},
 		},
 		Plugins: config.PluginsConfig{
@@ -66,7 +62,6 @@ func TestGenerator_Generate(t *testing.T) {
 		".tad/build/test-service/Dockerfile.test-service.arm64",
 		"compose.yaml",
 		"Makefile",
-		// Note: ConfigMap is generated via Makefile commands, not in main generation flow
 		ciPaths.GetScriptPath(ciPaths.BuildScript),
 		ciPaths.GetScriptPath(ciPaths.DepsInstallScript),
 		ciPaths.GetScriptPath(ciPaths.RtPrepareScript),
@@ -111,8 +106,7 @@ func TestGenerator_GenerateDockerfiles(t *testing.T) {
 		},
 		Build: config.BuildConfig{},
 		Language: config.LanguageConfig{
-			Type:    "golang",
-			Version: "1.21",
+			Type: "golang",
 		},
 	}
 
@@ -152,8 +146,7 @@ func TestGenerator_GenerateCompose(t *testing.T) {
 		},
 		Build: config.BuildConfig{},
 		Language: config.LanguageConfig{
-			Type:    "golang",
-			Version: "1.21",
+			Type: "golang",
 		},
 	}
 
@@ -187,8 +180,7 @@ func TestGenerator_GenerateMakefile(t *testing.T) {
 		},
 		Build: config.BuildConfig{},
 		Language: config.LanguageConfig{
-			Type:    "golang",
-			Version: "1.21",
+			Type: "golang",
 		},
 	}
 
@@ -222,8 +214,7 @@ func TestGenerator_GenerateScripts(t *testing.T) {
 		},
 		Build: config.BuildConfig{},
 		Language: config.LanguageConfig{
-			Type:    "golang",
-			Version: "1.21",
+			Type: "golang",
 		},
 	}
 
@@ -269,15 +260,11 @@ func TestGenerator_GenerateWithKubernetesConfig(t *testing.T) {
 		},
 		Build: config.BuildConfig{},
 		Language: config.LanguageConfig{
-			Type:    "golang",
-			Version: "1.21",
+			Type: "golang",
 		},
 		LocalDev: config.LocalDevConfig{
 			Kubernetes: config.KubernetesConfig{
 				Enabled: true,
-				ConfigMap: config.ConfigMapConfig{
-					AutoDetect: true,
-				},
 			},
 		},
 	}
@@ -290,7 +277,6 @@ func TestGenerator_GenerateWithKubernetesConfig(t *testing.T) {
 	require.NoError(t, err, "Generate() should not return an error")
 
 	// Assert: Check Makefile was created with Kubernetes targets
-	// Note: ConfigMap is generated via Makefile commands (k8s-configmap target), not in main generation flow
 	makefilePath := filepath.Join(outputDir, "Makefile")
 	_, err = os.Stat(makefilePath)
 	require.NoError(t, err, "Makefile should be created")

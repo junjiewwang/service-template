@@ -31,6 +31,9 @@ func (l *Loader) Load() (*ServiceConfig, error) {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
+	// Apply default values
+	applyDefaults(&config)
+
 	return &config, nil
 }
 
@@ -40,6 +43,9 @@ func LoadFromBytes(data []byte) (*ServiceConfig, error) {
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("failed to parse config: %w", err)
 	}
+
+	// Apply default values
+	applyDefaults(&config)
 
 	return &config, nil
 }
@@ -56,4 +62,21 @@ func (l *Loader) Save(config *ServiceConfig) error {
 	}
 
 	return nil
+}
+
+// applyDefaults applies default values to the configuration
+func applyDefaults(config *ServiceConfig) {
+	// Default deploy directory
+	if config.Service.DeployDir == "" {
+		config.Service.DeployDir = "/usr/local/services"
+	}
+
+	// Default auto_detect for dependency files
+	// Note: YAML unmarshaling sets bool to false by default
+	// We need to check if it was explicitly set or not
+	// Since we can't distinguish between "not set" and "false" with bool,
+	// we treat missing field as "true" by checking if Files is also empty
+	if !config.Build.DependencyFiles.AutoDetect && len(config.Build.DependencyFiles.Files) == 0 {
+		config.Build.DependencyFiles.AutoDetect = true
+	}
 }

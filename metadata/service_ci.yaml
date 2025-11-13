@@ -161,9 +161,6 @@ local_dev:
     output_dir: k8s-manifests
     volume_type: configMap
 
-    configmap:
-      auto_detect: true
-
     wait:
       enabled: true
       timeout: 300s

@@ -166,7 +166,6 @@ func (p *VariablePool) fillServiceVariables(shared *SharedVariables) {
 func (p *VariablePool) fillLanguageVariables(shared *SharedVariables) {
 	cfg := p.ctx.Config
 	shared.vars[VarLanguage] = cfg.Language.Type
-	shared.vars[VarLanguageVersion] = cfg.Language.Version
 	shared.vars["LANGUAGE_CONFIG"] = cfg.Language.Config
 }
 

@@ -4,17 +4,27 @@ import (
 	"strings"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	"github.com/junjiewwang/service-template/pkg/generator/domain/services"
 )
 
 // getDependencyFilesList returns list of dependency files
-func getDependencyFilesList(cfg *config.ServiceConfig) []string {
+// projectDir: the root directory of the project to scan for dependency files
+func getDependencyFilesList(cfg *config.ServiceConfig, projectDir string) []string {
 	if cfg.Build.DependencyFiles.AutoDetect {
-		return getDefaultDependencyFiles(cfg.Language.Type)
+		// Use language service to detect actual dependency files in the project
+		langService := services.NewLanguageService()
+		return langService.GetDependencyFilesWithDetection(
+			cfg.Language.Type,
+			projectDir,
+			true,
+			nil,
+		)
 	}
 	return cfg.Build.DependencyFiles.Files
 }
 
 // getDepsInstallCommand generates dependency installation command
+// Deprecated: Use LanguageService.GetDepsInstallCommand instead
 func getDepsInstallCommand(language string) string {
 	switch language {
 	case "go":
@@ -27,22 +37,6 @@ func getDepsInstallCommand(language string) string {
 		return "mvn dependency:go-offline"
 	default:
 		return "echo 'No dependency installation needed'"
-	}
-}
-
-// getDefaultDependencyFiles returns default dependency files for a language
-func getDefaultDependencyFiles(language string) []string {
-	switch language {
-	case "go":
-		return []string{"go.mod", "go.sum"}
-	case "python":
-		return []string{"requirements.txt"}
-	case "nodejs":
-		return []string{"package.json", "package-lock.json"}
-	case "java":
-		return []string{"pom.xml"}
-	default:
-		return []string{}
 	}
 }
 

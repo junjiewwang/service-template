@@ -323,11 +323,6 @@ local_dev:
     # 卷类型配置（kompose 转换时使用）
     volume_type: configMap              # configMap | persistentVolumeClaim | emptyDir | hostPath
     
-    # ConfigMap 配置（自动推导）
-    configmap:
-      auto_detect: true                 # 自动从 compose.volumes 推导
-      # name: custom-config             # 可选：自定义 ConfigMap 名称
-    
     # 部署等待配置
     wait:
       enabled: true

@@ -32,9 +32,72 @@ type PortConfig struct {
 
 // LanguageConfig contains language-specific settings
 type LanguageConfig struct {
-	Type    string            `yaml:"type"`
-	Version string            `yaml:"version"`
-	Config  map[string]string `yaml:"config,omitempty"`
+	Type   string                 `yaml:"type"`
+	Config map[string]interface{} `yaml:"config,omitempty"`
+}
+
+// GetString gets a string value from config with default
+func (l *LanguageConfig) GetString(key string, defaultValue string) string {
+	if l.Config == nil {
+		return defaultValue
+	}
+	if val, ok := l.Config[key]; ok {
+		if strVal, ok := val.(string); ok {
+			return strVal
+		}
+	}
+	return defaultValue
+}
+
+// GetInt gets an int value from config with default
+func (l *LanguageConfig) GetInt(key string, defaultValue int) int {
+	if l.Config == nil {
+		return defaultValue
+	}
+	if val, ok := l.Config[key]; ok {
+		switch v := val.(type) {
+		case int:
+			return v
+		case float64:
+			return int(v)
+		}
+	}
+	return defaultValue
+}
+
+// GetBool gets a bool value from config with default
+func (l *LanguageConfig) GetBool(key string, defaultValue bool) bool {
+	if l.Config == nil {
+		return defaultValue
+	}
+	if val, ok := l.Config[key]; ok {
+		if boolVal, ok := val.(bool); ok {
+			return boolVal
+		}
+	}
+	return defaultValue
+}
+
+// GetStringSlice gets a string slice from config
+func (l *LanguageConfig) GetStringSlice(key string) []string {
+	if l.Config == nil {
+		return nil
+	}
+	if val, ok := l.Config[key]; ok {
+		switch v := val.(type) {
+		case []string:
+			return v
+		case []interface{}:
+			result := make([]string, 0, len(v))
+			for _, item := range v {
+				if str, ok := item.(string); ok {
+					result = append(result, str)
+				}
+			}
+			return result
+		}
+	}
+	return nil
 }
 
 // BuildConfig contains build-related settings
@@ -142,6 +205,8 @@ type LocalDevConfig struct {
 type ComposeConfig struct {
 	Resources   ResourcesConfig     `yaml:"resources,omitempty"`
 	Volumes     []VolumeConfig      `yaml:"volumes,omitempty"`
+	Environment []EnvConfig         `yaml:"environment,omitempty"` // Compose-specific environment variables
+	Entrypoint  []string            `yaml:"entrypoint,omitempty"`  // Override container entrypoint
 	Healthcheck ComposeHealthConfig `yaml:"healthcheck,omitempty"`
 	Labels      map[string]string   `yaml:"labels,omitempty"`
 }
@@ -176,18 +241,11 @@ type ComposeHealthConfig struct {
 
 // KubernetesConfig for Kubernetes settings
 type KubernetesConfig struct {
-	Enabled    bool            `yaml:"enabled"`
-	Namespace  string          `yaml:"namespace"`
-	OutputDir  string          `yaml:"output_dir"`
-	VolumeType string          `yaml:"volume_type"` // configMap | persistentVolumeClaim | emptyDir | hostPath
-	ConfigMap  ConfigMapConfig `yaml:"configmap,omitempty"`
-	Wait       WaitConfig      `yaml:"wait,omitempty"`
-}
-
-// ConfigMapConfig for ConfigMap settings
-type ConfigMapConfig struct {
-	AutoDetect bool   `yaml:"auto_detect"`
-	Name       string `yaml:"name,omitempty"`
+	Enabled    bool       `yaml:"enabled"`
+	Namespace  string     `yaml:"namespace"`
+	OutputDir  string     `yaml:"output_dir"`
+	VolumeType string     `yaml:"volume_type"` // configMap | persistentVolumeClaim | emptyDir | hostPath
+	Wait       WaitConfig `yaml:"wait,omitempty"`
 }
 
 // WaitConfig for deployment wait settings

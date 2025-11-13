@@ -20,9 +20,8 @@ type Variables struct {
 	ServiceBinDir string
 
 	// Language variables
-	Language        string
-	LanguageVersion string
-	LanguageConfig  map[string]string
+	Language       string
+	LanguageConfig map[string]interface{}
 
 	// Architecture variables
 	GOARCH string
@@ -49,15 +48,14 @@ type Variables struct {
 // NewVariables creates a new Variables instance from config
 func NewVariables(cfg *config.ServiceConfig, paths *Paths) *Variables {
 	vars := &Variables{
-		ServiceName:     cfg.Service.Name,
-		ServiceRoot:     fmt.Sprintf("%s/%s", cfg.Service.DeployDir, cfg.Service.Name),
-		DeployDir:       cfg.Service.DeployDir,
-		Language:        cfg.Language.Type,
-		LanguageVersion: cfg.Language.Version,
-		LanguageConfig:  cfg.Language.Config,
-		Ports:           cfg.Service.Ports,
-		Config:          cfg,
-		paths:           paths,
+		ServiceName:    cfg.Service.Name,
+		ServiceRoot:    fmt.Sprintf("%s/%s", cfg.Service.DeployDir, cfg.Service.Name),
+		DeployDir:      cfg.Service.DeployDir,
+		Language:       cfg.Language.Type,
+		LanguageConfig: cfg.Language.Config,
+		Ports:          cfg.Service.Ports,
+		Config:         cfg,
+		paths:          paths,
 	}
 
 	// Set main service port (first port)
@@ -115,7 +113,6 @@ func (v *Variables) ToMap() map[string]interface{} {
 		"ConfigDir":         v.ConfigDir,
 		"ServiceBinDir":     v.ServiceBinDir,
 		"Language":          v.Language,
-		"LanguageVersion":   v.LanguageVersion,
 		"LanguageConfig":    v.LanguageConfig,
 		"GOARCH":            v.GOARCH,
 		"GOOS":              v.GOOS,

@@ -21,7 +21,6 @@ func TestNewVariables(t *testing.T) {
 		},
 		Language: config.LanguageConfig{
 			Type:    "golang",
-			Version: "1.21",
 		},
 		Build: config.BuildConfig{},
 	}
@@ -49,7 +48,7 @@ func TestVariables_WithArchitecture(t *testing.T) {
 			Ports:     []config.PortConfig{{Name: "http", Port: 8080, Protocol: "TCP"}},
 			DeployDir: "/usr/local/services",
 		},
-		Language: config.LanguageConfig{Type: "golang", Version: "1.21"},
+		Language: config.LanguageConfig{Type: "golang"},
 	}
 
 	paths := context.NewPaths(cfg)
@@ -84,7 +83,7 @@ func TestVariables_WithPlugin(t *testing.T) {
 			Ports:     []config.PortConfig{{Name: "http", Port: 8080, Protocol: "TCP"}},
 			DeployDir: "/usr/local/services",
 		},
-		Language: config.LanguageConfig{Type: "go", Version: "1.23"},
+		Language: config.LanguageConfig{Type: "go"},
 	}
 
 	paths := context.NewPaths(cfg)
@@ -113,7 +112,7 @@ func TestVariables_ToMap(t *testing.T) {
 			Ports:     []config.PortConfig{{Name: "http", Port: 8080, Protocol: "TCP"}},
 			DeployDir: "/usr/local/services",
 		},
-		Language: config.LanguageConfig{Type: "golang", Version: "1.21"},
+		Language: config.LanguageConfig{Type: "golang"},
 	}
 
 	paths := context.NewPaths(cfg)

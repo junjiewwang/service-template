@@ -24,8 +24,7 @@ func TestValidator_Validate(t *testing.T) {
 					DeployDir: "/usr/local/services",
 				},
 				Language: LanguageConfig{
-					Type:    "go",
-					Version: "1.23",
+					Type: "go",
 				},
 				Build: BuildConfig{
 					BuilderImage: ArchImageConfig{
@@ -69,8 +68,7 @@ func TestValidator_Validate(t *testing.T) {
 					DeployDir: "/usr/local/services",
 				},
 				Language: LanguageConfig{
-					Type:    "go",
-					Version: "1.23",
+					Type: "go",
 				},
 				Build: BuildConfig{
 					BuilderImage: ArchImageConfig{AMD64: "b", ARM64: "b"},
@@ -95,8 +93,7 @@ func TestValidator_Validate(t *testing.T) {
 					DeployDir: "/usr/local/services",
 				},
 				Language: LanguageConfig{
-					Type:    "go",
-					Version: "1.23",
+					Type: "go",
 				},
 				Build: BuildConfig{
 					BuilderImage: ArchImageConfig{AMD64: "b", ARM64: "b"},
@@ -119,8 +116,7 @@ func TestValidator_Validate(t *testing.T) {
 					DeployDir: "/usr/local/services",
 				},
 				Language: LanguageConfig{
-					Type:    "invalid",
-					Version: "1.0",
+					Type: "invalid",
 				},
 				Build: BuildConfig{
 					BuilderImage: ArchImageConfig{AMD64: "b", ARM64: "b"},
@@ -143,8 +139,7 @@ func TestValidator_Validate(t *testing.T) {
 					DeployDir: "/usr/local/services",
 				},
 				Language: LanguageConfig{
-					Type:    "go",
-					Version: "1.23",
+					Type: "go",
 				},
 				Build: BuildConfig{
 					BuilderImage: ArchImageConfig{AMD64: "b", ARM64: "b"},
@@ -239,7 +234,7 @@ func TestValidator_ValidateHealthcheck(t *testing.T) {
 					Ports:     []PortConfig{{Name: "http", Port: 8080, Protocol: "TCP"}},
 					DeployDir: "/usr/local/services",
 				},
-				Language: LanguageConfig{Type: "go", Version: "1.23"},
+				Language: LanguageConfig{Type: "go"},
 				Build: BuildConfig{
 					BuilderImage: ArchImageConfig{AMD64: "b", ARM64: "b"},
 					RuntimeImage: ArchImageConfig{AMD64: "r", ARM64: "r"},

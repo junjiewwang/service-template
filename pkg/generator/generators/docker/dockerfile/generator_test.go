@@ -92,30 +92,5 @@ func TestDetectPackageManager(t *testing.T) {
 	}
 }
 
-func TestGetDefaultDependencyFiles(t *testing.T) {
-	tests := []struct {
-		language string
-		want     []string
-	}{
-		{"go", []string{"go.mod", "go.sum"}},
-		{"python", []string{"requirements.txt"}},
-		{"nodejs", []string{"package.json", "package-lock.json"}},
-		{"java", []string{"pom.xml"}},
-		{"unknown", []string{}},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.language, func(t *testing.T) {
-			got := getDefaultDependencyFiles(tt.language)
-			if len(got) != len(tt.want) {
-				t.Errorf("getDefaultDependencyFiles(%s) length = %d, want %d", tt.language, len(got), len(tt.want))
-				return
-			}
-			for i := range got {
-				if got[i] != tt.want[i] {
-					t.Errorf("getDefaultDependencyFiles(%s)[%d] = %s, want %s", tt.language, i, got[i], tt.want[i])
-				}
-			}
-		})
-	}
-}
+// TestGetDefaultDependencyFiles removed - functionality moved to LanguageService
+// See pkg/generator/domain/services/language_service_test.go for dependency file detection tests
