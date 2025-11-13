@@ -17,6 +17,7 @@ import (
 	_ "github.com/junjiewwang/service-template/pkg/generator/generators/docker/devops"
 	_ "github.com/junjiewwang/service-template/pkg/generator/generators/docker/dockerfile"
 	_ "github.com/junjiewwang/service-template/pkg/generator/generators/scripts/build"
+	_ "github.com/junjiewwang/service-template/pkg/generator/generators/scripts/build_plugins"
 	_ "github.com/junjiewwang/service-template/pkg/generator/generators/scripts/deps_install"
 	_ "github.com/junjiewwang/service-template/pkg/generator/generators/scripts/entrypoint"
 	_ "github.com/junjiewwang/service-template/pkg/generator/generators/scripts/healthcheck"
@@ -203,6 +204,51 @@ func (g *Generator) generateScripts() error {
 		fmt.Printf("✓ Generated %s\n", scriptPath)
 	}
 
+	// Generate build_plugins.sh if plugins exist
+	if len(g.config.Plugins.Items) > 0 {
+		if err := g.generateBuildPluginsScript(); err != nil {
+			return fmt.Errorf("failed to generate build_plugins.sh: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// generateBuildPluginsScript generates build_plugins.sh script
+func (g *Generator) generateBuildPluginsScript() error {
+	generator, err := g.createGenerator("build-plugins-script")
+	if err != nil {
+		return fmt.Errorf("failed to create build-plugins-script generator: %w", err)
+	}
+
+	content, err := generator.Generate()
+	if err != nil {
+		return fmt.Errorf("failed to generate content: %w", err)
+	}
+
+	// If no plugins, skip file generation
+	if content == "" {
+		return nil
+	}
+
+	// Output to .tad/build/{service-name}/build_plugins.sh
+	scriptDir := filepath.Join(g.outputDir, ".tad", "build", g.config.Service.Name)
+	outputPath := filepath.Join(scriptDir, "build_plugins.sh")
+
+	if err := os.MkdirAll(scriptDir, 0755); err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	if err := utils.WriteFile(outputPath, content); err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
+	}
+
+	// Make script executable
+	if err := os.Chmod(outputPath, 0755); err != nil {
+		return fmt.Errorf("failed to make executable: %w", err)
+	}
+
+	fmt.Printf("✓ Generated .tad/build/%s/build_plugins.sh\n", g.config.Service.Name)
 	return nil
 }
 

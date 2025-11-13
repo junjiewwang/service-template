@@ -1,0 +1,123 @@
+#!/bin/bash
+# build_plugins.sh - Plugin build script (独立于服务构建)
+# This script is executed in the plugin-builder stage of Dockerfile
+# It downloads and prepares all plugins in /plugins directory
+
+set -e # Exit on error
+
+# ============================================
+# Plugin Build Configuration
+# ============================================
+PROJECT_ROOT="${PROJECT_ROOT:-/opt}"
+PLUGIN_ROOT_DIR="{{ .PLUGIN_ROOT_DIR }}"
+
+echo "========================================="
+echo "Plugin Build System"
+echo "========================================="
+echo "Project root: ${PROJECT_ROOT}"
+echo "Plugin root directory: ${PLUGIN_ROOT_DIR}"
+echo ""
+
+# Create plugin root directory
+mkdir -p ${PLUGIN_ROOT_DIR}
+
+{{- range .PLUGINS }}
+# ============================================
+# Build plugin: {{ .Name }}
+# ============================================
+PLUGIN_NAME="{{ .Name }}"
+PLUGIN_DOWNLOAD_URL="{{ .DownloadURL }}"
+PLUGIN_INSTALL_DIR="{{ .InstallDir }}"
+PLUGIN_WORK_DIR="${PLUGIN_ROOT_DIR}/{{ .Name }}"
+
+echo "Building plugin: ${PLUGIN_NAME}"
+echo "  Description: {{ .Description }}"
+echo "  Download URL: ${PLUGIN_DOWNLOAD_URL}"
+echo "  Work directory: ${PLUGIN_WORK_DIR}"
+echo "  Final install directory: ${PLUGIN_INSTALL_DIR}"
+
+# Create plugin work directory
+mkdir -p ${PLUGIN_WORK_DIR}
+
+{{- if .InstallCommand }}
+# Use custom install command from configuration
+echo "  Using custom install command..."
+{{ .InstallCommand }}
+{{- else }}
+# Default install command: download and execute script
+echo "  Using default install command..."
+set -o pipefail # Enable pipefail to catch errors in pipe
+if ! curl -fsSL ${PLUGIN_DOWNLOAD_URL} | bash -s ${PLUGIN_WORK_DIR}; then
+	echo "ERROR: Failed to download or execute plugin script"
+	echo "  URL: ${PLUGIN_DOWNLOAD_URL}"
+	echo "  Target directory: ${PLUGIN_WORK_DIR}"
+	exit 1
+fi
+{{- end }}
+
+if [ $? -eq 0 ]; then
+	echo "✓ Plugin {{ .Name }} built successfully"
+else
+	echo "ERROR: Plugin {{ .Name }} build failed"
+	exit 1
+fi
+
+echo ""
+{{- end }}
+
+# ============================================
+# Generate unified plugin install script
+# ============================================
+echo "Generating plugin install script..."
+INSTALL_SCRIPT="${PLUGIN_ROOT_DIR}/install.sh"
+cat > ${INSTALL_SCRIPT} << 'INSTALL_EOF'
+#!/bin/bash
+# Plugin installation script
+# This script copies plugins from /plugins/<name> to their install directories
+# and sets up runtime environment variables
+set -e
+
+echo "========================================="
+echo "Installing Plugins"
+echo "========================================="
+
+{{- range .PLUGINS }}
+# Install plugin: {{ .Name }}
+echo "Installing {{ .Name }} to {{ .InstallDir }}..."
+mkdir -p {{ .InstallDir }}
+if [ -d "{{ $.PLUGIN_ROOT_DIR }}/{{ .Name }}" ]; then
+	cp -rf {{ $.PLUGIN_ROOT_DIR }}/{{ .Name }}/* {{ .InstallDir }}/
+	echo "✓ {{ .Name }} installed successfully"
+else
+	echo "ERROR: Plugin directory {{ $.PLUGIN_ROOT_DIR }}/{{ .Name }} not found"
+	exit 1
+fi
+
+{{- if .RuntimeEnv }}
+# Setup runtime environment for {{ .Name }}
+ENV_FILE="{{ .InstallDir }}/.env"
+cat > ${ENV_FILE} << 'INNER_ENV_EOF'
+{{- range .RuntimeEnv }}
+export {{ .Name }}="{{ .Value }}"
+{{- end }}
+INNER_ENV_EOF
+echo "✓ Environment variables written to ${ENV_FILE}"
+{{- end }}
+
+{{- end }}
+
+echo "========================================="
+echo "All plugins installed successfully"
+echo "========================================="
+INSTALL_EOF
+
+chmod +x ${INSTALL_SCRIPT}
+echo "✓ Generated ${INSTALL_SCRIPT}"
+echo ""
+
+echo "========================================="
+echo "Plugin build completed successfully"
+echo "========================================="
+echo "Total plugins built: {{ len .PLUGINS }}"
+echo "Plugin directory: ${PLUGIN_ROOT_DIR}"
+echo ""

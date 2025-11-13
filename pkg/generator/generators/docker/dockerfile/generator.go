@@ -78,9 +78,18 @@ func (g *Generator) prepareTemplateVars() map[string]interface{} {
 
 	// Use plugin service to process plugins
 	pluginService := services.NewPluginService(ctx, g.GetEngine())
-	if pluginService.HasPlugins() {
+	hasPlugins := pluginService.HasPlugins()
+
+	composer.WithCustom("HAS_PLUGINS", hasPlugins)
+
+	if hasPlugins {
 		plugins := pluginService.PrepareForDockerfile()
 		composer.Override("PLUGINS", plugins)
+
+		// Add plugin build script variables
+		composer.
+			WithCustom("PLUGIN_BUILD_SCRIPT", "build_plugins.sh").
+			WithCustom("PLUGIN_BUILD_SCRIPT_CONTAINER_PATH", fmt.Sprintf("%s/build_plugins.sh", ctx.Paths.CI.ContainerScriptDir))
 	}
 
 	return composer.Build()

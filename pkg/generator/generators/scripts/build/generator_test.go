@@ -47,8 +47,9 @@ func TestGenerator_Generate(t *testing.T) {
 	if !strings.Contains(content, "post-build") {
 		t.Error("Expected post-build command not found")
 	}
-	if !strings.Contains(content, "test-plugin") {
-		t.Error("Expected plugin name not found")
+	// Plugin logic has been moved to build_plugins.sh, so build.sh should NOT contain plugin names
+	if strings.Contains(content, "test-plugin") {
+		t.Error("build.sh should not contain plugin logic (moved to build_plugins.sh)")
 	}
 }
 

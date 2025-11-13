@@ -23,6 +23,7 @@ func NewPluginService(ctx *context.GeneratorContext, engine *core.TemplateEngine
 // PluginInfo represents plugin information (domain model)
 type PluginInfo struct {
 	Name           string
+	Description    string
 	DownloadURL    string
 	InstallDir     string
 	InstallCommand string
@@ -58,6 +59,7 @@ func (s *PluginService) PrepareForBuildScript() []PluginInfo {
 
 		plugins = append(plugins, PluginInfo{
 			Name:           plugin.Name,
+			Description:    plugin.Description,
 			DownloadURL:    plugin.DownloadURL,
 			InstallDir:     sharedInstallDir,
 			InstallCommand: plugin.InstallCommand,

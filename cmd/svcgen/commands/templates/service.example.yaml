@@ -309,16 +309,17 @@ local_dev:
     #   ${CI_SCRIPT_DIR}         - CI 脚本目录
     #   ${CI_BUILD_CONFIG_DIR}   - 构建配置目录
     #   ${CI_CONFIG_TEMPLATE_DIR} - 配置模板目录
-    volumes:
-    - source: ${CI_BUILD_CONFIG_DIR}/config.yaml
-      target: ${SERVICE_ROOT}/config.yaml
-      type: bind
-      description: "Service config"
+    # volumes: 
+    # - source: ${CI_BUILD_CONFIG_DIR}/config.yaml
 
-    - source: ${CI_BUILD_CONFIG_DIR}/sdk.json
-      target: ${PLUGIN_INSTALL_DIR}/config/sdk.json
-      type: bind
-      description: "TCE SDK config"
+    #   target: ${SERVICE_ROOT}/config.yaml
+    #   type: bind
+    #   description: "Service config"
+
+    # - source: ${CI_BUILD_CONFIG_DIR}/sdk.json
+    #   target: ${PLUGIN_INSTALL_DIR}/config/sdk.json
+    #   type: bind
+    #   description: "TCE SDK config"
     # 数据卷示例
     # - source: app-data
     #   target: /data
