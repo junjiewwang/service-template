@@ -393,19 +393,19 @@ ci:
   # 默认: .tad/build/{service-name}
   # 该目录用于存放构建脚本、Dockerfile 等，所有构建相关文件集中管理
   # 留空使用默认值
-  script_dir: ""
+  # script_dir: ""
 
   # 构建配置目录（用于 K8s ConfigMap 等）
   # 默认: {script_dir}/build
   # 该目录用于存放配置文件，会被挂载到容器中
   # 留空使用默认值
-  build_config_dir: ""
+  # build_config_dir: ""
 
   # 配置模板目录（用于用户自定义配置模板）
   # 默认: {script_dir}/config_template
   # 该目录用于存放配置模板文件，可在构建时渲染
   # 留空使用默认值
-  config_template_dir: ""
+  # config_template_dir: ""
 
 # ============================================
 # 元数据
