@@ -393,7 +393,7 @@ func TestJavaStrategy_GetDependencyFilesWithDetection(t *testing.T) {
 		{
 			name:       "no dependency files (fallback)",
 			setupFiles: []string{},
-			expected:   []string{"pom.xml", "build.gradle", "settings.gradle"}, // Returns all as fallback
+			expected:   []string{}, // Returns all as fallback
 		},
 	}
 

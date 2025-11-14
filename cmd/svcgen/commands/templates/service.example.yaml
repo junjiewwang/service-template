@@ -104,23 +104,41 @@ build:
     amd64: "mirrors.tencent.com/tencentos/tencentos3-minimal:latest"
     arm64: "mirrors.tencent.com/tencentos/tencentos3-minimal:latest"
 
-  # 构建阶段系统依赖
+  # 构建阶段依赖配置
   # 工具会自动检测包管理器（apt-get/yum/apk/dnf/zypper）
-  system_dependencies:
-    packages:
+  dependencies:
+    # 系统包列表（通过包管理器安装）
+    system_pkgs:
     - git
     - make
     - gcc
+    # 自定义包列表（通过自定义命令安装）
+    # 可用变量：
+    #   ${BUILD_OUTPUT_DIR}   - 构建输出目录（/opt/dist）
+    #   ${SERVICE_NAME}       - 服务名称
+    #   ${SERVICE_ROOT}       - 项目根目录（/opt）
+    #   ${PROJECT_ROOT}       - 项目根目录（/opt，同 SERVICE_ROOT）
+    #   ${DEPLOY_DIR}         - 部署目录
+    # custom_pkgs:
+    # - name: nacos
+    #   description: "Nacos Service Discovery"
+    #   install_command: |
+    #     echo "Installing Nacos to ${BUILD_OUTPUT_DIR}..."
+    #     curl -L https://github.com/alibaba/nacos/releases/download/2.2.0/nacos-server-2.2.0.tar.gz \
+    #       -o ${BUILD_OUTPUT_DIR}/nacos.tar.gz
+    #     tar -xzf ${BUILD_OUTPUT_DIR}/nacos.tar.gz -C ${BUILD_OUTPUT_DIR}
+    #     echo "Nacos installed successfully"
+    #   required: true
 
-  # 构建命令（三阶段）
-  # 可用变量：
-  #   ${SERVICE_NAME}       - 服务名称
-  #   ${SERVICE_ROOT}       - 项目根目录（容器内为 /opt，等同于 PROJECT_ROOT）
-  #   ${PROJECT_ROOT}       - 项目根目录（容器内为 /opt，等同于 SERVICE_ROOT）
-  #   ${BUILD_OUTPUT_DIR}   - 构建输出目录（容器内为 /opt/dist）
-  #   ${DEPLOY_DIR}         - 部署目录（默认 /usr/local/services）
-  #   ${GOARCH}             - Go 架构（仅 Go）
-  #   ${GOOS}               - Go 操作系统（仅 Go）
+    # 构建命令（三阶段）
+    # 可用变量：
+    #   ${SERVICE_NAME}       - 服务名称
+    #   ${SERVICE_ROOT}       - 项目根目录（容器内为 /opt，等同于 PROJECT_ROOT）
+    #   ${PROJECT_ROOT}       - 项目根目录（容器内为 /opt，等同于 SERVICE_ROOT）
+    #   ${BUILD_OUTPUT_DIR}   - 构建输出目录（容器内为 /opt/dist）
+    #   ${DEPLOY_DIR}         - 部署目录（默认 /usr/local/services）
+    #   ${GOARCH}             - Go 架构（仅 Go）
+    #   ${GOOS}               - Go 操作系统（仅 Go）
   commands:
     pre_build: |
       echo "Pre-build stage"
@@ -148,6 +166,7 @@ plugins:
 
   # 插件列表
   items:
+  # 示例1：静态 URL（架构无关）
   - name: selfMonitor
     description: "TCE Self Monitor Tool"
     download_url: "https://mirrors.tencent.com/repository/generic/selfMonitor/download_tool.sh"
@@ -159,7 +178,7 @@ plugins:
     # 可用变量：
     #   ${PLUGIN_NAME}           - 插件名称
     #   ${PLUGIN_DESCRIPTION}    - 插件描述
-    #   ${PLUGIN_DOWNLOAD_URL}   - 下载地址
+    #   ${PLUGIN_DOWNLOAD_URL}   - 下载地址（自动根据架构解析）
     #   ${PLUGIN_WORK_DIR}       - 插件工作目录（/plugins/<name>）
     #   ${PLUGIN_INSTALL_DIR}    - 最终安装目录（runtime 阶段，从 plugins.install_dir 获取）
     #   ${SERVICE_NAME}          - 服务名称
@@ -180,16 +199,48 @@ plugins:
       value: ${PLUGIN_INSTALL_DIR}/config
 
     required: true
+  # 示例2：架构映射 URL（支持多架构）
+  # download_url 支持两种配置方式：
+  # 1. 静态字符串：适用于架构无关的插件
+  #    download_url: "https://example.com/plugin.tar.gz"
+  #
+  # 2. 架构映射：适用于需要区分架构的插件（如 JDK）
+  #    download_url:
+  #      x86_64: "https://example.com/plugin-x86_64.tar.gz"
+  #      aarch64: "https://example.com/plugin-aarch64.tar.gz"
+  #      default: "https://example.com/plugin-generic.tar.gz"  # 可选的回退URL
+  #
+  # 支持的架构键：x86_64, amd64, aarch64, arm64, default
+  # 注意：x86_64 和 amd64 会被视为同一架构，aarch64 和 arm64 也是
+  #
+  # - name: jre
+  #   description: "Java Runtime Environment"
+  #   download_url:
+  #     x86_64: "https://mirrors.tencent.com/repository/generic/konajdk/17/17.0.17/linux-x86_64/TencentKona-17.0.17.b1-jdk_linux-x86_64.tar.gz"
+  #     aarch64: "https://mirrors.tencent.com/repository/generic/konajdk/17/17.0.17/linux-aarch64/TencentKona-17.0.17.b1-jdk_linux-aarch64.tar.gz"
+  #   install_command: |
+  #     echo "Downloading ${PLUGIN_NAME} to ${PLUGIN_WORK_DIR}..."
+  #     curl -fsSL "${PLUGIN_DOWNLOAD_URL}" -o "/tmp/jdk.tar.gz"
+  #     mkdir -p "${PLUGIN_WORK_DIR}/${PLUGIN_NAME}"
+  #     tar -xzf "/tmp/jdk.tar.gz" -C "${PLUGIN_WORK_DIR}/${PLUGIN_NAME}" --strip-components=1
+  #     rm -f "/tmp/jdk.tar.gz"
+  #     echo "✓ JDK extracted successfully"
+  #   runtime_env:
+  #   - name: JAVA_HOME
+  #     value: ${PLUGIN_INSTALL_DIR}/jre
+  #   - name: PATH
+  #     value: ${PLUGIN_INSTALL_DIR}/jre/bin:${PATH}
+  #   required: false
 
-# ============================================
-# 运行时配置
-# ============================================
-# 运行时脚本生成：
-# 1. build.sh 会生成 entrypoint.sh 和 healthcheck.sh 脚本
-# 2. 这些脚本会被放置在服务目录中（${SERVICE_ROOT}）
-# 3. entrypoint.sh 负责加载插件环境变量并启动服务
-# 4. healthcheck.sh 负责服务健康检查
-# ============================================
+  # ============================================
+  # 运行时配置
+  # ============================================
+  # 运行时脚本生成：
+  # 1. build.sh 会生成 entrypoint.sh 和 healthcheck.sh 脚本
+  # 2. 这些脚本会被放置在服务目录中（${SERVICE_ROOT}）
+  # 3. entrypoint.sh 负责加载插件环境变量并启动服务
+  # 4. healthcheck.sh 负责服务健康检查
+  # ============================================
 runtime:
   # 运行时系统依赖
   # 工具会自动检测包管理器

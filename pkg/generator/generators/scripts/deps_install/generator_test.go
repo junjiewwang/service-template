@@ -15,7 +15,7 @@ func TestGenerator_Generate(t *testing.T) {
 		"goproxy": "https://goproxy.cn",
 		"gosumdb": "sum.golang.org",
 	}
-	cfg.Build.SystemDependencies.Packages = []string{"git", "make"}
+	cfg.Build.Dependencies.SystemPkgs = []string{"git", "make"}
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	gen, err := New(ctx)

@@ -9,9 +9,6 @@ type GeneratorContext struct {
 	// Config is the service configuration
 	Config *config.ServiceConfig
 
-	// Variables holds all template variables
-	Variables *Variables
-
 	// Paths manages all path-related information
 	Paths *Paths
 
@@ -25,11 +22,9 @@ type GeneratorContext struct {
 // NewGeneratorContext creates a new generator context
 func NewGeneratorContext(cfg *config.ServiceConfig, outputDir string) *GeneratorContext {
 	paths := NewPaths(cfg)
-	variables := NewVariables(cfg, paths)
 
 	ctx := &GeneratorContext{
 		Config:    cfg,
-		Variables: variables,
 		Paths:     paths,
 		OutputDir: outputDir,
 	}
@@ -55,11 +50,11 @@ func (c *GeneratorContext) Validate() error {
 	if c.Config == nil {
 		return ErrNilConfig
 	}
-	if c.Variables == nil {
-		return ErrNilVariables
-	}
 	if c.Paths == nil {
 		return ErrNilPaths
+	}
+	if c.VariablePool == nil {
+		return ErrNilVariablePool
 	}
 	return nil
 }

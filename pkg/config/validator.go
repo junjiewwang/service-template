@@ -110,9 +110,39 @@ func (v *Validator) validatePlugins() {
 		if plugin.Name == "" {
 			v.errors = append(v.errors, fmt.Sprintf("plugins.items[%d].name is required", i))
 		}
-		if plugin.DownloadURL == "" {
+
+		// 验证 download_url
+		if plugin.DownloadURL.IsEmpty() {
 			v.errors = append(v.errors, fmt.Sprintf("plugins.items[%d].download_url is required", i))
+		} else if plugin.DownloadURL.IsArchMapping() {
+			// 如果是架构映射，验证架构键的合法性
+			urls, _ := plugin.DownloadURL.GetArchURLs()
+
+			validArchs := map[string]bool{
+				"x86_64":  true,
+				"amd64":   true,
+				"aarch64": true,
+				"arm64":   true,
+				"default": true,
+			}
+
+			for arch, url := range urls {
+				if !validArchs[arch] {
+					v.errors = append(v.errors, fmt.Sprintf(
+						"plugins.items[%d].download_url: unsupported architecture '%s'. "+
+							"Supported: x86_64, amd64, aarch64, arm64, default",
+						i, arch,
+					))
+				}
+				if url == "" {
+					v.errors = append(v.errors, fmt.Sprintf(
+						"plugins.items[%d].download_url: URL for architecture '%s' cannot be empty",
+						i, arch,
+					))
+				}
+			}
 		}
+
 		if plugin.InstallCommand == "" {
 			v.errors = append(v.errors, fmt.Sprintf("plugins.items[%d].install_command is required", i))
 		}

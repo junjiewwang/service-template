@@ -147,8 +147,8 @@ func createTestConfig() *config.ServiceConfig {
 				AMD64: "alpine:3.18",
 				ARM64: "alpine:3.18",
 			},
-			SystemDependencies: config.BuildSystemDependenciesConfig{
-				Packages: []string{"ca-certificates"},
+			Dependencies: config.DependenciesConfig{
+				SystemPkgs: []string{"ca-certificates"},
 			},
 		},
 		Runtime: config.RuntimeConfig{
@@ -172,7 +172,7 @@ func createTestConfig() *config.ServiceConfig {
 			Items: []config.PluginConfig{
 				{
 					Name:        "test-plugin",
-					DownloadURL: "https://example.com/plugin.sh",
+					DownloadURL: config.NewStaticDownloadURL("https://example.com/plugin.sh"),
 					RuntimeEnv: []config.EnvironmentVariable{
 						{Name: "PLUGIN_HOME", Value: "/opt/plugins"},
 					},

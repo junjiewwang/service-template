@@ -92,7 +92,9 @@ func New(ctx *context.GeneratorContext, options ...interface{}) (core.Generator,
 }
 
 func (g *Generator) Generate() (string, error) {
-    vars := g.GetContext().Variables.ToMap()
+    // Use the new variable system
+    composer := g.GetContext().GetVariableComposer().WithCommon()
+    vars := composer.Build()
     return g.RenderTemplate(myTemplate, vars)
 }
 

@@ -28,7 +28,7 @@ func TestGenerator_Generate(t *testing.T) {
 						{
 							Name:           "selfMonitor",
 							Description:    "TCE Self Monitor Tool",
-							DownloadURL:    "https://example.com/download.sh",
+							DownloadURL:    config.NewStaticDownloadURL("https://example.com/download.sh"),
 							InstallCommand: `curl -fsSL "${PLUGIN_DOWNLOAD_URL}" | bash -s "${PLUGIN_WORK_DIR}"`,
 							RuntimeEnv: []config.EnvironmentVariable{
 								{Name: "TOOL_PATH", Value: "${PLUGIN_INSTALL_DIR}"},
@@ -113,12 +113,12 @@ func TestGenerator_MultiplePlugins(t *testing.T) {
 				{
 					Name:        "plugin1",
 					Description: "First Plugin",
-					DownloadURL: "https://example.com/plugin1.sh",
+					DownloadURL: config.NewStaticDownloadURL("https://example.com/plugin1.sh"),
 				},
 				{
 					Name:        "plugin2",
 					Description: "Second Plugin",
-					DownloadURL: "https://example.com/plugin2.sh",
+					DownloadURL: config.NewStaticDownloadURL("https://example.com/plugin2.sh"),
 				},
 			},
 		},
@@ -144,5 +144,69 @@ func TestGenerator_MultiplePlugins(t *testing.T) {
 	}
 	if !strings.Contains(content, "Total plugins built: 2") {
 		t.Error("Generated content should show 2 plugins built")
+	}
+}
+
+func TestGenerator_ArchitectureMapping(t *testing.T) {
+	cfg := &config.ServiceConfig{
+		Service: config.ServiceInfo{
+			Name:      "test-service",
+			DeployDir: "/usr/local/services",
+		},
+		Plugins: config.PluginsConfig{
+			InstallDir: "/tce",
+			Items: []config.PluginConfig{
+				{
+					Name:        "jre",
+					Description: "Java Runtime Environment",
+					DownloadURL: config.NewArchMappingDownloadURL(map[string]string{
+						"x86_64":  "https://example.com/jdk-x86_64.tar.gz",
+						"aarch64": "https://example.com/jdk-aarch64.tar.gz",
+						"default": "https://example.com/jdk-generic.tar.gz",
+					}),
+					InstallCommand: `echo "Installing JDK"`,
+				},
+			},
+		},
+	}
+
+	ctx := context.NewGeneratorContext(cfg, "/tmp/test")
+	gen, err := New(ctx)
+	if err != nil {
+		t.Fatalf("Failed to create generator: %v", err)
+	}
+
+	content, err := gen.Generate()
+	if err != nil {
+		t.Fatalf("Generate() failed: %v", err)
+	}
+
+	// Check architecture detection logic is present
+	if !strings.Contains(content, "ARCH=$(uname -m)") {
+		t.Error("Generated content missing architecture detection")
+	}
+
+	// Check case statement is present
+	if !strings.Contains(content, "case \"${ARCH}\" in") {
+		t.Error("Generated content missing case statement")
+	}
+
+	// Check architecture-specific URLs
+	if !strings.Contains(content, "https://example.com/jdk-x86_64.tar.gz") {
+		t.Error("Generated content missing x86_64 URL")
+	}
+	if !strings.Contains(content, "https://example.com/jdk-aarch64.tar.gz") {
+		t.Error("Generated content missing aarch64 URL")
+	}
+	if !strings.Contains(content, "https://example.com/jdk-generic.tar.gz") {
+		t.Error("Generated content missing default URL")
+	}
+
+	// Check architecture aliases are combined
+	if !strings.Contains(content, "x86_64|amd64)") {
+		t.Error("Generated content should combine x86_64 and amd64 aliases")
+	}
+	if !strings.Contains(content, "aarch64|arm64)") {
+		t.Error("Generated content should combine aarch64 and arm64 aliases")
 	}
 }

@@ -478,9 +478,12 @@ langService.Register(&RubyStrategy{})
 var plugins []map[string]interface{}
 sharedInstallDir := ctx.Config.Plugins.InstallDir
 for _, plugin := range ctx.Config.Plugins.Items {
-    pluginVars := ctx.Variables.WithPlugin(plugin, sharedInstallDir)
+    // Get base variables using the new variable system
+    composer := ctx.GetVariableComposer().WithCommon().WithPlugin()
+    baseVars := composer.Build()
+    
     plugins = append(plugins, map[string]interface{}{
-        "InstallCommand": core.SubstituteVariables(plugin.InstallCommand, pluginVars.ToMap()),
+        "InstallCommand": core.SubstituteVariables(plugin.InstallCommand, baseVars),
         "Name":           plugin.Name,
         "InstallDir":     sharedInstallDir,
         "RuntimeEnv":     plugin.RuntimeEnv,

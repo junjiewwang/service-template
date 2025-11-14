@@ -255,11 +255,6 @@ func (s *JavaStrategy) GetDependencyFilesWithDetection(projectDir string) []stri
 		detectedFiles = append(detectedFiles, "settings.gradle")
 	}
 
-	// If no files detected, return all possible files as fallback
-	if len(detectedFiles) == 0 {
-		return s.GetDependencyFiles()
-	}
-
 	return detectedFiles
 }
 

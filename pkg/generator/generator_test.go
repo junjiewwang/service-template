@@ -42,7 +42,7 @@ func TestGenerator_Generate(t *testing.T) {
 				{
 					Name:        "test-plugin",
 					Description: "Test plugin",
-					DownloadURL: "https://example.com/plugin.tar.gz",
+					DownloadURL: config.NewStaticDownloadURL("https://example.com/plugin.tar.gz"),
 				},
 			},
 		},

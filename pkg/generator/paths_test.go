@@ -125,15 +125,16 @@ func TestCIPaths_GetAllScriptPaths(t *testing.T) {
 
 	// Assert: Verify all script paths are present
 	require.NotNil(t, allPaths)
-	assert.Len(t, allPaths, 5, "Should have 5 script paths")
+	assert.Len(t, allPaths, 6, "Should have 6 script paths")
 
 	// 验证所有脚本路径
 	expectedPaths := map[string]string{
-		"build-script":        "ci/scripts/build.sh",
-		"deps-install-script": "ci/scripts/build_deps_install.sh",
-		"rt-prepare-script":   "ci/scripts/rt_prepare.sh",
-		"entrypoint-script":   "ci/scripts/entrypoint.sh",
-		"healthcheck-script":  "ci/scripts/healthchk.sh",
+		"build-script":         "ci/scripts/build.sh",
+		"deps-install-script":  "ci/scripts/build_deps_install.sh",
+		"rt-prepare-script":    "ci/scripts/rt_prepare.sh",
+		"entrypoint-script":    "ci/scripts/entrypoint.sh",
+		"healthcheck-script":   "ci/scripts/healthchk.sh",
+		"build-plugins-script": "ci/scripts/build_plugins.sh",
 	}
 
 	for key, expectedPath := range expectedPaths {

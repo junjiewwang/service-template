@@ -33,66 +33,58 @@ echo "Build output: ${BUILD_OUTPUT_DIR}"
 echo "========================================="
 
 # ============================================
-# Install Build Dependencies
+# 1. Install System Packages
 # ============================================
-# Build dependencies are typically executable tools needed for compilation
-# Examples: git, make, gcc, etc.
-{{- if .BUILD_DEPS_PACKAGES }}
-BUILD_PACKAGES="{{ join " " .BUILD_DEPS_PACKAGES }}"
-{{- else }}
-BUILD_PACKAGES=""
-{{- end }}
+{{- if .HasSystemPackages }}
+echo "Installing system packages..."
+SYSTEM_PACKAGES="{{ join " " .SystemPackages }}"
 
-if [ -n "$BUILD_PACKAGES" ]; then
-	echo "Installing build dependencies: $BUILD_PACKAGES"
-	echo ""
-
-	# Detect package manager and install all packages at once
-	if command -v apk >/dev/null 2>&1; then
-		echo "Using apk package manager..."
-		apk add --no-cache $BUILD_PACKAGES || {
-			echo "ERROR: Failed to install packages with apk"
-			exit 1
-		}
-	elif command -v apt-get >/dev/null 2>&1; then
-		echo "Using apt-get package manager..."
-		apt-get update -qq && apt-get install -y $BUILD_PACKAGES || {
-			echo "ERROR: Failed to install packages with apt-get"
-			exit 1
-		}
-	elif command -v yum >/dev/null 2>&1; then
-		echo "Using yum package manager..."
-		yum install -y $BUILD_PACKAGES || {
-			echo "ERROR: Failed to install packages with yum"
-			exit 1
-		}
-	elif command -v dnf >/dev/null 2>&1; then
-		echo "Using dnf package manager..."
-		dnf install -y $BUILD_PACKAGES || {
-			echo "ERROR: Failed to install packages with dnf"
-			exit 1
-		}
-	elif command -v zypper >/dev/null 2>&1; then
-		echo "Using zypper package manager..."
-		zypper install -y $BUILD_PACKAGES || {
-			echo "ERROR: Failed to install packages with zypper"
-			exit 1
-		}
-	else
-		echo "ERROR: No supported package manager found"
-		echo "Supported package managers: apk, apt-get, yum, dnf, zypper"
+# Auto-detect package manager and install
+if command -v apk >/dev/null 2>&1; then
+	echo "Using apk package manager..."
+	apk add --no-cache $SYSTEM_PACKAGES || {
+		echo "ERROR: Failed to install packages with apk"
 		exit 1
-	fi
-
-	echo "✓ All build dependencies installed successfully"
-	echo ""
+	}
+elif command -v apt-get >/dev/null 2>&1; then
+	echo "Using apt-get package manager..."
+	apt-get update -qq && apt-get install -y $SYSTEM_PACKAGES || {
+		echo "ERROR: Failed to install packages with apt-get"
+		exit 1
+	}
+elif command -v yum >/dev/null 2>&1; then
+	echo "Using yum package manager..."
+	yum install -y $SYSTEM_PACKAGES || {
+		echo "ERROR: Failed to install packages with yum"
+		exit 1
+	}
+elif command -v dnf >/dev/null 2>&1; then
+	echo "Using dnf package manager..."
+	dnf install -y $SYSTEM_PACKAGES || {
+		echo "ERROR: Failed to install packages with dnf"
+		exit 1
+	}
+elif command -v zypper >/dev/null 2>&1; then
+	echo "Using zypper package manager..."
+	zypper install -y $SYSTEM_PACKAGES || {
+		echo "ERROR: Failed to install packages with zypper"
+		exit 1
+	}
 else
-	echo "No build dependencies specified, skipping installation"
-	echo ""
+	echo "ERROR: No supported package manager found"
+	echo "Supported: apk, apt-get, yum, dnf, zypper"
+	exit 1
 fi
 
+echo "✓ System packages installed successfully"
+echo ""
+{{- else }}
+echo "No system packages to install"
+echo ""
+{{- end }}
+
 # ============================================
-# Ensure Build Output Directory Exists
+# 2. Ensure Build Output Directory Exists
 # ============================================
 echo "Ensuring build output directory exists..."
 mkdir -p "${BUILD_OUTPUT_DIR}"
@@ -100,63 +92,93 @@ echo "✓ Build output directory ready: ${BUILD_OUTPUT_DIR}"
 echo ""
 
 # ============================================
-# Detect Project Type and Install Dependencies
+# 3. Install Custom Packages
+# ============================================
+{{- if .HasCustomPackages }}
+echo "Installing custom packages..."
+
+{{- range .CustomPackages }}
+echo "----------------------------------------"
+echo "Installing {{ .Name }}..."
+{{- if .Description }}
+echo "Description: {{ .Description }}"
+{{- end }}
+
+# Execute install command
+{{- if .Required }}
+# Required package - fail on error
+set -e
+{{ .InstallCommand }}
+echo "✓ {{ .Name }} installed successfully"
+{{- else }}
+# Optional package - continue on error
+set +e
+{{ .InstallCommand }}
+INSTALL_RESULT=$?
+set -e
+if [ $INSTALL_RESULT -ne 0 ]; then
+	echo "⚠ Warning: Failed to install {{ .Name }} (optional)"
+else
+	echo "✓ {{ .Name }} installed successfully"
+fi
+{{- end }}
+echo ""
+{{- end }}
+
+echo "All custom packages processed"
+echo ""
+{{- else }}
+echo "No custom packages to install"
+echo ""
+{{- end }}
+
+
+# ============================================
+# 4. Install Language Dependencies
 # ============================================
 
 # Example 1: Go Project
-{{- if eq .LANGUAGE "go" }}
+{{- if eq .Language "go" }}
 if [ -f "go.mod" ]; then
-{{- if .GO_PROXY }}
-	go env -w GOPROXY="{{ .GO_PROXY }}"
+{{- if .GoProxy }}
+	go env -w GOPROXY="{{ .GoProxy }}"
 {{- end }}
-{{- if .GO_SUMDB }}
-	#Set Go checksum database
-	go env -w GOSUMDB="{{ .GO_SUMDB }}"
+{{- if .GoSumDB }}
+	go env -w GOSUMDB="{{ .GoSumDB }}"
 {{- end }}
-	echo "Detected Go project, downloading dependencies..."
+	echo "Downloading Go dependencies..."
 	go mod download
+	echo "✓ Go dependencies downloaded"
 fi
 {{- end }}
 
 # Example 2: Node.js Project
-{{- if eq .LANGUAGE "nodejs" }}
-# if [ -f "package.json" ]; then
-#     echo "Detected Node.js project, installing dependencies..."
-#     npm install --production
-#     # Or use yarn
-#     # yarn install --production
-# fi
+{{- if eq .Language "nodejs" }}
+if [ -f "package.json" ]; then
+	echo "Installing Node.js dependencies..."
+	npm install --production
+	echo "✓ Node.js dependencies installed"
+fi
 {{- end }}
 
 # Example 3: Python Project
-{{- if eq .LANGUAGE "python" }}
-# if [ -f "requirements.txt" ]; then
-#     echo "Detected Python project, installing dependencies..."
-#     # Install to system site-packages
-#     pip install -r requirements.txt
-#
-#     # Or install to custom directory (useful for packaging)
-#     # mkdir -p "${BUILD_OUTPUT_DIR}/bin"
-#     # pip install -r requirements.txt -t "${BUILD_OUTPUT_DIR}/bin/"
-# fi
+{{- if eq .Language "python" }}
+if [ -f "requirements.txt" ]; then
+	echo "Installing Python dependencies..."
+	pip install -r requirements.txt
+	echo "✓ Python dependencies installed"
+fi
 {{- end }}
 
 # Example 4: Java Maven Project
-{{- if eq .LANGUAGE "java" }}
-# if [ -f "pom.xml" ]; then
-#     echo "Detected Maven project, downloading dependencies..."
-#     mvn dependency:go-offline
-# fi
+{{- if eq .Language "java" }}
+if [ -f "pom.xml" ]; then
+	echo "Downloading Maven dependencies..."
+	mvn dependency:go-offline
+	echo "✓ Maven dependencies downloaded"
+fi
 {{- end }}
 
-
-# ============================================
-# Custom Dependency Installation
-# ============================================
-# Add your custom dependency installation logic here
-# Examples:
-#   - Download external binaries
-#   - Install system packages (if needed in builder image)
-#   - Set up build tools
-
-echo "Dependency installation completed successfully"
+echo "=========================================="
+echo "Build Dependencies Installation Completed"
+echo "=========================================="

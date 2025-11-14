@@ -26,9 +26,11 @@ mkdir -p ${PLUGIN_ROOT_DIR}
 # Build plugin: {{ .Name }}
 # ============================================
 PLUGIN_NAME="{{ .Name }}"
-PLUGIN_DOWNLOAD_URL="{{ .DownloadURL }}"
 PLUGIN_INSTALL_DIR="{{ .InstallDir }}"
 PLUGIN_WORK_DIR="${PLUGIN_ROOT_DIR}/{{ .Name }}"
+
+# Resolve download URL (supports architecture-specific URLs)
+{{ .URLResolverScript }}
 
 echo "Building plugin: ${PLUGIN_NAME}"
 echo "  Description: {{ .Description }}"

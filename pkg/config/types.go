@@ -1,5 +1,7 @@
 package config
 
+import "fmt"
+
 // ServiceConfig represents the complete service configuration
 type ServiceConfig struct {
 	Service  ServiceInfo    `yaml:"service"`
@@ -102,11 +104,11 @@ func (l *LanguageConfig) GetStringSlice(key string) []string {
 
 // BuildConfig contains build-related settings
 type BuildConfig struct {
-	DependencyFiles    DependencyFilesConfig         `yaml:"dependency_files"`
-	BuilderImage       ArchImageConfig               `yaml:"builder_image"`
-	RuntimeImage       ArchImageConfig               `yaml:"runtime_image"`
-	SystemDependencies BuildSystemDependenciesConfig `yaml:"system_dependencies,omitempty"`
-	Commands           BuildCommandsConfig           `yaml:"commands"`
+	DependencyFiles DependencyFilesConfig `yaml:"dependency_files"`
+	BuilderImage    ArchImageConfig       `yaml:"builder_image"`
+	RuntimeImage    ArchImageConfig       `yaml:"runtime_image"`
+	Dependencies    DependenciesConfig    `yaml:"dependencies"`
+	Commands        BuildCommandsConfig   `yaml:"commands"`
 }
 
 // DependencyFilesConfig for dependency file detection
@@ -121,10 +123,19 @@ type ArchImageConfig struct {
 	ARM64 string `yaml:"arm64"`
 }
 
-// BuildSystemDependenciesConfig for build stage system packages
-// Matches structure: build.system_dependencies.packages
-type BuildSystemDependenciesConfig struct {
-	Packages []string `yaml:"packages,omitempty"`
+// DependenciesConfig for build stage dependencies
+// Matches structure: build.dependencies
+type DependenciesConfig struct {
+	SystemPkgs []string        `yaml:"system_pkgs,omitempty"`
+	CustomPkgs []CustomPackage `yaml:"custom_pkgs,omitempty"`
+}
+
+// CustomPackage for custom package installation
+type CustomPackage struct {
+	Name           string `yaml:"name"`
+	Description    string `yaml:"description,omitempty"`
+	InstallCommand string `yaml:"install_command"`
+	Required       bool   `yaml:"required"`
 }
 
 // RuntimeSystemDependenciesConfig for runtime stage system packages
@@ -150,13 +161,18 @@ type PluginsConfig struct {
 
 // PluginConfig for plugin installation
 type PluginConfig struct {
-	Name           string `yaml:"name"`
-	Description    string `yaml:"description"`
-	DownloadURL    string `yaml:"download_url"`
-	InstallCommand string `yaml:"install_command"`
-	Required       bool   `yaml:"required"`
+	Name           string            `yaml:"name"`
+	Description    string            `yaml:"description"`
+	DownloadURL    DownloadURLConfig `yaml:"download_url"`
+	InstallCommand string            `yaml:"install_command"`
+	Required       bool              `yaml:"required"`
 	// 运行时环境变量配置
 	RuntimeEnv []EnvironmentVariable `yaml:"runtime_env,omitempty"`
+}
+
+// DownloadURLConfig supports both static string URL and architecture-specific URL mapping
+type DownloadURLConfig struct {
+	value interface{} // string or map[string]string
 }
 
 // EnvironmentVariable represents an environment variable
@@ -284,4 +300,92 @@ type CIConfig struct {
 	// 配置模板目录（用于用户自定义配置模板）
 	// 默认: {script_dir}/config_template
 	ConfigTemplateDir string `yaml:"config_template_dir,omitempty"`
+}
+
+// DownloadURLConfig methods
+
+// UnmarshalYAML implements custom YAML unmarshaling for DownloadURLConfig
+func (d *DownloadURLConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	// Try to unmarshal as string
+	var str string
+	if err := unmarshal(&str); err == nil {
+		if str == "" {
+			return fmt.Errorf("download_url cannot be empty string")
+		}
+		d.value = str
+		return nil
+	}
+
+	// Try to unmarshal as map
+	var m map[string]string
+	if err := unmarshal(&m); err == nil {
+		if len(m) == 0 {
+			return fmt.Errorf("download_url map cannot be empty")
+		}
+		d.value = m
+		return nil
+	}
+
+	return fmt.Errorf("download_url must be either a string or a map[string]string")
+}
+
+// MarshalYAML implements custom YAML marshaling for DownloadURLConfig
+func (d DownloadURLConfig) MarshalYAML() (interface{}, error) {
+	return d.value, nil
+}
+
+// IsStatic returns true if the download URL is a static string
+func (d *DownloadURLConfig) IsStatic() bool {
+	_, ok := d.value.(string)
+	return ok
+}
+
+// IsArchMapping returns true if the download URL is an architecture mapping
+func (d *DownloadURLConfig) IsArchMapping() bool {
+	_, ok := d.value.(map[string]string)
+	return ok
+}
+
+// GetStaticURL returns the static URL string
+func (d *DownloadURLConfig) GetStaticURL() (string, error) {
+	if str, ok := d.value.(string); ok {
+		return str, nil
+	}
+	return "", fmt.Errorf("download_url is not a static string")
+}
+
+// GetArchURLs returns the architecture-specific URL mapping
+func (d *DownloadURLConfig) GetArchURLs() (map[string]string, error) {
+	if m, ok := d.value.(map[string]string); ok {
+		return m, nil
+	}
+	return nil, fmt.Errorf("download_url is not an architecture mapping")
+}
+
+// IsEmpty returns true if the download URL is not configured
+func (d *DownloadURLConfig) IsEmpty() bool {
+	return d.value == nil
+}
+
+// String returns a string representation for logging
+func (d *DownloadURLConfig) String() string {
+	if d.IsStatic() {
+		url, _ := d.GetStaticURL()
+		return url
+	}
+	if d.IsArchMapping() {
+		urls, _ := d.GetArchURLs()
+		return fmt.Sprintf("arch_mapping(%d archs)", len(urls))
+	}
+	return "<empty>"
+}
+
+// NewStaticDownloadURL creates a DownloadURLConfig with a static URL
+func NewStaticDownloadURL(url string) DownloadURLConfig {
+	return DownloadURLConfig{value: url}
+}
+
+// NewArchMappingDownloadURL creates a DownloadURLConfig with architecture mapping
+func NewArchMappingDownloadURL(urls map[string]string) DownloadURLConfig {
+	return DownloadURLConfig{value: urls}
 }

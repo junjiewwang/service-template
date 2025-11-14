@@ -88,6 +88,8 @@ func (p *VariablePool) fillCommonVariables(shared *SharedVariables) {
 	shared.vars[VarGeneratedAt] = cfg.Metadata.GeneratedAt
 	shared.vars[VarConfigDir] = p.ctx.Paths.ConfigDir
 	shared.vars[VarServiceBinDir] = p.ctx.Paths.BinDir
+	shared.vars[VarBuildOutputDir] = "/opt/dist"
+	shared.vars[VarProjectRoot] = ContainerProjectRoot
 }
 
 // fillBuildVariables fills build-related variables
@@ -96,7 +98,7 @@ func (p *VariablePool) fillBuildVariables(shared *SharedVariables) {
 	shared.vars[VarBuildCommand] = cfg.Build.Commands.Build
 	shared.vars[VarPreBuildCommand] = cfg.Build.Commands.PreBuild
 	shared.vars[VarPostBuildCommand] = cfg.Build.Commands.PostBuild
-	shared.vars["BUILD_DEPS_PACKAGES"] = cfg.Build.SystemDependencies.Packages
+	shared.vars["BUILD_DEPS_PACKAGES"] = cfg.Build.Dependencies.SystemPkgs
 	shared.vars["BUILDER_IMAGE_AMD64"] = cfg.Build.BuilderImage.AMD64
 	shared.vars["BUILDER_IMAGE_ARM64"] = cfg.Build.BuilderImage.ARM64
 	shared.vars["RUNTIME_IMAGE_AMD64"] = cfg.Build.RuntimeImage.AMD64

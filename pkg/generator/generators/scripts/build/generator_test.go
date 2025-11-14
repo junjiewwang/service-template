@@ -18,7 +18,7 @@ func TestGenerator_Generate(t *testing.T) {
 	cfg.Plugins.Items = []config.PluginConfig{
 		{
 			Name:           "test-plugin",
-			DownloadURL:    "https://example.com/plugin.tar.gz",
+			DownloadURL:    config.NewStaticDownloadURL("https://example.com/plugin.tar.gz"),
 			InstallCommand: "tar -xzf plugin.tar.gz -C ${PLUGIN_INSTALL_DIR}",
 		},
 	}

@@ -46,11 +46,7 @@ RUN sh -xe {{ .DEPS_INSTALL_SCRIPT_CONTAINER_PATH }}
 # ============================================
 # Stage 2: plugin-builder - Build plugins independently
 # ============================================
-{{- if eq .ARCH "amd64" }}
-FROM ${BUILDER_IMAGE_X86} AS plugin-builder
-{{- else }}
-FROM ${BUILDER_IMAGE_ARM} AS plugin-builder
-{{- end }}
+FROM deps AS plugin-builder
 
 ENV PROJECT_ROOT=/opt
 WORKDIR /opt

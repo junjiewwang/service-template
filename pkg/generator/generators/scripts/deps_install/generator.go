@@ -5,6 +5,7 @@ import (
 
 	"github.com/junjiewwang/service-template/pkg/generator/context"
 	"github.com/junjiewwang/service-template/pkg/generator/core"
+	"github.com/junjiewwang/service-template/pkg/generator/domain/services"
 )
 
 const GeneratorType = "deps-install-script"
@@ -17,6 +18,7 @@ func init() {
 // Generator generates build_deps_install.sh script
 type Generator struct {
 	core.BaseGenerator
+	depSvc *services.DependencyService
 }
 
 // New creates a new deps install script generator
@@ -24,6 +26,7 @@ func New(ctx *context.GeneratorContext, options ...interface{}) (core.Generator,
 	engine := core.NewTemplateEngine()
 	return &Generator{
 		BaseGenerator: core.NewBaseGenerator(GeneratorType, ctx, engine),
+		depSvc:        services.NewDependencyService(ctx, engine),
 	}, nil
 }
 
@@ -35,8 +38,8 @@ func (g *Generator) Generate() (string, error) {
 
 	ctx := g.GetContext()
 
-	// Use preset for script
-	composer := ctx.GetVariablePreset().ForScript()
+	// Get build dependencies
+	buildDeps := g.depSvc.GetBuildDependencies()
 
 	// Get language-specific config using helper methods
 	var goProxy, goSumDB string
@@ -45,13 +48,18 @@ func (g *Generator) Generate() (string, error) {
 		goSumDB = ctx.Config.Language.GetString("gosumdb", "")
 	}
 
-	// Add script-specific custom variables
-	composer.
-		WithCustom("BUILD_DEPS_PACKAGES", ctx.Config.Build.SystemDependencies.Packages).
-		WithCustom("GO_PROXY", goProxy).
-		WithCustom("GO_SUMDB", goSumDB)
+	// Prepare template data
+	data := map[string]interface{}{
+		"HasSystemPackages": g.depSvc.HasSystemPackages(),
+		"SystemPackages":    buildDeps.SystemPkgs,
+		"HasCustomPackages": g.depSvc.HasCustomPackages(),
+		"CustomPackages":    buildDeps.CustomPkgs,
+		"Language":          ctx.Config.Language.Type,
+		"GoProxy":           goProxy,
+		"GoSumDB":           goSumDB,
+	}
 
-	return g.RenderTemplate(template, composer.Build())
+	return g.RenderTemplate(template, data)
 }
 
 //go:embed templates/deps_install.sh.tmpl

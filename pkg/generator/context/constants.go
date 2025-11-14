@@ -64,6 +64,8 @@ const (
 	VarBuildCommand     = "BUILD_COMMAND"
 	VarPreBuildCommand  = "PRE_BUILD_COMMAND"
 	VarPostBuildCommand = "POST_BUILD_COMMAND"
+	VarBuildOutputDir   = "BUILD_OUTPUT_DIR"
+	VarProjectRoot      = "PROJECT_ROOT"
 
 	// Language variables
 	VarLanguage        = "LANGUAGE"

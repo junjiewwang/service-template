@@ -68,7 +68,7 @@ func NewTestConfigWithPlugins() *config.ServiceConfig {
 		{
 			Name:        "selfMonitor",
 			Description: "Self monitoring plugin",
-			DownloadURL: "https://example.com/selfMonitor.tar.gz",
+			DownloadURL: config.NewStaticDownloadURL("https://example.com/selfMonitor.tar.gz"),
 			RuntimeEnv: []config.EnvironmentVariable{
 				{Name: "TOOL_PATH", Value: "${PLUGIN_INSTALL_DIR}"},
 			},
