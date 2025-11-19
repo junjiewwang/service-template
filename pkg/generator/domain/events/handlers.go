@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"sync"
 )
 
 // LoggingEventHandler logs all events
@@ -39,7 +38,6 @@ func (h *LoggingEventHandler) CanHandle(eventName string) bool {
 // MetricsEventHandler collects metrics from events
 type MetricsEventHandler struct {
 	metrics map[string]int
-	mu      sync.RWMutex
 }
 
 // NewMetricsEventHandler creates a new metrics event handler
@@ -51,8 +49,6 @@ func NewMetricsEventHandler() *MetricsEventHandler {
 
 // Handle increments the counter for the event
 func (h *MetricsEventHandler) Handle(event Event) error {
-	h.mu.Lock()
-	defer h.mu.Unlock()
 	h.metrics[event.EventName()]++
 	return nil
 }
@@ -64,8 +60,6 @@ func (h *MetricsEventHandler) CanHandle(eventName string) bool {
 
 // GetMetrics returns the collected metrics
 func (h *MetricsEventHandler) GetMetrics() map[string]int {
-	h.mu.RLock()
-	defer h.mu.RUnlock()
 	result := make(map[string]int)
 	for k, v := range h.metrics {
 		result[k] = v
@@ -75,15 +69,11 @@ func (h *MetricsEventHandler) GetMetrics() map[string]int {
 
 // GetCount returns the count for a specific event
 func (h *MetricsEventHandler) GetCount(eventName string) int {
-	h.mu.RLock()
-	defer h.mu.RUnlock()
 	return h.metrics[eventName]
 }
 
 // Reset resets all metrics
 func (h *MetricsEventHandler) Reset() {
-	h.mu.Lock()
-	defer h.mu.Unlock()
 	h.metrics = make(map[string]int)
 }
 
