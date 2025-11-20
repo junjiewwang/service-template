@@ -80,14 +80,15 @@ func (c *VariableComposer) WithArchitecture(arch string) *VariableComposer {
 
 	// Select architecture-specific images from shared variables
 	buildVars := c.pool.GetSharedVariables(CategoryBuild)
-	if arch == "amd64" {
+	switch arch {
+	case "amd64":
 		if img, ok := buildVars.Get("BUILDER_IMAGE_AMD64"); ok {
 			c.result["BUILDER_IMAGE"] = img
 		}
 		if img, ok := buildVars.Get("RUNTIME_IMAGE_AMD64"); ok {
 			c.result["RUNTIME_IMAGE"] = img
 		}
-	} else if arch == "arm64" {
+	case "arm64":
 		if img, ok := buildVars.Get("BUILDER_IMAGE_ARM64"); ok {
 			c.result["BUILDER_IMAGE"] = img
 		}
