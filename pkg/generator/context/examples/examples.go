@@ -201,6 +201,20 @@ func ExamplePresetComparison() {
 // Helper function to create sample config
 func createSampleConfig() *config.ServiceConfig {
 	return &config.ServiceConfig{
+		BaseImages: config.BaseImagesConfig{
+			Builders: map[string]config.ArchImageConfig{
+				"go_builder": {
+					AMD64: "golang:1.21-alpine",
+					ARM64: "golang:1.21-alpine",
+				},
+			},
+			Runtimes: map[string]config.ArchImageConfig{
+				"alpine_runtime": {
+					AMD64: "alpine:3.18",
+					ARM64: "alpine:3.18",
+				},
+			},
+		},
 		Service: config.ServiceInfo{
 			Name:      "example-service",
 			DeployDir: "/app",
@@ -209,7 +223,7 @@ func createSampleConfig() *config.ServiceConfig {
 			},
 		},
 		Language: config.LanguageConfig{
-			Type:    "go",
+			Type: "go",
 		},
 		Build: config.BuildConfig{
 			Commands: config.BuildCommandsConfig{
@@ -217,14 +231,8 @@ func createSampleConfig() *config.ServiceConfig {
 				PreBuild:  "go mod download",
 				PostBuild: "echo done",
 			},
-			BuilderImage: config.ArchImageConfig{
-				AMD64: "golang:1.21-alpine",
-				ARM64: "golang:1.21-alpine",
-			},
-			RuntimeImage: config.ArchImageConfig{
-				AMD64: "alpine:3.18",
-				ARM64: "alpine:3.18",
-			},
+			BuilderImage: "@builders.go_builder",
+			RuntimeImage: "@runtimes.alpine_runtime",
 		},
 		Runtime: config.RuntimeConfig{
 			Startup: config.StartupConfig{

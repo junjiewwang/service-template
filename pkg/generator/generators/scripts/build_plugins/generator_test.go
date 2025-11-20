@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	configtestutil "github.com/junjiewwang/service-template/pkg/config/testutil"
 	"github.com/junjiewwang/service-template/pkg/generator/context"
 )
 
@@ -17,26 +18,27 @@ func TestGenerator_Generate(t *testing.T) {
 	}{
 		{
 			name: "generate build_plugins.sh with single plugin",
-			config: &config.ServiceConfig{
-				Service: config.ServiceInfo{
-					Name:      "test-service",
-					DeployDir: "/usr/local/services",
-				},
-				Plugins: config.PluginsConfig{
-					InstallDir: "/tce",
-					Items: []config.PluginConfig{
-						{
-							Name:           "selfMonitor",
-							Description:    "TCE Self Monitor Tool",
-							DownloadURL:    config.NewStaticDownloadURL("https://example.com/download.sh"),
-							InstallCommand: `curl -fsSL "${PLUGIN_DOWNLOAD_URL}" | bash -s "${PLUGIN_WORK_DIR}"`,
-							RuntimeEnv: []config.EnvironmentVariable{
-								{Name: "TOOL_PATH", Value: "${PLUGIN_INSTALL_DIR}"},
-							},
-						},
+			config: configtestutil.NewConfigBuilder().
+				WithService("test-service", "Test Service").
+				WithLanguage("go").
+				WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+				WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+				WithBuilderImage("@builders.go_1.21").
+				WithRuntimeImage("@runtimes.alpine_3.18").
+				WithBuildCommand("go build -o bin/app").
+				WithStartupCommand("./bin/app").
+				WithPluginInstallDir("/tce").
+				WithPlugin(config.PluginConfig{
+					Name:           "selfMonitor",
+					Description:    "TCE Self Monitor Tool",
+					DownloadURL:    config.NewStaticDownloadURL("https://example.com/download.sh"),
+					InstallCommand: `curl -fsSL "${PLUGIN_DOWNLOAD_URL}" | bash -s "${PLUGIN_WORK_DIR}"`,
+					RuntimeEnv: []config.EnvironmentVariable{
+						{Name: "TOOL_PATH", Value: "${PLUGIN_INSTALL_DIR}"},
 					},
-				},
-			},
+					Required: true,
+				}).
+				BuildWithDefaults(),
 			wantErr: false,
 			checks: []string{
 				"Plugin Build System",
@@ -50,15 +52,16 @@ func TestGenerator_Generate(t *testing.T) {
 		},
 		{
 			name: "no plugins configured",
-			config: &config.ServiceConfig{
-				Service: config.ServiceInfo{
-					Name:      "test-service",
-					DeployDir: "/usr/local/services",
-				},
-				Plugins: config.PluginsConfig{
-					Items: []config.PluginConfig{},
-				},
-			},
+			config: configtestutil.NewConfigBuilder().
+				WithService("test-service", "Test Service").
+				WithLanguage("go").
+				WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+				WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+				WithBuilderImage("@builders.go_1.21").
+				WithRuntimeImage("@runtimes.alpine_3.18").
+				WithBuildCommand("go build -o bin/app").
+				WithStartupCommand("./bin/app").
+				BuildWithDefaults(),
 			wantErr: false,
 			checks:  []string{}, // Should return empty string
 		},
@@ -102,27 +105,27 @@ func TestGenerator_Generate(t *testing.T) {
 }
 
 func TestGenerator_MultiplePlugins(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name:      "test-service",
-			DeployDir: "/usr/local/services",
-		},
-		Plugins: config.PluginsConfig{
-			InstallDir: "/tce",
-			Items: []config.PluginConfig{
-				{
-					Name:        "plugin1",
-					Description: "First Plugin",
-					DownloadURL: config.NewStaticDownloadURL("https://example.com/plugin1.sh"),
-				},
-				{
-					Name:        "plugin2",
-					Description: "Second Plugin",
-					DownloadURL: config.NewStaticDownloadURL("https://example.com/plugin2.sh"),
-				},
-			},
-		},
-	}
+	cfg := configtestutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
+		WithLanguage("go").
+		WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+		WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+		WithBuilderImage("@builders.go_1.21").
+		WithRuntimeImage("@runtimes.alpine_3.18").
+		WithBuildCommand("go build -o bin/app").
+		WithStartupCommand("./bin/app").
+		WithPluginInstallDir("/tce").
+		WithPlugin(config.PluginConfig{
+			Name:        "plugin1",
+			Description: "First Plugin",
+			DownloadURL: config.NewStaticDownloadURL("https://example.com/plugin1.sh"),
+		}).
+		WithPlugin(config.PluginConfig{
+			Name:        "plugin2",
+			Description: "Second Plugin",
+			DownloadURL: config.NewStaticDownloadURL("https://example.com/plugin2.sh"),
+		}).
+		BuildWithDefaults()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/test")
 	gen, err := New(ctx)
@@ -148,27 +151,27 @@ func TestGenerator_MultiplePlugins(t *testing.T) {
 }
 
 func TestGenerator_ArchitectureMapping(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name:      "test-service",
-			DeployDir: "/usr/local/services",
-		},
-		Plugins: config.PluginsConfig{
-			InstallDir: "/tce",
-			Items: []config.PluginConfig{
-				{
-					Name:        "jre",
-					Description: "Java Runtime Environment",
-					DownloadURL: config.NewArchMappingDownloadURL(map[string]string{
-						"x86_64":  "https://example.com/jdk-x86_64.tar.gz",
-						"aarch64": "https://example.com/jdk-aarch64.tar.gz",
-						"default": "https://example.com/jdk-generic.tar.gz",
-					}),
-					InstallCommand: `echo "Installing JDK"`,
-				},
-			},
-		},
-	}
+	cfg := configtestutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
+		WithLanguage("go").
+		WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+		WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+		WithBuilderImage("@builders.go_1.21").
+		WithRuntimeImage("@runtimes.alpine_3.18").
+		WithBuildCommand("go build -o bin/app").
+		WithStartupCommand("./bin/app").
+		WithPluginInstallDir("/tce").
+		WithPlugin(config.PluginConfig{
+			Name:        "jre",
+			Description: "Java Runtime Environment",
+			DownloadURL: config.NewArchMappingDownloadURL(map[string]string{
+				"x86_64":  "https://example.com/jdk-x86_64.tar.gz",
+				"aarch64": "https://example.com/jdk-aarch64.tar.gz",
+				"default": "https://example.com/jdk-generic.tar.gz",
+			}),
+			InstallCommand: `echo "Installing JDK"`,
+		}).
+		BuildWithDefaults()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/test")
 	gen, err := New(ctx)

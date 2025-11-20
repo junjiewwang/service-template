@@ -1,9 +1,15 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // ServiceConfig represents the complete service configuration
 type ServiceConfig struct {
+	// 基础镜像配置（顶层，与 service 同级）
+	BaseImages BaseImagesConfig `yaml:"base_images"`
+
 	Service  ServiceInfo    `yaml:"service"`
 	Language LanguageConfig `yaml:"language"`
 	Build    BuildConfig    `yaml:"build"`
@@ -13,6 +19,11 @@ type ServiceConfig struct {
 	Makefile MakefileConfig `yaml:"makefile,omitempty"`
 	Metadata MetadataConfig `yaml:"metadata"`
 	CI       CIConfig       `yaml:"ci,omitempty"`
+}
+
+// NewImageResolver 创建镜像解析器
+func (s *ServiceConfig) NewImageResolver() *ImageResolver {
+	return NewImageResolver(s)
 }
 
 // ServiceInfo contains basic service information
@@ -105,10 +116,11 @@ func (l *LanguageConfig) GetStringSlice(key string) []string {
 // BuildConfig contains build-related settings
 type BuildConfig struct {
 	DependencyFiles DependencyFilesConfig `yaml:"dependency_files"`
-	BuilderImage    ArchImageConfig       `yaml:"builder_image"`
-	RuntimeImage    ArchImageConfig       `yaml:"runtime_image"`
-	Dependencies    DependenciesConfig    `yaml:"dependencies"`
-	Commands        BuildCommandsConfig   `yaml:"commands"`
+	// 使用 ImageRef 类型强制引用
+	BuilderImage ImageRef            `yaml:"builder_image"`
+	RuntimeImage ImageRef            `yaml:"runtime_image"`
+	Dependencies DependenciesConfig  `yaml:"dependencies"`
+	Commands     BuildCommandsConfig `yaml:"commands"`
 }
 
 // DependencyFilesConfig for dependency file detection
@@ -121,6 +133,62 @@ type DependencyFilesConfig struct {
 type ArchImageConfig struct {
 	AMD64 string `yaml:"amd64"`
 	ARM64 string `yaml:"arm64"`
+}
+
+// Validate 验证架构镜像配置
+func (a *ArchImageConfig) Validate() error {
+	if a.AMD64 == "" {
+		return fmt.Errorf("amd64 image is required")
+	}
+	if a.ARM64 == "" {
+		return fmt.Errorf("arm64 image is required")
+	}
+	return nil
+}
+
+// GetByArch 根据架构获取镜像
+func (a *ArchImageConfig) GetByArch(arch string) (string, error) {
+	arch = normalizeArch(arch)
+
+	switch arch {
+	case "amd64":
+		if a.AMD64 == "" {
+			return "", fmt.Errorf("amd64 image not configured")
+		}
+		return a.AMD64, nil
+	case "arm64":
+		if a.ARM64 == "" {
+			return "", fmt.Errorf("arm64 image not configured")
+		}
+		return a.ARM64, nil
+	default:
+		return "", fmt.Errorf("unsupported architecture: %s (supported: amd64, arm64)", arch)
+	}
+}
+
+// SupportedArchs 返回支持的架构列表
+func (a *ArchImageConfig) SupportedArchs() []string {
+	archs := make([]string, 0, 2)
+	if a.AMD64 != "" {
+		archs = append(archs, "amd64")
+	}
+	if a.ARM64 != "" {
+		archs = append(archs, "arm64")
+	}
+	return archs
+}
+
+// normalizeArch 标准化架构名称
+func normalizeArch(arch string) string {
+	arch = strings.ToLower(strings.TrimSpace(arch))
+	switch arch {
+	case "x86_64", "x64":
+		return "amd64"
+	case "aarch64":
+		return "arm64"
+	default:
+		return arch
+	}
 }
 
 // DependenciesConfig for build stage dependencies

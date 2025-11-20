@@ -13,6 +13,16 @@ func TestLoader_Load(t *testing.T) {
 		{
 			name: "valid configuration",
 			yaml: `
+base_images:
+  builders:
+    test_builder:
+      amd64: "builder:amd64"
+      arm64: "builder:arm64"
+  runtimes:
+    test_runtime:
+      amd64: "runtime:amd64"
+      arm64: "runtime:arm64"
+
 service:
   name: test-service
   description: "Test Service"
@@ -29,12 +39,8 @@ language:
 build:
   dependency_files:
     auto_detect: true
-  builder_image:
-    amd64: "builder:amd64"
-    arm64: "builder:arm64"
-  runtime_image:
-    amd64: "runtime:amd64"
-    arm64: "runtime:arm64"
+  builder_image: "@builders.test_builder"
+  runtime_image: "@runtimes.test_runtime"
   commands:
     build: "go build"
   output_dir: dist
@@ -90,6 +96,16 @@ metadata:
 
 func TestServiceConfig_Ports(t *testing.T) {
 	yaml := `
+base_images:
+  builders:
+    test_builder:
+      amd64: "builder:amd64"
+      arm64: "builder:arm64"
+  runtimes:
+    test_runtime:
+      amd64: "runtime:amd64"
+      arm64: "runtime:arm64"
+
 service:
   name: test-service
   description: "Test"
@@ -110,12 +126,8 @@ language:
 build:
   dependency_files:
     auto_detect: true
-  builder_image:
-    amd64: "builder:amd64"
-    arm64: "builder:arm64"
-  runtime_image:
-    amd64: "runtime:amd64"
-    arm64: "runtime:arm64"
+  builder_image: "@builders.test_builder"
+  runtime_image: "@runtimes.test_runtime"
   commands:
     build: "go build"
   output_dir: dist

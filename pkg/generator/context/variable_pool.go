@@ -95,14 +95,25 @@ func (p *VariablePool) fillCommonVariables(shared *SharedVariables) {
 // fillBuildVariables fills build-related variables
 func (p *VariablePool) fillBuildVariables(shared *SharedVariables) {
 	cfg := p.ctx.Config
+
+	// 创建镜像解析器
+	resolver := cfg.NewImageResolver()
+
+	// 解析镜像
+	builderImages := resolver.MustResolveBuilderImage()
+	runtimeImages := resolver.MustResolveRuntimeImage()
+
+	// 填充变量
 	shared.vars[VarBuildCommand] = cfg.Build.Commands.Build
 	shared.vars[VarPreBuildCommand] = cfg.Build.Commands.PreBuild
 	shared.vars[VarPostBuildCommand] = cfg.Build.Commands.PostBuild
 	shared.vars["BUILD_DEPS_PACKAGES"] = cfg.Build.Dependencies.SystemPkgs
-	shared.vars["BUILDER_IMAGE_AMD64"] = cfg.Build.BuilderImage.AMD64
-	shared.vars["BUILDER_IMAGE_ARM64"] = cfg.Build.BuilderImage.ARM64
-	shared.vars["RUNTIME_IMAGE_AMD64"] = cfg.Build.RuntimeImage.AMD64
-	shared.vars["RUNTIME_IMAGE_ARM64"] = cfg.Build.RuntimeImage.ARM64
+
+	// 使用解析后的镜像
+	shared.vars["BUILDER_IMAGE_AMD64"] = builderImages.AMD64
+	shared.vars["BUILDER_IMAGE_ARM64"] = builderImages.ARM64
+	shared.vars["RUNTIME_IMAGE_AMD64"] = runtimeImages.AMD64
+	shared.vars["RUNTIME_IMAGE_ARM64"] = runtimeImages.ARM64
 }
 
 // fillRuntimeVariables fills runtime-related variables

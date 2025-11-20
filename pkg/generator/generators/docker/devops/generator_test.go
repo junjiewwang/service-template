@@ -9,12 +9,9 @@ import (
 )
 
 func TestGenerator_Generate(t *testing.T) {
-	cfg := testutil.NewTestConfig()
-	cfg.Build.BuilderImage.AMD64 = "golang:1.21"
-	cfg.Build.BuilderImage.ARM64 = "golang:1.21"
-	cfg.Build.RuntimeImage.AMD64 = "alpine:3.18"
-	cfg.Build.RuntimeImage.ARM64 = "alpine:3.18"
-	cfg.Language.Type = "go"
+	cfg := testutil.NewDefaultConfig().
+		WithLanguage("go").
+		Build()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	gen, err := New(ctx)

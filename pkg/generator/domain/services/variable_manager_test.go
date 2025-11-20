@@ -72,9 +72,8 @@ func TestVariableManager_PrepareForDockerfile(t *testing.T) {
 			Name: "testservice",
 		},
 		Build: config.BuildConfig{
-			BuilderImage: config.ArchImageConfig{
-				AMD64: "golang:1.21-alpine",
-			},
+			BuilderImage: "@builders.test_builder",
+			RuntimeImage: "@runtimes.test_runtime",
 		},
 	}
 

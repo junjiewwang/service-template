@@ -42,12 +42,19 @@ func (g *Generator) Generate() (string, error) {
 func (g *Generator) prepareTemplateVars() map[string]interface{} {
 	ctx := g.GetContext()
 
+	// 创建镜像解析器
+	resolver := ctx.Config.NewImageResolver()
+
+	// 解析镜像
+	builderImages := resolver.MustResolveBuilderImage()
+	runtimeImages := resolver.MustResolveRuntimeImage()
+
 	// Use preset for DevOps
 	composer := ctx.GetVariablePreset().ForDevOps()
 
 	// Parse runtime images
-	runtimeImageX86, runtimeTagX86 := parseImageAndTag(ctx.Config.Build.RuntimeImage.AMD64)
-	runtimeImageARM, runtimeTagARM := parseImageAndTag(ctx.Config.Build.RuntimeImage.ARM64)
+	runtimeImageX86, runtimeTagX86 := parseImageAndTag(runtimeImages.AMD64)
+	runtimeImageARM, runtimeTagARM := parseImageAndTag(runtimeImages.ARM64)
 
 	// Add DevOps-specific custom variables
 	composer.
@@ -55,8 +62,8 @@ func (g *Generator) prepareTemplateVars() map[string]interface{} {
 		WithCustom("RUNTIME_TAG_X86", runtimeTagX86).
 		WithCustom("RUNTIME_IMAGE_ARM", runtimeImageARM).
 		WithCustom("RUNTIME_TAG_ARM", runtimeTagARM).
-		WithCustom("BUILDER_IMAGE_X86", ctx.Config.Build.BuilderImage.AMD64).
-		WithCustom("BUILDER_IMAGE_ARM", ctx.Config.Build.BuilderImage.ARM64).
+		WithCustom("BUILDER_IMAGE_X86", builderImages.AMD64).
+		WithCustom("BUILDER_IMAGE_ARM", builderImages.ARM64).
 		WithCustom("LANGUAGE_TYPE", ctx.Config.Language.Type).
 		WithCustom("LANGUAGE_DISPLAY_NAME", getLanguageDisplayName(ctx.Config.Language.Type))
 

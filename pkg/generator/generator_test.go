@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	configtestutil "github.com/junjiewwang/service-template/pkg/config/testutil"
 	"github.com/junjiewwang/service-template/pkg/generator/context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,34 +20,25 @@ func TestGenerator_Generate(t *testing.T) {
 
 	t.Logf("Created temp directory: %s", tmpDir)
 
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name:      "test-service",
-			DeployDir: "/opt/services",
-			Ports: []config.PortConfig{
-				{Port: 8080, Protocol: "tcp"},
-			},
-		},
-		Build: config.BuildConfig{},
-		Language: config.LanguageConfig{
-			Type: "golang",
-		},
-		LocalDev: config.LocalDevConfig{
-			Kubernetes: config.KubernetesConfig{
-				Enabled: true,
-			},
-		},
-		Plugins: config.PluginsConfig{
-			InstallDir: "/opt/plugins",
-			Items: []config.PluginConfig{
-				{
-					Name:        "test-plugin",
-					Description: "Test plugin",
-					DownloadURL: config.NewStaticDownloadURL("https://example.com/plugin.tar.gz"),
-				},
-			},
-		},
-	}
+	// 使用新的testutil创建测试配置
+	cfg := configtestutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
+		WithPort("http", 8080, "TCP", true).
+		WithLanguage("go").
+		WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+		WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+		WithBuilderImage("@builders.go_1.21").
+		WithRuntimeImage("@runtimes.alpine_3.18").
+		WithBuildCommand("go build -o bin/test-service").
+		WithStartupCommand("./bin/test-service").
+		WithPluginInstallDir("/opt/plugins").
+		WithPlugin(config.PluginConfig{
+			Name:        "test-plugin",
+			Description: "Test plugin",
+			DownloadURL: config.NewStaticDownloadURL("https://example.com/plugin.tar.gz"),
+		}).
+		WithDeployDir("/opt/services").
+		BuildWithDefaults()
 
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)
@@ -96,19 +88,18 @@ func TestGenerator_GenerateDockerfiles(t *testing.T) {
 	require.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(tmpDir)
 
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name:      "test-service",
-			DeployDir: "/opt/services",
-			Ports: []config.PortConfig{
-				{Port: 8080, Protocol: "tcp"},
-			},
-		},
-		Build: config.BuildConfig{},
-		Language: config.LanguageConfig{
-			Type: "golang",
-		},
-	}
+	// 使用预设配置，简化测试
+	cfg := configtestutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
+		WithPort("http", 8080, "TCP", true).
+		WithLanguage("go").
+		WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+		WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+		WithBuilderImage("@builders.go_1.21").
+		WithRuntimeImage("@runtimes.alpine_3.18").
+		WithBuildCommand("go build -o bin/test-service").
+		WithDeployDir("/opt/services").
+		BuildWithDefaults()
 
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)
@@ -136,19 +127,18 @@ func TestGenerator_GenerateCompose(t *testing.T) {
 	require.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(tmpDir)
 
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name:      "test-service",
-			DeployDir: "/opt/services",
-			Ports: []config.PortConfig{
-				{Port: 8080, Protocol: "tcp"},
-			},
-		},
-		Build: config.BuildConfig{},
-		Language: config.LanguageConfig{
-			Type: "golang",
-		},
-	}
+	// 使用预设配置，简化测试
+	cfg := configtestutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
+		WithPort("http", 8080, "TCP", true).
+		WithLanguage("go").
+		WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+		WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+		WithBuilderImage("@builders.go_1.21").
+		WithRuntimeImage("@runtimes.alpine_3.18").
+		WithBuildCommand("go build -o bin/test-service").
+		WithDeployDir("/opt/services").
+		BuildWithDefaults()
 
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)
@@ -170,19 +160,18 @@ func TestGenerator_GenerateMakefile(t *testing.T) {
 	require.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(tmpDir)
 
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name:      "test-service",
-			DeployDir: "/opt/services",
-			Ports: []config.PortConfig{
-				{Port: 8080, Protocol: "tcp"},
-			},
-		},
-		Build: config.BuildConfig{},
-		Language: config.LanguageConfig{
-			Type: "golang",
-		},
-	}
+	// 使用预设配置，简化测试
+	cfg := configtestutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
+		WithPort("http", 8080, "TCP", true).
+		WithLanguage("go").
+		WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+		WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+		WithBuilderImage("@builders.go_1.21").
+		WithRuntimeImage("@runtimes.alpine_3.18").
+		WithBuildCommand("go build -o bin/test-service").
+		WithDeployDir("/opt/services").
+		BuildWithDefaults()
 
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)
@@ -204,19 +193,18 @@ func TestGenerator_GenerateScripts(t *testing.T) {
 	require.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(tmpDir)
 
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name:      "test-service",
-			DeployDir: "/opt/services",
-			Ports: []config.PortConfig{
-				{Port: 8080, Protocol: "tcp"},
-			},
-		},
-		Build: config.BuildConfig{},
-		Language: config.LanguageConfig{
-			Type: "golang",
-		},
-	}
+	// 使用预设配置，简化测试
+	cfg := configtestutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
+		WithPort("http", 8080, "TCP", true).
+		WithLanguage("go").
+		WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+		WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+		WithBuilderImage("@builders.go_1.21").
+		WithRuntimeImage("@runtimes.alpine_3.18").
+		WithBuildCommand("go build -o bin/test-service").
+		WithDeployDir("/opt/services").
+		BuildWithDefaults()
 
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)
@@ -250,24 +238,18 @@ func TestGenerator_GenerateWithKubernetesConfig(t *testing.T) {
 	require.NoError(t, err, "Failed to create temp dir")
 	defer os.RemoveAll(tmpDir)
 
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name:      "test-service",
-			DeployDir: "/opt/services",
-			Ports: []config.PortConfig{
-				{Port: 8080, Protocol: "tcp"},
-			},
-		},
-		Build: config.BuildConfig{},
-		Language: config.LanguageConfig{
-			Type: "golang",
-		},
-		LocalDev: config.LocalDevConfig{
-			Kubernetes: config.KubernetesConfig{
-				Enabled: true,
-			},
-		},
-	}
+	// 使用预设配置，简化测试
+	cfg := configtestutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
+		WithPort("http", 8080, "TCP", true).
+		WithLanguage("go").
+		WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+		WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+		WithBuilderImage("@builders.go_1.21").
+		WithRuntimeImage("@runtimes.alpine_3.18").
+		WithBuildCommand("go build -o bin/test-service").
+		WithDeployDir("/opt/services").
+		BuildWithDefaults()
 
 	outputDir := filepath.Join(tmpDir, "output")
 	gen := NewGenerator(cfg, outputDir)

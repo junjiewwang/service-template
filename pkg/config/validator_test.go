@@ -5,6 +5,24 @@ import (
 	"testing"
 )
 
+// createTestBaseImages 创建测试用的基础镜像配置
+func createTestBaseImages() BaseImagesConfig {
+	return BaseImagesConfig{
+		Builders: map[string]ArchImageConfig{
+			"test_builder": {
+				AMD64: "builder:amd64",
+				ARM64: "builder:arm64",
+			},
+		},
+		Runtimes: map[string]ArchImageConfig{
+			"test_runtime": {
+				AMD64: "runtime:amd64",
+				ARM64: "runtime:arm64",
+			},
+		},
+	}
+}
+
 func TestValidator_Validate(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -15,6 +33,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "valid configuration",
 			config: &ServiceConfig{
+				BaseImages: createTestBaseImages(),
 				Service: ServiceInfo{
 					Name:        "test-service",
 					Description: "Test",
@@ -27,14 +46,8 @@ func TestValidator_Validate(t *testing.T) {
 					Type: "go",
 				},
 				Build: BuildConfig{
-					BuilderImage: ArchImageConfig{
-						AMD64: "builder:amd64",
-						ARM64: "builder:arm64",
-					},
-					RuntimeImage: ArchImageConfig{
-						AMD64: "runtime:amd64",
-						ARM64: "runtime:arm64",
-					},
+					BuilderImage: "@builders.test_builder",
+					RuntimeImage: "@runtimes.test_runtime",
 					Commands: BuildCommandsConfig{
 						Build: "go build",
 					},
@@ -60,6 +73,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "missing service name",
 			config: &ServiceConfig{
+				BaseImages: createTestBaseImages(),
 				Service: ServiceInfo{
 					Name: "",
 					Ports: []PortConfig{
@@ -71,8 +85,8 @@ func TestValidator_Validate(t *testing.T) {
 					Type: "go",
 				},
 				Build: BuildConfig{
-					BuilderImage: ArchImageConfig{AMD64: "b", ARM64: "b"},
-					RuntimeImage: ArchImageConfig{AMD64: "r", ARM64: "r"},
+					BuilderImage: "@builders.test_builder",
+					RuntimeImage: "@runtimes.test_runtime",
 					Commands:     BuildCommandsConfig{Build: "build"},
 				},
 				Runtime: RuntimeConfig{
@@ -85,6 +99,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "invalid port",
 			config: &ServiceConfig{
+				BaseImages: createTestBaseImages(),
 				Service: ServiceInfo{
 					Name: "test",
 					Ports: []PortConfig{
@@ -96,8 +111,8 @@ func TestValidator_Validate(t *testing.T) {
 					Type: "go",
 				},
 				Build: BuildConfig{
-					BuilderImage: ArchImageConfig{AMD64: "b", ARM64: "b"},
-					RuntimeImage: ArchImageConfig{AMD64: "r", ARM64: "r"},
+					BuilderImage: "@builders.test_builder",
+					RuntimeImage: "@runtimes.test_runtime",
 					Commands:     BuildCommandsConfig{Build: "build"},
 				},
 				Runtime: RuntimeConfig{
@@ -110,6 +125,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "invalid language type",
 			config: &ServiceConfig{
+				BaseImages: createTestBaseImages(),
 				Service: ServiceInfo{
 					Name:      "test",
 					Ports:     []PortConfig{{Name: "http", Port: 8080, Protocol: "TCP"}},
@@ -119,8 +135,8 @@ func TestValidator_Validate(t *testing.T) {
 					Type: "invalid",
 				},
 				Build: BuildConfig{
-					BuilderImage: ArchImageConfig{AMD64: "b", ARM64: "b"},
-					RuntimeImage: ArchImageConfig{AMD64: "r", ARM64: "r"},
+					BuilderImage: "@builders.test_builder",
+					RuntimeImage: "@runtimes.test_runtime",
 					Commands:     BuildCommandsConfig{Build: "build"},
 				},
 				Runtime: RuntimeConfig{
@@ -133,6 +149,7 @@ func TestValidator_Validate(t *testing.T) {
 		{
 			name: "missing build command",
 			config: &ServiceConfig{
+				BaseImages: createTestBaseImages(),
 				Service: ServiceInfo{
 					Name:      "test",
 					Ports:     []PortConfig{{Name: "http", Port: 8080, Protocol: "TCP"}},
@@ -142,8 +159,8 @@ func TestValidator_Validate(t *testing.T) {
 					Type: "go",
 				},
 				Build: BuildConfig{
-					BuilderImage: ArchImageConfig{AMD64: "b", ARM64: "b"},
-					RuntimeImage: ArchImageConfig{AMD64: "r", ARM64: "r"},
+					BuilderImage: "@builders.test_builder",
+					RuntimeImage: "@runtimes.test_runtime",
 					Commands:     BuildCommandsConfig{Build: ""},
 				},
 				Runtime: RuntimeConfig{
@@ -229,6 +246,7 @@ func TestValidator_ValidateHealthcheck(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			config := &ServiceConfig{
+				BaseImages: createTestBaseImages(),
 				Service: ServiceInfo{
 					Name:      "test",
 					Ports:     []PortConfig{{Name: "http", Port: 8080, Protocol: "TCP"}},
@@ -236,8 +254,8 @@ func TestValidator_ValidateHealthcheck(t *testing.T) {
 				},
 				Language: LanguageConfig{Type: "go"},
 				Build: BuildConfig{
-					BuilderImage: ArchImageConfig{AMD64: "b", ARM64: "b"},
-					RuntimeImage: ArchImageConfig{AMD64: "r", ARM64: "r"},
+					BuilderImage: "@builders.test_builder",
+					RuntimeImage: "@runtimes.test_runtime",
 					Commands:     BuildCommandsConfig{Build: "build"},
 				},
 				Runtime: RuntimeConfig{

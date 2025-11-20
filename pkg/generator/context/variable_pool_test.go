@@ -121,6 +121,20 @@ func TestSharedVariables_Get(t *testing.T) {
 // Helper function to create test config
 func createTestConfig() *config.ServiceConfig {
 	return &config.ServiceConfig{
+		BaseImages: config.BaseImagesConfig{
+			Builders: map[string]config.ArchImageConfig{
+				"go_builder": {
+					AMD64: "golang:1.21-alpine",
+					ARM64: "golang:1.21-alpine",
+				},
+			},
+			Runtimes: map[string]config.ArchImageConfig{
+				"alpine_runtime": {
+					AMD64: "alpine:3.18",
+					ARM64: "alpine:3.18",
+				},
+			},
+		},
 		Service: config.ServiceInfo{
 			Name:      "test-service",
 			DeployDir: "/app",
@@ -139,14 +153,8 @@ func createTestConfig() *config.ServiceConfig {
 				PreBuild:  "go mod download",
 				PostBuild: "echo done",
 			},
-			BuilderImage: config.ArchImageConfig{
-				AMD64: "golang:1.21-alpine",
-				ARM64: "golang:1.21-alpine",
-			},
-			RuntimeImage: config.ArchImageConfig{
-				AMD64: "alpine:3.18",
-				ARM64: "alpine:3.18",
-			},
+			BuilderImage: "@builders.go_builder",
+			RuntimeImage: "@runtimes.alpine_runtime",
 			Dependencies: config.DependenciesConfig{
 				SystemPkgs: []string{"ca-certificates"},
 			},

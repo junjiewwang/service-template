@@ -9,9 +9,7 @@ import (
 )
 
 func TestGenerator_Generate_AMD64(t *testing.T) {
-	cfg := testutil.NewTestConfig()
-	cfg.Build.BuilderImage.AMD64 = "golang:1.21-alpine"
-	cfg.Build.RuntimeImage.AMD64 = "alpine:3.18"
+	cfg := testutil.NewDefaultConfig().Build()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	gen, err := New(ctx, "amd64")
@@ -34,9 +32,7 @@ func TestGenerator_Generate_AMD64(t *testing.T) {
 }
 
 func TestGenerator_Generate_ARM64(t *testing.T) {
-	cfg := testutil.NewTestConfig()
-	cfg.Build.BuilderImage.ARM64 = "golang:1.21-alpine"
-	cfg.Build.RuntimeImage.ARM64 = "alpine:3.18"
+	cfg := testutil.NewDefaultConfig().Build()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	gen, err := New(ctx, "arm64")

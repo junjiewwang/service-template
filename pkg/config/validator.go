@@ -21,8 +21,17 @@ func NewValidator(config *ServiceConfig) *Validator {
 
 // Validate performs comprehensive validation of the configuration
 func (v *Validator) Validate() error {
+	// 1. 验证基础镜像配置（必须先验证，因为后续会引用）
+	v.validateBaseImages()
+
+	// 2. 验证基础信息
 	v.validateService()
 	v.validateLanguage()
+
+	// 3. 验证镜像引用（依赖 base_images）
+	v.validateImageReferences()
+
+	// 4. 验证其他配置
 	v.validateBuild()
 	v.validatePlugins()
 	v.validateRuntime()
@@ -77,20 +86,57 @@ func (v *Validator) validateLanguage() {
 	// Config is optional, no validation needed
 }
 
-func (v *Validator) validateBuild() {
-	if v.config.Build.BuilderImage.AMD64 == "" {
-		v.errors = append(v.errors, "build.builder_image.amd64 is required")
+// validateBaseImages 验证基础镜像配置
+func (v *Validator) validateBaseImages() {
+	if err := v.config.BaseImages.Validate(); err != nil {
+		v.errors = append(v.errors, fmt.Sprintf("base_images: %v", err))
 	}
-	if v.config.Build.BuilderImage.ARM64 == "" {
-		v.errors = append(v.errors, "build.builder_image.arm64 is required")
+}
+
+// validateImageReferences 验证镜像引用
+func (v *Validator) validateImageReferences() {
+	// 验证 builder_image 引用格式
+	if err := v.config.Build.BuilderImage.Validate(); err != nil {
+		v.errors = append(v.errors, fmt.Sprintf("build.builder_image: %v", err))
+		return // 格式错误，后续验证无意义
 	}
 
-	if v.config.Build.RuntimeImage.AMD64 == "" {
-		v.errors = append(v.errors, "build.runtime_image.amd64 is required")
+	// 验证 runtime_image 引用格式
+	if err := v.config.Build.RuntimeImage.Validate(); err != nil {
+		v.errors = append(v.errors, fmt.Sprintf("build.runtime_image: %v", err))
+		return
 	}
-	if v.config.Build.RuntimeImage.ARM64 == "" {
-		v.errors = append(v.errors, "build.runtime_image.arm64 is required")
+
+	// 验证引用是否存在且类型正确
+	resolver := NewImageResolver(v.config)
+
+	// 验证 builder_image
+	if !v.config.Build.BuilderImage.IsBuilder() {
+		v.errors = append(v.errors, fmt.Sprintf(
+			"build.builder_image: must reference @builders.* (got: %s)",
+			v.config.Build.BuilderImage,
+		))
+	} else {
+		if _, err := resolver.ResolveBuilderImage(); err != nil {
+			v.errors = append(v.errors, fmt.Sprintf("build.builder_image: %v", err))
+		}
 	}
+
+	// 验证 runtime_image
+	if !v.config.Build.RuntimeImage.IsRuntime() {
+		v.errors = append(v.errors, fmt.Sprintf(
+			"build.runtime_image: must reference @runtimes.* (got: %s)",
+			v.config.Build.RuntimeImage,
+		))
+	} else {
+		if _, err := resolver.ResolveRuntimeImage(); err != nil {
+			v.errors = append(v.errors, fmt.Sprintf("build.runtime_image: %v", err))
+		}
+	}
+}
+
+func (v *Validator) validateBuild() {
+	// 镜像验证已在 validateImageReferences 中完成
 
 	if v.config.Build.Commands.Build == "" {
 		v.errors = append(v.errors, "build.commands.build is required")
