@@ -6,29 +6,24 @@ import (
 	"github.com/junjiewwang/service-template/pkg/config"
 	"github.com/junjiewwang/service-template/pkg/generator/context"
 	"github.com/junjiewwang/service-template/pkg/generator/core"
+	"github.com/junjiewwang/service-template/pkg/generator/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestPluginService_PrepareForBuildScript_StaticURL(t *testing.T) {
 	// Arrange
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name: "test-service",
-		},
-		Plugins: config.PluginsConfig{
-			InstallDir: "/tce",
-			Items: []config.PluginConfig{
-				{
-					Name:           "selfMonitor",
-					Description:    "TCE Self Monitor Tool",
-					DownloadURL:    config.NewStaticDownloadURL("https://example.com/tool.sh"),
-					InstallCommand: "echo 'Installing...'",
-					Required:       true,
-				},
-			},
-		},
-	}
+	cfg := testutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
+		WithPluginInstallDir("/tce").
+		WithPlugin(config.PluginConfig{
+			Name:           "selfMonitor",
+			Description:    "TCE Self Monitor Tool",
+			DownloadURL:    config.NewStaticDownloadURL("https://example.com/tool.sh"),
+			InstallCommand: "echo 'Installing...'",
+			Required:       true,
+		}).
+		Build()
 
 	ctx := context.NewGeneratorContext(cfg, ".")
 	engine := core.NewTemplateEngine()
@@ -50,27 +45,21 @@ func TestPluginService_PrepareForBuildScript_StaticURL(t *testing.T) {
 
 func TestPluginService_PrepareForBuildScript_ArchMapping(t *testing.T) {
 	// Arrange
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name: "test-service",
-		},
-		Plugins: config.PluginsConfig{
-			InstallDir: "/tce",
-			Items: []config.PluginConfig{
-				{
-					Name:        "jre",
-					Description: "Java Runtime Environment",
-					DownloadURL: config.NewArchMappingDownloadURL(map[string]string{
-						"x86_64":  "https://example.com/jdk-x86_64.tar.gz",
-						"aarch64": "https://example.com/jdk-aarch64.tar.gz",
-						"default": "https://example.com/jdk-generic.tar.gz",
-					}),
-					InstallCommand: "echo 'Installing JDK...'",
-					Required:       false,
-				},
-			},
-		},
-	}
+	cfg := testutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
+		WithPluginInstallDir("/tce").
+		WithPlugin(config.PluginConfig{
+			Name:        "jre",
+			Description: "Java Runtime Environment",
+			DownloadURL: config.NewArchMappingDownloadURL(map[string]string{
+				"x86_64":  "https://example.com/jdk-x86_64.tar.gz",
+				"aarch64": "https://example.com/jdk-aarch64.tar.gz",
+				"default": "https://example.com/jdk-generic.tar.gz",
+			}),
+			InstallCommand: "echo 'Installing JDK...'",
+			Required:       false,
+		}).
+		Build()
 
 	ctx := context.NewGeneratorContext(cfg, ".")
 	engine := core.NewTemplateEngine()
@@ -98,9 +87,7 @@ func TestPluginService_PrepareForBuildScript_ArchMapping(t *testing.T) {
 
 func TestPluginService_GenerateURLResolverScript_StaticURL(t *testing.T) {
 	// Arrange
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{Name: "test-service"},
-	}
+	cfg := testutil.NewMinimal("test-service")
 	ctx := context.NewGeneratorContext(cfg, ".")
 	engine := core.NewTemplateEngine()
 	service := NewPluginService(ctx, engine)
@@ -116,9 +103,7 @@ func TestPluginService_GenerateURLResolverScript_StaticURL(t *testing.T) {
 
 func TestPluginService_GenerateURLResolverScript_ArchMapping(t *testing.T) {
 	// Arrange
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{Name: "test-service"},
-	}
+	cfg := testutil.NewMinimal("test-service")
 	ctx := context.NewGeneratorContext(cfg, ".")
 	engine := core.NewTemplateEngine()
 	service := NewPluginService(ctx, engine)
@@ -145,9 +130,7 @@ func TestPluginService_GenerateURLResolverScript_ArchMapping(t *testing.T) {
 
 func TestPluginService_GenerateURLResolverScript_WithDefault(t *testing.T) {
 	// Arrange
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{Name: "test-service"},
-	}
+	cfg := testutil.NewMinimal("test-service")
 	ctx := context.NewGeneratorContext(cfg, ".")
 	engine := core.NewTemplateEngine()
 	service := NewPluginService(ctx, engine)
@@ -170,9 +153,7 @@ func TestPluginService_GenerateURLResolverScript_WithDefault(t *testing.T) {
 
 func TestPluginService_NormalizeArchMapping(t *testing.T) {
 	// Arrange
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{Name: "test-service"},
-	}
+	cfg := testutil.NewMinimal("test-service")
 	ctx := context.NewGeneratorContext(cfg, ".")
 	engine := core.NewTemplateEngine()
 	service := NewPluginService(ctx, engine)
@@ -239,12 +220,11 @@ func TestPluginService_HasPlugins(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := &config.ServiceConfig{
-				Service: config.ServiceInfo{Name: "test-service"},
-				Plugins: config.PluginsConfig{
-					Items: tt.plugins,
-				},
+			builder := testutil.NewConfigBuilder().WithService("test-service", "Test Service")
+			for _, p := range tt.plugins {
+				builder = builder.WithPlugin(p)
 			}
+			cfg := builder.Build()
 			ctx := context.NewGeneratorContext(cfg, ".")
 			engine := core.NewTemplateEngine()
 			service := NewPluginService(ctx, engine)
@@ -256,12 +236,10 @@ func TestPluginService_HasPlugins(t *testing.T) {
 }
 
 func TestPluginService_GetInstallDir(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{Name: "test-service"},
-		Plugins: config.PluginsConfig{
-			InstallDir: "/custom/plugins",
-		},
-	}
+	cfg := testutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
+		WithPluginInstallDir("/custom/plugins").
+		Build()
 	ctx := context.NewGeneratorContext(cfg, ".")
 	engine := core.NewTemplateEngine()
 	service := NewPluginService(ctx, engine)
@@ -271,24 +249,20 @@ func TestPluginService_GetInstallDir(t *testing.T) {
 }
 
 func TestPluginService_PrepareForEntrypoint(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{Name: "test-service"},
-		Plugins: config.PluginsConfig{
-			InstallDir: "/tce",
-			Items: []config.PluginConfig{
-				{
-					Name: "plugin1",
-					RuntimeEnv: []config.EnvironmentVariable{
-						{Name: "PLUGIN_PATH", Value: "${PLUGIN_INSTALL_DIR}/bin"},
-					},
-				},
-				{
-					Name:       "plugin2",
-					RuntimeEnv: []config.EnvironmentVariable{},
-				},
+	cfg := testutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
+		WithPluginInstallDir("/tce").
+		WithPlugin(config.PluginConfig{
+			Name: "plugin1",
+			RuntimeEnv: []config.EnvironmentVariable{
+				{Name: "PLUGIN_PATH", Value: "${PLUGIN_INSTALL_DIR}/bin"},
 			},
-		},
-	}
+		}).
+		WithPlugin(config.PluginConfig{
+			Name:       "plugin2",
+			RuntimeEnv: []config.EnvironmentVariable{},
+		}).
+		Build()
 	ctx := context.NewGeneratorContext(cfg, ".")
 	engine := core.NewTemplateEngine()
 	service := NewPluginService(ctx, engine)

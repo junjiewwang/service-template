@@ -2,18 +2,24 @@ package testutil
 
 import (
 	"github.com/junjiewwang/service-template/pkg/config"
-	configtestutil "github.com/junjiewwang/service-template/pkg/config/testutil"
 )
 
-// NewTestBaseImages creates test base images configuration
+// ============================================
+// 生成器测试固定数据
+// ============================================
+// 这个文件提供生成器测试专用的固定配置数据
+// 所有实现都委托给核心层 (pkg/config/testutil)
+
+// NewTestBaseImages 创建测试用的基础镜像配置
+// Deprecated: 使用 testutil.DefaultBaseImages() 代替
 func NewTestBaseImages() config.BaseImagesConfig {
-	return configtestutil.DefaultBaseImages()
+	return DefaultBaseImages()
 }
 
-// NewTestConfig creates a test service configuration
-// 使用新的 testutil 包创建配置
+// NewTestConfig 创建标准的测试服务配置
+// 这是生成器测试中最常用的配置
 func NewTestConfig() *config.ServiceConfig {
-	return configtestutil.NewConfigBuilder().
+	return NewConfigBuilder().
 		WithService("test-service", "Test Service").
 		WithPort("http", 8080, "TCP", true).
 		WithLanguage("go").
@@ -31,9 +37,10 @@ func NewTestConfig() *config.ServiceConfig {
 		BuildWithDefaults()
 }
 
-// NewTestConfigWithPlugins creates a test config with plugins
+// NewTestConfigWithPlugins 创建带插件的测试配置
+// 用于测试插件相关的生成器功能
 func NewTestConfigWithPlugins() *config.ServiceConfig {
-	return configtestutil.NewConfigBuilder().
+	return NewConfigBuilder().
 		WithService("test-service", "Test Service").
 		WithPort("http", 8080, "TCP", true).
 		WithLanguage("go").

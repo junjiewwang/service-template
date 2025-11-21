@@ -282,6 +282,12 @@ func (b *ConfigBuilder) WithCIBuildConfigDir(dir string) *ConfigBuilder {
 	return b
 }
 
+// WithCIConfigTemplateDir 设置配置模板目录
+func (b *ConfigBuilder) WithCIConfigTemplateDir(dir string) *ConfigBuilder {
+	b.cfg.CI.ConfigTemplateDir = dir
+	return b
+}
+
 // ============================================
 // 元数据配置
 // ============================================

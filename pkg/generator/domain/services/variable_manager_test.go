@@ -3,21 +3,17 @@ package services
 import (
 	"testing"
 
-	"github.com/junjiewwang/service-template/pkg/config"
 	"github.com/junjiewwang/service-template/pkg/generator/context"
 	"github.com/junjiewwang/service-template/pkg/generator/domain/models"
+	"github.com/junjiewwang/service-template/pkg/generator/internal/testutil"
 )
 
 func TestNewVariableManager(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name:      "testservice",
-			DeployDir: "/data/services",
-		},
-		Plugins: config.PluginsConfig{
-			InstallDir: "/plugins",
-		},
-	}
+	cfg := testutil.NewConfigBuilder().
+		WithService("testservice", "Test Service").
+		WithDeployDir("/data/services").
+		WithPluginInstallDir("/plugins").
+		Build()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 
@@ -42,11 +38,7 @@ func TestNewVariableManager(t *testing.T) {
 }
 
 func TestNewVariableManagerWithPaths(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name: "testservice",
-		},
-	}
+	cfg := testutil.NewMinimal("testservice")
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 
@@ -67,15 +59,13 @@ func TestNewVariableManagerWithPaths(t *testing.T) {
 }
 
 func TestVariableManager_PrepareForDockerfile(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name: "testservice",
-		},
-		Build: config.BuildConfig{
-			BuilderImage: "@builders.test_builder",
-			RuntimeImage: "@runtimes.test_runtime",
-		},
-	}
+	cfg := testutil.NewConfigBuilder().
+		WithService("testservice", "Test Service").
+		WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+		WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+		WithBuilderImage("@builders.go_1.21").
+		WithRuntimeImage("@runtimes.alpine_3.18").
+		Build()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	manager := NewVariableManager(ctx)
@@ -93,11 +83,7 @@ func TestVariableManager_PrepareForDockerfile(t *testing.T) {
 }
 
 func TestVariableManager_PrepareForCompose(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name: "testservice",
-		},
-	}
+	cfg := testutil.NewMinimal("testservice")
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	manager := NewVariableManager(ctx)
@@ -115,11 +101,7 @@ func TestVariableManager_PrepareForCompose(t *testing.T) {
 }
 
 func TestVariableManager_PrepareForBuildScript(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name: "testservice",
-		},
-	}
+	cfg := testutil.NewMinimal("testservice")
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	manager := NewVariableManager(ctx)
@@ -137,14 +119,10 @@ func TestVariableManager_PrepareForBuildScript(t *testing.T) {
 }
 
 func TestVariableManager_PrepareForScript(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name: "testservice",
-		},
-		Language: config.LanguageConfig{
-			Type: "go",
-		},
-	}
+	cfg := testutil.NewConfigBuilder().
+		WithService("testservice", "Test Service").
+		WithLanguage("go").
+		Build()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	manager := NewVariableManager(ctx)
@@ -162,15 +140,11 @@ func TestVariableManager_PrepareForScript(t *testing.T) {
 }
 
 func TestVariableManager_AddPathVariables(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name:      "testservice",
-			DeployDir: "/data/services",
-		},
-		Plugins: config.PluginsConfig{
-			InstallDir: "/plugins",
-		},
-	}
+	cfg := testutil.NewConfigBuilder().
+		WithService("testservice", "Test Service").
+		WithDeployDir("/data/services").
+		WithPluginInstallDir("/plugins").
+		Build()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	manager := NewVariableManager(ctx)
@@ -204,15 +178,11 @@ func TestVariableManager_AddPathVariables(t *testing.T) {
 }
 
 func TestVariableManager_PrepareWithPaths(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name:      "testservice",
-			DeployDir: "/data/services",
-		},
-		Plugins: config.PluginsConfig{
-			InstallDir: "/plugins",
-		},
-	}
+	cfg := testutil.NewConfigBuilder().
+		WithService("testservice", "Test Service").
+		WithDeployDir("/data/services").
+		WithPluginInstallDir("/plugins").
+		Build()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	manager := NewVariableManager(ctx)

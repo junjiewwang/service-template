@@ -6,38 +6,36 @@ import (
 	"github.com/junjiewwang/service-template/pkg/config"
 	"github.com/junjiewwang/service-template/pkg/generator/context"
 	"github.com/junjiewwang/service-template/pkg/generator/core"
+	"github.com/junjiewwang/service-template/pkg/generator/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestDependencyService_GetBuildDependencies(t *testing.T) {
 	// Arrange
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name:      "test-service",
-			DeployDir: "/app",
-		},
-		Build: config.BuildConfig{
-			Dependencies: config.DependenciesConfig{
-				SystemPkgs: []string{"git", "make", "gcc"},
-				CustomPkgs: []config.CustomPackage{
-					{
-						Name:        "nacos",
-						Description: "Nacos Service Discovery",
-						InstallCommand: `echo "Installing to ${BUILD_OUTPUT_DIR}"
+	cfg := testutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
+		WithDeployDir("/app").
+		WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+		WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+		WithBuilderImage("@builders.go_1.21").
+		WithRuntimeImage("@runtimes.alpine_3.18").
+		WithBuildCommand("go build -o bin/app").
+		WithSystemPackages([]string{"git", "make", "gcc"}).
+		WithCustomPackage(config.CustomPackage{
+			Name:        "nacos",
+			Description: "Nacos Service Discovery",
+			InstallCommand: `echo "Installing to ${BUILD_OUTPUT_DIR}"
 curl -L https://example.com/nacos.tar.gz -o ${BUILD_OUTPUT_DIR}/nacos.tar.gz`,
-						Required: true,
-					},
-					{
-						Name:           "consul",
-						Description:    "Consul Service Mesh",
-						InstallCommand: `curl -L https://example.com/consul.zip -o /tmp/consul.zip`,
-						Required:       false,
-					},
-				},
-			},
-		},
-	}
+			Required: true,
+		}).
+		WithCustomPackage(config.CustomPackage{
+			Name:           "consul",
+			Description:    "Consul Service Mesh",
+			InstallCommand: `curl -L https://example.com/consul.zip -o /tmp/consul.zip`,
+			Required:       false,
+		}).
+		Build()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	engine := core.NewTemplateEngine()
@@ -68,16 +66,10 @@ curl -L https://example.com/nacos.tar.gz -o ${BUILD_OUTPUT_DIR}/nacos.tar.gz`,
 
 func TestDependencyService_GetRuntimeDependencies(t *testing.T) {
 	// Arrange
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name: "test-service",
-		},
-		Runtime: config.RuntimeConfig{
-			SystemDependencies: config.RuntimeSystemDependenciesConfig{
-				Packages: []string{"ca-certificates", "tzdata"},
-			},
-		},
-	}
+	cfg := testutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
+		WithRuntimePackages([]string{"ca-certificates", "tzdata"}).
+		Build()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	engine := core.NewTemplateEngine()
@@ -131,15 +123,14 @@ func TestDependencyService_HasBuildDependencies(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := &config.ServiceConfig{
-				Service: config.ServiceInfo{Name: "test"},
-				Build: config.BuildConfig{
-					Dependencies: config.DependenciesConfig{
-						SystemPkgs: tt.systemPkgs,
-						CustomPkgs: tt.customPkgs,
-					},
-				},
+			builder := testutil.NewConfigBuilder().WithService("test", "Test Service")
+			if len(tt.systemPkgs) > 0 {
+				builder = builder.WithSystemPackages(tt.systemPkgs)
 			}
+			for _, pkg := range tt.customPkgs {
+				builder = builder.WithCustomPackage(pkg)
+			}
+			cfg := builder.Build()
 
 			ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 			engine := core.NewTemplateEngine()
@@ -151,14 +142,10 @@ func TestDependencyService_HasBuildDependencies(t *testing.T) {
 }
 
 func TestDependencyService_HasSystemPackages(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{Name: "test"},
-		Build: config.BuildConfig{
-			Dependencies: config.DependenciesConfig{
-				SystemPkgs: []string{"git", "make"},
-			},
-		},
-	}
+	cfg := testutil.NewConfigBuilder().
+		WithService("test", "Test Service").
+		WithSystemPackages([]string{"git", "make"}).
+		Build()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	engine := core.NewTemplateEngine()
@@ -168,16 +155,14 @@ func TestDependencyService_HasSystemPackages(t *testing.T) {
 }
 
 func TestDependencyService_HasCustomPackages(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{Name: "test"},
-		Build: config.BuildConfig{
-			Dependencies: config.DependenciesConfig{
-				CustomPkgs: []config.CustomPackage{
-					{Name: "nacos", InstallCommand: "echo test", Required: true},
-				},
-			},
-		},
-	}
+	cfg := testutil.NewConfigBuilder().
+		WithService("test", "Test Service").
+		WithCustomPackage(config.CustomPackage{
+			Name:           "nacos",
+			InstallCommand: "echo test",
+			Required:       true,
+		}).
+		Build()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	engine := core.NewTemplateEngine()
@@ -188,26 +173,23 @@ func TestDependencyService_HasCustomPackages(t *testing.T) {
 
 func TestDependencyService_VariableSubstitution(t *testing.T) {
 	// Arrange
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name:      "my-service",
-			DeployDir: "/usr/local/services",
-		},
-		Build: config.BuildConfig{
-			Dependencies: config.DependenciesConfig{
-				CustomPkgs: []config.CustomPackage{
-					{
-						Name: "test-pkg",
-						InstallCommand: `echo "Service: ${SERVICE_NAME}"
+	cfg := testutil.NewConfigBuilder().
+		WithService("my-service", "My Service").
+		WithDeployDir("/usr/local/services").
+		WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+		WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+		WithBuilderImage("@builders.go_1.21").
+		WithRuntimeImage("@runtimes.alpine_3.18").
+		WithBuildCommand("go build -o bin/app").
+		WithCustomPackage(config.CustomPackage{
+			Name: "test-pkg",
+			InstallCommand: `echo "Service: ${SERVICE_NAME}"
 echo "Deploy: ${DEPLOY_DIR}"
 echo "Output: ${BUILD_OUTPUT_DIR}"
 echo "Root: ${SERVICE_ROOT}"`,
-						Required: true,
-					},
-				},
-			},
-		},
-	}
+			Required: true,
+		}).
+		Build()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	engine := core.NewTemplateEngine()

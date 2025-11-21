@@ -9,8 +9,15 @@ import (
 )
 
 func TestGenerator_Generate(t *testing.T) {
-	cfg := testutil.NewDefaultConfig().
+	cfg := testutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
 		WithLanguage("go").
+		WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+		WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+		WithBuilderImage("@builders.go_1.21").
+		WithRuntimeImage("@runtimes.alpine_3.18").
+		WithBuildCommand("go build -o bin/app").
+		WithPort("http", 8080, "TCP", true).
 		Build()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")

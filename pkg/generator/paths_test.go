@@ -3,22 +3,15 @@ package generator
 import (
 	"testing"
 
-	"github.com/junjiewwang/service-template/pkg/config"
 	"github.com/junjiewwang/service-template/pkg/generator/context"
+	"github.com/junjiewwang/service-template/pkg/generator/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewCIPaths_DefaultValues(t *testing.T) {
 	// Arrange: Setup configuration with no CI settings (use defaults)
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name: "test-service",
-		},
-		CI: config.CIConfig{
-			// 不设置任何值，使用默认值
-		},
-	}
+	cfg := testutil.NewMinimal("test-service")
 
 	// Act: Create CI paths
 	paths := context.NewCIPaths(cfg)
@@ -39,16 +32,12 @@ func TestNewCIPaths_DefaultValues(t *testing.T) {
 }
 
 func TestNewCIPaths_CustomValues(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name: "test-service",
-		},
-		CI: config.CIConfig{
-			ScriptDir:         "custom/ci/scripts",
-			BuildConfigDir:    "custom/ci/config",
-			ConfigTemplateDir: "custom/ci/templates",
-		},
-	}
+	cfg := testutil.NewBuilder().
+		WithServiceName("test-service").
+		WithCIScriptDir("custom/ci/scripts").
+		WithCIBuildConfigDir("custom/ci/config").
+		WithCIConfigTemplateDir("custom/ci/templates").
+		Build()
 
 	paths := context.NewCIPaths(cfg)
 
@@ -59,11 +48,9 @@ func TestNewCIPaths_CustomValues(t *testing.T) {
 }
 
 func TestCIPaths_GetScriptPath(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		CI: config.CIConfig{
-			ScriptDir: "ci/scripts",
-		},
-	}
+	cfg := testutil.NewBuilder().
+		WithCIScriptDir("ci/scripts").
+		Build()
 
 	paths := context.NewCIPaths(cfg)
 
@@ -86,11 +73,7 @@ func TestCIPaths_GetScriptPath(t *testing.T) {
 }
 
 func TestCIPaths_GetContainerScriptPath(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name: "test-service",
-		},
-	}
+	cfg := testutil.NewMinimal("test-service")
 	paths := context.NewCIPaths(cfg)
 
 	tests := []struct {
@@ -112,11 +95,9 @@ func TestCIPaths_GetContainerScriptPath(t *testing.T) {
 
 func TestCIPaths_GetAllScriptPaths(t *testing.T) {
 	// Arrange: Setup configuration with custom script directory
-	cfg := &config.ServiceConfig{
-		CI: config.CIConfig{
-			ScriptDir: "ci/scripts",
-		},
-	}
+	cfg := testutil.NewBuilder().
+		WithCIScriptDir("ci/scripts").
+		Build()
 
 	paths := context.NewCIPaths(cfg)
 
@@ -146,16 +127,12 @@ func TestCIPaths_GetAllScriptPaths(t *testing.T) {
 }
 
 func TestCIPaths_ToTemplateVars(t *testing.T) {
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name: "test-service",
-		},
-		CI: config.CIConfig{
-			ScriptDir:         "ci/scripts",
-			BuildConfigDir:    "ci/config",
-			ConfigTemplateDir: "ci/templates",
-		},
-	}
+	cfg := testutil.NewBuilder().
+		WithServiceName("test-service").
+		WithCIScriptDir("ci/scripts").
+		WithCIBuildConfigDir("ci/config").
+		WithCIConfigTemplateDir("ci/templates").
+		Build()
 
 	paths := context.NewCIPaths(cfg)
 	vars := paths.ToTemplateVars()
@@ -186,16 +163,12 @@ func TestCIPaths_ToTemplateVars(t *testing.T) {
 
 func TestCIPaths_Integration(t *testing.T) {
 	// Arrange: Setup complete integration scenario
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name:      "test-service",
-			DeployDir: "/opt/services",
-		},
-		CI: config.CIConfig{
-			ScriptDir:      "devops/scripts",
-			BuildConfigDir: "devops/config",
-		},
-	}
+	cfg := testutil.NewBuilder().
+		WithServiceName("test-service").
+		WithDeployDir("/opt/services").
+		WithCIScriptDir("devops/scripts").
+		WithCIBuildConfigDir("devops/config").
+		Build()
 
 	paths := context.NewCIPaths(cfg)
 

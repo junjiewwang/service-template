@@ -3,22 +3,17 @@ package examples
 import (
 	"fmt"
 
-	"github.com/junjiewwang/service-template/pkg/config"
 	"github.com/junjiewwang/service-template/pkg/generator/context"
+	"github.com/junjiewwang/service-template/pkg/generator/internal/testutil"
 )
 
 // Example 1: Basic Usage - Using Variable Composer
 func ExampleBasicUsage() {
 	// Create a sample config
-	cfg := &config.ServiceConfig{
-		Service: config.ServiceInfo{
-			Name:      "my-service",
-			DeployDir: "/app",
-		},
-		Metadata: config.MetadataConfig{
-			GeneratedAt: "2024-01-01T00:00:00Z",
-		},
-	}
+	cfg := testutil.NewBuilder().
+		WithServiceName("my-service").
+		WithDeployDir("/app").
+		Build()
 
 	// Create context
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
@@ -199,56 +194,17 @@ func ExamplePresetComparison() {
 }
 
 // Helper function to create sample config
-func createSampleConfig() *config.ServiceConfig {
-	return &config.ServiceConfig{
-		BaseImages: config.BaseImagesConfig{
-			Builders: map[string]config.ArchImageConfig{
-				"go_builder": {
-					AMD64: "golang:1.21-alpine",
-					ARM64: "golang:1.21-alpine",
-				},
-			},
-			Runtimes: map[string]config.ArchImageConfig{
-				"alpine_runtime": {
-					AMD64: "alpine:3.18",
-					ARM64: "alpine:3.18",
-				},
-			},
-		},
-		Service: config.ServiceInfo{
-			Name:      "example-service",
-			DeployDir: "/app",
-			Ports: []config.PortConfig{
-				{Port: 8080, Expose: true},
-			},
-		},
-		Language: config.LanguageConfig{
-			Type: "go",
-		},
-		Build: config.BuildConfig{
-			Commands: config.BuildCommandsConfig{
-				Build:     "go build -o bin/app",
-				PreBuild:  "go mod download",
-				PostBuild: "echo done",
-			},
-			BuilderImage: "@builders.go_builder",
-			RuntimeImage: "@runtimes.alpine_runtime",
-		},
-		Runtime: config.RuntimeConfig{
-			Startup: config.StartupConfig{
-				Command: "./bin/app",
-			},
-			Healthcheck: config.HealthcheckConfig{
-				Enabled: true,
-				Type:    "http",
-			},
-			GenerateScripts: true,
-		},
-		Plugins: config.PluginsConfig{
-			InstallDir: "/opt/plugins",
-		},
-		Metadata: config.MetadataConfig{
-			GeneratedAt: "2024-01-01T00:00:00Z",
-		},
-	}
+func createSampleConfig() *testutil.ServiceConfig {
+	return testutil.NewConfigBuilder().
+		WithService("example-service", "Example Service").
+		WithDeployDir("/app").
+		WithLanguage("go").
+		WithPort("http", 8080, "TCP", true).
+		WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+		WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+		WithBuilderImage("@builders.go_1.21").
+		WithRuntimeImage("@runtimes.alpine_3.18").
+		WithBuildCommand("go build -o bin/app").
+		WithPluginInstallDir("/opt/plugins").
+		Build()
 }

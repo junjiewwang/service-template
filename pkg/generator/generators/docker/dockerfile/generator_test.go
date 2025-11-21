@@ -9,7 +9,7 @@ import (
 )
 
 func TestGenerator_Generate_AMD64(t *testing.T) {
-	cfg := testutil.NewDefaultConfig().Build()
+	cfg := testutil.NewGeneratorTestConfig()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	gen, err := New(ctx, "amd64")
@@ -32,7 +32,7 @@ func TestGenerator_Generate_AMD64(t *testing.T) {
 }
 
 func TestGenerator_Generate_ARM64(t *testing.T) {
-	cfg := testutil.NewDefaultConfig().Build()
+	cfg := testutil.NewGeneratorTestConfig()
 
 	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
 	gen, err := New(ctx, "arm64")

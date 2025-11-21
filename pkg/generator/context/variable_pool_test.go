@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/junjiewwang/service-template/pkg/config"
+	"github.com/junjiewwang/service-template/pkg/generator/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -119,79 +120,20 @@ func TestSharedVariables_Get(t *testing.T) {
 }
 
 // Helper function to create test config
-func createTestConfig() *config.ServiceConfig {
-	return &config.ServiceConfig{
-		BaseImages: config.BaseImagesConfig{
-			Builders: map[string]config.ArchImageConfig{
-				"go_builder": {
-					AMD64: "golang:1.21-alpine",
-					ARM64: "golang:1.21-alpine",
-				},
-			},
-			Runtimes: map[string]config.ArchImageConfig{
-				"alpine_runtime": {
-					AMD64: "alpine:3.18",
-					ARM64: "alpine:3.18",
-				},
-			},
-		},
-		Service: config.ServiceInfo{
-			Name:      "test-service",
-			DeployDir: "/app",
-			Ports: []config.PortConfig{
-				{Port: 8080, Expose: true},
-				{Port: 9090, Expose: false},
-			},
-		},
-		Language: config.LanguageConfig{
-			Type:   "go",
-			Config: map[string]interface{}{"GO111MODULE": "on"},
-		},
-		Build: config.BuildConfig{
-			Commands: config.BuildCommandsConfig{
-				Build:     "go build -o bin/app",
-				PreBuild:  "go mod download",
-				PostBuild: "echo done",
-			},
-			BuilderImage: "@builders.go_builder",
-			RuntimeImage: "@runtimes.alpine_runtime",
-			Dependencies: config.DependenciesConfig{
-				SystemPkgs: []string{"ca-certificates"},
-			},
-		},
-		Runtime: config.RuntimeConfig{
-			Startup: config.StartupConfig{
-				Command: "./bin/app",
-				Env: []config.EnvConfig{
-					{Name: "ENV", Value: "production"},
-				},
-			},
-			Healthcheck: config.HealthcheckConfig{
-				Enabled: true,
-				Type:    "http",
-			},
-			SystemDependencies: config.RuntimeSystemDependenciesConfig{
-				Packages: []string{"curl"},
-			},
-			GenerateScripts: true,
-		},
-		Plugins: config.PluginsConfig{
-			InstallDir: "/opt/plugins",
-			Items: []config.PluginConfig{
-				{
-					Name:        "test-plugin",
-					DownloadURL: config.NewStaticDownloadURL("https://example.com/plugin.sh"),
-					RuntimeEnv: []config.EnvironmentVariable{
-						{Name: "PLUGIN_HOME", Value: "/opt/plugins"},
-					},
-				},
-			},
-		},
-		CI: config.CIConfig{
-			ScriptDir: ".tad/build/test-service",
-		},
-		Metadata: config.MetadataConfig{
-			GeneratedAt: "2024-01-01T00:00:00Z",
-		},
-	}
+func createTestConfig() *testutil.ServiceConfig {
+	return testutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
+		WithDeployDir("/app").
+		WithLanguage("go").
+		WithPort("http", 8080, "TCP", true).
+		WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+		WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+		WithBuilderImage("@builders.go_1.21").
+		WithRuntimeImage("@runtimes.alpine_3.18").
+		WithBuildCommand("go build -o bin/app").
+		WithPlugin(config.PluginConfig{
+			Name:        "test-plugin",
+			DownloadURL: config.NewStaticDownloadURL("https://example.com/plugin.sh"),
+		}).
+		Build()
 }
