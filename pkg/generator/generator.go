@@ -1,6 +1,7 @@
 package generator
 
 import (
+	gocontext "context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +10,8 @@ import (
 	"github.com/junjiewwang/service-template/pkg/config"
 	"github.com/junjiewwang/service-template/pkg/generator/context"
 	"github.com/junjiewwang/service-template/pkg/generator/core"
+	"github.com/junjiewwang/service-template/pkg/generator/filewriter"
+	"github.com/junjiewwang/service-template/pkg/generator/filewriter/strategies"
 	"github.com/junjiewwang/service-template/pkg/utils"
 
 	// Import all generators to register them
@@ -142,7 +145,7 @@ func (g *Generator) generateCompose() error {
 	return nil
 }
 
-// generateMakefile generates Makefile
+// generateMakefile generates Makefile using incremental update strategy
 func (g *Generator) generateMakefile() error {
 	generator, err := g.createGenerator("makefile")
 	if err != nil {
@@ -155,11 +158,18 @@ func (g *Generator) generateMakefile() error {
 	}
 
 	outputPath := filepath.Join(g.outputDir, "Makefile")
-	if err := utils.WriteFile(outputPath, content); err != nil {
+
+	// Use FileWriter with incremental strategy for Makefile
+	// This allows users to add custom targets outside the generated block
+	ctx := gocontext.Background()
+	writer := filewriter.New().
+		WithStrategy(filewriter.DefaultStrategyRegistry.MustGet(strategies.IncrementalStrategyID))
+
+	if err := writer.WriteString(ctx, outputPath, content); err != nil {
 		return err
 	}
 
-	fmt.Println("✓ Generated Makefile")
+	fmt.Println("✓ Generated Makefile (incremental update)")
 	return nil
 }
 
