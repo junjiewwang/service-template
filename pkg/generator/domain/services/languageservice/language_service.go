@@ -1,9 +1,21 @@
-package services
+package languageservice
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+
+	"github.com/junjiewwang/service-template/pkg/generator/context"
+)
+
+// Language identifier constants
+const (
+	LangGo     = "go"
+	LangPython = "python"
+	LangNodeJS = "nodejs"
+	LangJava   = "java"
+	LangRust   = "rust"
 )
 
 // LanguageStrategy defines the interface for language-specific logic
@@ -27,37 +39,25 @@ type LanguageStrategy interface {
 
 // LanguageService manages language-specific logic
 type LanguageService struct {
-	strategies map[string]LanguageStrategy
+	ctx     *context.GeneratorContext
+	factory *StrategyFactory
 }
 
-// NewLanguageService creates a new language service with built-in strategies
-func NewLanguageService() *LanguageService {
-	service := &LanguageService{
-		strategies: make(map[string]LanguageStrategy),
+// NewLanguageService creates a new language service with context
+func NewLanguageService(ctx *context.GeneratorContext) *LanguageService {
+	return &LanguageService{
+		ctx:     ctx,
+		factory: NewStrategyFactory(ctx),
 	}
-
-	// Register built-in language strategies
-	service.Register(NewGoStrategy())
-	service.Register(NewPythonStrategy())
-	service.Register(NewNodeJSStrategy())
-	service.Register(NewJavaStrategy())
-	service.Register(NewRustStrategy())
-
-	return service
 }
 
-// Register registers a language strategy
-func (s *LanguageService) Register(strategy LanguageStrategy) {
-	s.strategies[strategy.GetName()] = strategy
-}
-
-// GetStrategy returns the language strategy for the given language
+// GetStrategy returns a fully decorated language strategy
 func (s *LanguageService) GetStrategy(language string) (LanguageStrategy, error) {
-	strategy, exists := s.strategies[language]
-	if !exists {
-		return nil, fmt.Errorf("unsupported language: %s", language)
+	if s.ctx == nil || s.ctx.Config == nil {
+		return nil, fmt.Errorf("context or config is nil")
 	}
-	return strategy, nil
+
+	return s.factory.CreateStrategy(language, &s.ctx.Config.Language)
 }
 
 // GetDependencyFiles returns dependency files for the given language
@@ -89,6 +89,7 @@ func (s *LanguageService) GetDependencyFilesWithDetection(language string, proje
 }
 
 // GetDepsInstallCommand returns the dependency installation command
+// The command is automatically decorated with custom config and variable substitution
 func (s *LanguageService) GetDepsInstallCommand(language string) string {
 	strategy, err := s.GetStrategy(language)
 	if err != nil {
@@ -110,16 +111,18 @@ func (s *LanguageService) GetPackageManager(language string) string {
 
 // IsSupported checks if the language is supported
 func (s *LanguageService) IsSupported(language string) bool {
-	_, exists := s.strategies[language]
-	return exists
+	_, err := s.GetStrategy(language)
+	return err == nil
 }
 
 // ListSupportedLanguages returns a list of all supported languages
 func (s *LanguageService) ListSupportedLanguages() []string {
-	languages := make([]string, 0, len(s.strategies))
-	for lang := range s.strategies {
+	languages := make([]string, 0, len(strategyRegistry))
+	for lang := range strategyRegistry {
 		languages = append(languages, lang)
 	}
+	// Sort to ensure stable order for tests and API consumers
+	sort.Strings(languages)
 	return languages
 }
 
@@ -134,7 +137,7 @@ func NewGoStrategy() *GoStrategy {
 }
 
 func (s *GoStrategy) GetName() string {
-	return "go"
+	return LangGo
 }
 
 func (s *GoStrategy) GetDependencyFiles() []string {
@@ -164,7 +167,7 @@ func NewPythonStrategy() *PythonStrategy {
 }
 
 func (s *PythonStrategy) GetName() string {
-	return "python"
+	return LangPython
 }
 
 func (s *PythonStrategy) GetDependencyFiles() []string {
@@ -194,7 +197,7 @@ func NewNodeJSStrategy() *NodeJSStrategy {
 }
 
 func (s *NodeJSStrategy) GetName() string {
-	return "nodejs"
+	return LangNodeJS
 }
 
 func (s *NodeJSStrategy) GetDependencyFiles() []string {
@@ -225,7 +228,7 @@ func NewJavaStrategy() *JavaStrategy {
 }
 
 func (s *JavaStrategy) GetName() string {
-	return "java"
+	return LangJava
 }
 
 func (s *JavaStrategy) GetDependencyFiles() []string {
@@ -280,7 +283,7 @@ func NewRustStrategy() *RustStrategy {
 }
 
 func (s *RustStrategy) GetName() string {
-	return "rust"
+	return LangRust
 }
 
 func (s *RustStrategy) GetDependencyFiles() []string {

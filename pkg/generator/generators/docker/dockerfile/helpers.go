@@ -1,18 +1,19 @@
 package dockerfile
 
 import (
+	"github.com/junjiewwang/service-template/pkg/generator/domain/services/languageservice"
 	"strings"
 
-	"github.com/junjiewwang/service-template/pkg/config"
-	"github.com/junjiewwang/service-template/pkg/generator/domain/services"
+	"github.com/junjiewwang/service-template/pkg/generator/context"
 )
 
 // getDependencyFilesList returns list of dependency files
 // projectDir: the root directory of the project to scan for dependency files
-func getDependencyFilesList(cfg *config.ServiceConfig, projectDir string) []string {
+func getDependencyFilesList(ctx *context.GeneratorContext, projectDir string) []string {
+	cfg := ctx.Config
 	if cfg.Build.DependencyFiles.AutoDetect {
 		// Use language service to detect actual dependency files in the project
-		langService := services.NewLanguageService()
+		langService := languageservice.NewLanguageService(ctx)
 		return langService.GetDependencyFilesWithDetection(
 			cfg.Language.Type,
 			projectDir,

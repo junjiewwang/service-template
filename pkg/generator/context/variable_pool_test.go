@@ -119,6 +119,46 @@ func TestSharedVariables_Get(t *testing.T) {
 	t.Logf("✓ Get method works correctly")
 }
 
+func TestVariablePool_EmptyPorts(t *testing.T) {
+	// Arrange: 创建一个没有端口的配置
+	cfg := testutil.NewConfigBuilder().
+		WithService("test-service", "Test Service").
+		WithDeployDir("/app").
+		WithLanguage("go").
+		// 不添加任何端口
+		WithBuilder("go_1.21", "golang:1.21", "golang:1.21").
+		WithRuntime("alpine_3.18", "alpine:3.18", "alpine:3.18").
+		WithBuilderImage("@builders.go_1.21").
+		WithRuntimeImage("@runtimes.alpine_3.18").
+		WithBuildCommand("go build -o bin/app").
+		Build()
+
+	ctx := NewGeneratorContext(cfg, "/tmp/output")
+
+	// Act: 获取 service 变量
+	shared := ctx.VariablePool.GetSharedVariables(CategoryService)
+
+	// Assert
+	vars := shared.ToMap()
+
+	// PORTS 应该是空数组
+	ports, exists := vars["PORTS"]
+	assert.True(t, exists, "PORTS should exist")
+	assert.Empty(t, ports, "PORTS should be empty")
+
+	// SERVICE_PORT 应该是空字符串
+	servicePort, exists := vars[VarServicePort]
+	assert.True(t, exists, "SERVICE_PORT should exist")
+	assert.Equal(t, "", servicePort, "SERVICE_PORT should be empty string when no ports configured")
+
+	// EXPOSE_PORTS 应该是空数组
+	exposePorts, exists := vars["EXPOSE_PORTS"]
+	assert.True(t, exists, "EXPOSE_PORTS should exist")
+	assert.Empty(t, exposePorts, "EXPOSE_PORTS should be empty")
+
+	t.Logf("✓ Empty ports handling works correctly")
+}
+
 // Helper function to create test config
 func createTestConfig() *testutil.ServiceConfig {
 	return testutil.NewConfigBuilder().

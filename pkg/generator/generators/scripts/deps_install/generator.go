@@ -6,6 +6,7 @@ import (
 	"github.com/junjiewwang/service-template/pkg/generator/context"
 	"github.com/junjiewwang/service-template/pkg/generator/core"
 	"github.com/junjiewwang/service-template/pkg/generator/domain/services"
+	"github.com/junjiewwang/service-template/pkg/generator/domain/services/languageservice"
 )
 
 const GeneratorType = "deps-install-script"
@@ -18,7 +19,8 @@ func init() {
 // Generator generates build_deps_install.sh script
 type Generator struct {
 	core.BaseGenerator
-	depSvc *services.DependencyService
+	depSvc  *services.DependencyService
+	langSvc *languageservice.LanguageService
 }
 
 // New creates a new deps install script generator
@@ -27,6 +29,7 @@ func New(ctx *context.GeneratorContext, options ...interface{}) (core.Generator,
 	return &Generator{
 		BaseGenerator: core.NewBaseGenerator(GeneratorType, ctx, engine),
 		depSvc:        services.NewDependencyService(ctx, engine),
+		langSvc:       languageservice.NewLanguageService(ctx),
 	}, nil
 }
 
@@ -41,6 +44,9 @@ func (g *Generator) Generate() (string, error) {
 	// Get build dependencies
 	buildDeps := g.depSvc.GetBuildDependencies()
 
+	// Get language-specific install command (with custom config and variable substitution)
+	depsInstallCmd := g.langSvc.GetDepsInstallCommand(ctx.Config.Language.Type)
+
 	// Get language-specific config using helper methods
 	var goProxy, goSumDB string
 	if ctx.Config.Language.Type == "go" {
@@ -50,13 +56,14 @@ func (g *Generator) Generate() (string, error) {
 
 	// Prepare template data
 	data := map[string]interface{}{
-		"HasSystemPackages": g.depSvc.HasSystemPackages(),
-		"SystemPackages":    buildDeps.SystemPkgs,
-		"HasCustomPackages": g.depSvc.HasCustomPackages(),
-		"CustomPackages":    buildDeps.CustomPkgs,
-		"Language":          ctx.Config.Language.Type,
-		"GoProxy":           goProxy,
-		"GoSumDB":           goSumDB,
+		"HasSystemPackages":  g.depSvc.HasSystemPackages(),
+		"SystemPackages":     buildDeps.SystemPkgs,
+		"HasCustomPackages":  g.depSvc.HasCustomPackages(),
+		"CustomPackages":     buildDeps.CustomPkgs,
+		"Language":           ctx.Config.Language.Type,
+		"DepsInstallCommand": depsInstallCmd,
+		"GoProxy":            goProxy,
+		"GoSumDB":            goSumDB,
 	}
 
 	return g.RenderTemplate(template, data)

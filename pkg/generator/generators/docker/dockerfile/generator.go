@@ -3,6 +3,7 @@ package dockerfile
 import (
 	_ "embed"
 	"fmt"
+	"github.com/junjiewwang/service-template/pkg/generator/domain/services/languageservice"
 
 	"github.com/junjiewwang/service-template/pkg/generator/context"
 	"github.com/junjiewwang/service-template/pkg/generator/core"
@@ -68,12 +69,12 @@ func (g *Generator) prepareTemplateVars() map[string]interface{} {
 	}
 
 	// Use language service for language-specific logic
-	langService := services.NewLanguageService()
+	langService := languageservice.NewLanguageService(ctx)
 
 	// Add Dockerfile-specific custom variables
 	composer.
 		WithCustom("PKG_MANAGER", detectPackageManager(builderImage)).
-		WithCustom("DEPENDENCY_FILES", getDependencyFilesList(ctx.Config, ctx.OutputDir)).
+		WithCustom("DEPENDENCY_FILES", getDependencyFilesList(ctx, ctx.OutputDir)).
 		WithCustom("DEPS_INSTALL_COMMAND", langService.GetDepsInstallCommand(ctx.Config.Language.Type))
 
 	// Use plugin service to process plugins

@@ -1,12 +1,22 @@
-package services
+package languageservice
 
 import (
 	"os"
 	"testing"
+
+	"github.com/junjiewwang/service-template/pkg/generator/context"
+	"github.com/junjiewwang/service-template/pkg/generator/internal/testutil"
 )
 
+// createTestService creates a LanguageService for testing
+func createTestService() *LanguageService {
+	cfg := testutil.NewTestConfig()
+	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
+	return NewLanguageService(ctx)
+}
+
 func TestLanguageService_GetStrategy(t *testing.T) {
-	service := NewLanguageService()
+	service := createTestService()
 
 	tests := []struct {
 		name     string
@@ -36,7 +46,7 @@ func TestLanguageService_GetStrategy(t *testing.T) {
 }
 
 func TestLanguageService_GetDependencyFiles(t *testing.T) {
-	service := NewLanguageService()
+	service := createTestService()
 
 	tests := []struct {
 		name        string
@@ -89,7 +99,7 @@ func TestLanguageService_GetDependencyFiles(t *testing.T) {
 }
 
 func TestLanguageService_GetDepsInstallCommand(t *testing.T) {
-	service := NewLanguageService()
+	service := createTestService()
 
 	tests := []struct {
 		name     string
@@ -115,7 +125,7 @@ func TestLanguageService_GetDepsInstallCommand(t *testing.T) {
 }
 
 func TestLanguageService_GetPackageManager(t *testing.T) {
-	service := NewLanguageService()
+	service := createTestService()
 
 	tests := []struct {
 		name     string
@@ -141,7 +151,7 @@ func TestLanguageService_GetPackageManager(t *testing.T) {
 }
 
 func TestLanguageService_IsSupported(t *testing.T) {
-	service := NewLanguageService()
+	service := createTestService()
 
 	tests := []struct {
 		name     string
@@ -165,7 +175,7 @@ func TestLanguageService_IsSupported(t *testing.T) {
 }
 
 func TestLanguageService_ListSupportedLanguages(t *testing.T) {
-	service := NewLanguageService()
+	service := createTestService()
 
 	languages := service.ListSupportedLanguages()
 
@@ -189,24 +199,8 @@ func TestLanguageService_ListSupportedLanguages(t *testing.T) {
 	}
 }
 
-func TestLanguageService_Register(t *testing.T) {
-	service := NewLanguageService()
-
-	// Create a custom strategy
-	customStrategy := &GoStrategy{} // Reuse GoStrategy for testing
-
-	// Register with a different name
-	service.Register(customStrategy)
-
-	// Verify it's registered
-	strategy, err := service.GetStrategy("go")
-	if err != nil {
-		t.Errorf("GetStrategy() error = %v", err)
-	}
-	if strategy == nil {
-		t.Error("GetStrategy() returned nil")
-	}
-}
+// TestLanguageService_Register is removed because the new decorator pattern
+// doesn't require manual registration of strategies
 
 // Test individual strategies
 func TestGoStrategy(t *testing.T) {
@@ -290,7 +284,7 @@ func TestRustStrategy(t *testing.T) {
 }
 
 func TestLanguageService_GetDependencyFilesWithDetection(t *testing.T) {
-	service := NewLanguageService()
+	service := createTestService()
 
 	tests := []struct {
 		name        string

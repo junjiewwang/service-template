@@ -38,8 +38,9 @@ service:
   name: example-service
   description: "Example Service"
 
-  # 服务端口配置（支持多端口）
-  # 可用变量：SERVICE_PORT（主端口，取第一个端口）
+  # 服务端口配置（支持多端口，可选）
+  # 注意：ports 可以为空数组，适用于不需要暴露端口的服务（如后台任务、消息消费者等）
+  # 可用变量：SERVICE_PORT（主端口，取第一个端口；如果 ports 为空，则为空字符串）
   ports:
   - name: http
     port: 8080
@@ -80,23 +81,14 @@ language:
     # pip_trusted_host: "mirrors.tencent.com"
     # pip_extra_index_url: "https://pypi.org/simple"
 
-    # ========================================
-    # Node.js 语言配置（示例）
-    # ========================================
-    # npm_registry: "https://mirrors.tencent.com/npm/"
-    # npm_token: "your-npm-token"
-
-    # ========================================
-    # Java 语言配置（示例）
-    # ========================================
-    # maven_settings: "/path/to/settings.xml"
-    # gradle_props: "/path/to/gradle.properties"
-
-    # ========================================
-    # Rust 语言配置（示例）
-    # ========================================
-    # cargo_registry: "https://mirrors.tencent.com/crates.io-index"
-
+    # 自定义依赖安装命令（支持变量替换）
+    # 可用变量：
+    #   ${BUILD_OUTPUT_DIR}  - 构建输出目录（如 /opt/dist）
+    #   ${PROJECT_ROOT}      - 项目根目录（如 /opt）
+    #   ${SERVICE_ROOT}      - 服务根目录（同 PROJECT_ROOT）
+    #   ${SERVICE_NAME}      - 服务名称
+    #   ${DEPLOY_DIR}        - 部署目录
+    # deps_install_command: "pip install -r requirements.txt -t ${BUILD_OUTPUT_DIR}/bin"
     # ============================================
     # 构建配置
     # ============================================

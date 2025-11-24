@@ -254,7 +254,7 @@ k8s-deploy: check-kubectl k8s-convert
 	@echo "========================================="
 	@echo "Deploying to Kubernetes cluster"
 	@echo "========================================="
-	@if [ ! -d "$(K8S_OUTPUT_DIR)" ] || [ -z "$$(ls -A $(K8S_OUTPUT_DIR) 2>/dev/null)" ]; then \
+	@if [ ! -d "$(K8S_OUTPUT_DIR)" ] || [ -z "$$$$(ls -A $(K8S_OUTPUT_DIR) 2>/dev/null)" ]; then \
 		echo "ERROR: K8s manifests not found in $(K8S_OUTPUT_DIR)/"; \
 		echo "Please run 'make k8s-convert' first"; \
 		exit 1; \
@@ -279,7 +279,7 @@ k8s-clean: check-kubectl
 	@echo "========================================="
 	@echo "Cleaning Kubernetes resources"
 	@echo "========================================="
-	@if [ ! -d "$(K8S_OUTPUT_DIR)" ] || [ -z "$$(ls -A $(K8S_OUTPUT_DIR) 2>/dev/null)" ]; then \
+	@if [ ! -d "$(K8S_OUTPUT_DIR)" ] || [ -z "$$$$(ls -A $(K8S_OUTPUT_DIR) 2>/dev/null)" ]; then \
 		echo "WARNING: K8s manifests not found in $(K8S_OUTPUT_DIR)/"; \
 		echo "Skipping kubectl delete"; \
 	else \
@@ -322,17 +322,17 @@ k8s-logs: check-kubectl
 	@echo "========================================="
 	@echo "Fetching logs for $(PROJECT_NAME)"
 	@echo "========================================="
-	@pod=$$(kubectl get pods -n $(K8S_NAMESPACE) -l io.kompose.service=$(PROJECT_NAME) -o jsonpath='{.items[0].metadata.name}' 2>/dev/null); \
-	if [ -z "$$pod" ]; then \
-		pod=$$(kubectl get pods -n $(K8S_NAMESPACE) -o name | grep $(PROJECT_NAME) | head -n1 | cut -d'/' -f2); \
+	@pod=$$$$(kubectl get pods -n $(K8S_NAMESPACE) -l io.kompose.service=$(PROJECT_NAME) -o jsonpath='{.items[0].metadata.name}' 2>/dev/null); \
+	if [ -z "$$$$pod" ]; then \
+		pod=$$$$(kubectl get pods -n $(K8S_NAMESPACE) -o name | grep $(PROJECT_NAME) | head -n1 | cut -d'/' -f2); \
 	fi; \
-	if [ -z "$$pod" ]; then \
+	if [ -z "$$$$pod" ]; then \
 		echo "ERROR: No pods found for $(PROJECT_NAME)"; \
 		exit 1; \
 	fi; \
-	echo "Pod: $$pod"; \
+	echo "Pod: $$$$pod"; \
 	echo ""; \
-	kubectl logs -f $$pod -n $(K8S_NAMESPACE)
+	kubectl logs -f $$$$pod -n $(K8S_NAMESPACE)
 
 
 # Full CI/CD pipeline: build -> convert -> deploy (basic)

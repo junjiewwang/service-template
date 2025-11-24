@@ -49,10 +49,7 @@ func (v *Validator) validateService() {
 		v.errors = append(v.errors, "service.name is required")
 	}
 
-	if len(v.config.Service.Ports) == 0 {
-		v.errors = append(v.errors, "service.ports must have at least one port")
-	}
-
+	// ports 可以为空，但如果配置了端口，则需要验证其有效性
 	for i, port := range v.config.Service.Ports {
 		if port.Name == "" {
 			v.errors = append(v.errors, fmt.Sprintf("service.ports[%d].name is required", i))

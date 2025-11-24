@@ -161,8 +161,13 @@ func (p *VariablePool) fillServiceVariables(shared *SharedVariables) {
 	cfg := p.ctx.Config
 	shared.vars["PORTS"] = cfg.Service.Ports
 
+	// 只有在配置了端口时才设置 SERVICE_PORT
 	if len(cfg.Service.Ports) > 0 {
 		shared.vars[VarServicePort] = cfg.Service.Ports[0].Port
+	} else {
+		// ports 为空时，SERVICE_PORT 设置为空字符串或不设置
+		// 这样模板中使用 ${SERVICE_PORT} 时不会报错
+		shared.vars[VarServicePort] = ""
 	}
 
 	// Expose ports

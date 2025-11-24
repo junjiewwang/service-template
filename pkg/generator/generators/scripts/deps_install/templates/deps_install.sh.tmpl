@@ -137,46 +137,28 @@ echo ""
 # 4. Install Language Dependencies
 # ============================================
 
-# Example 1: Go Project
+{{- if .DepsInstallCommand }}
+echo "Installing {{ .Language }} dependencies..."
+
 {{- if eq .Language "go" }}
-if [ -f "go.mod" ]; then
 {{- if .GoProxy }}
-	go env -w GOPROXY="{{ .GoProxy }}"
+go env -w GOPROXY="{{ .GoProxy }}"
 {{- end }}
 {{- if .GoSumDB }}
-	go env -w GOSUMDB="{{ .GoSumDB }}"
+go env -w GOSUMDB="{{ .GoSumDB }}"
 {{- end }}
-	echo "Downloading Go dependencies..."
-	go mod download
-	echo "✓ Go dependencies downloaded"
-fi
 {{- end }}
 
-# Example 2: Node.js Project
-{{- if eq .Language "nodejs" }}
-if [ -f "package.json" ]; then
-	echo "Installing Node.js dependencies..."
-	npm install --production
-	echo "✓ Node.js dependencies installed"
-fi
-{{- end }}
+# Execute language-specific dependency installation command
+# This command is automatically configured based on:
+# 1. Language type (go, python, nodejs, java, rust, etc.)
+# 2. Custom deps_install_command from config (if specified)
+# 3. Variable substitution (${BUILD_OUTPUT_DIR}, ${PROJECT_ROOT}, etc.)
+{{ .DepsInstallCommand }}
 
-# Example 3: Python Project
-{{- if eq .Language "python" }}
-if [ -f "requirements.txt" ]; then
-	echo "Installing Python dependencies..."
-	pip install -r requirements.txt
-	echo "✓ Python dependencies installed"
-fi
-{{- end }}
-
-# Example 4: Java Maven Project
-{{- if eq .Language "java" }}
-if [ -f "pom.xml" ]; then
-	echo "Downloading Maven dependencies..."
-	mvn dependency:go-offline
-	echo "✓ Maven dependencies downloaded"
-fi
+echo "✓ {{ .Language }} dependencies installed successfully"
+{{- else }}
+echo "No language dependencies to install"
 {{- end }}
 
 echo "=========================================="

@@ -170,6 +170,44 @@ func TestValidator_Validate(t *testing.T) {
 			wantErr: true,
 			errMsg:  "build.commands.build is required",
 		},
+		{
+			name: "empty ports is valid",
+			config: &ServiceConfig{
+				BaseImages: createTestBaseImages(),
+				Service: ServiceInfo{
+					Name:        "test-service",
+					Description: "Test service without ports",
+					Ports:       []PortConfig{}, // 空端口列表
+					DeployDir:   "/usr/local/services",
+				},
+				Language: LanguageConfig{
+					Type: "go",
+				},
+				Build: BuildConfig{
+					BuilderImage: "@builders.test_builder",
+					RuntimeImage: "@runtimes.test_runtime",
+					Commands: BuildCommandsConfig{
+						Build: "go build",
+					},
+				},
+				Runtime: RuntimeConfig{
+					Healthcheck: HealthcheckConfig{
+						Enabled: true,
+						Type:    "default",
+					},
+					Startup: StartupConfig{
+						Command: "./app",
+					},
+				},
+				LocalDev: LocalDevConfig{
+					Kubernetes: KubernetesConfig{
+						Enabled:   false,
+						Namespace: "default",
+					},
+				},
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
