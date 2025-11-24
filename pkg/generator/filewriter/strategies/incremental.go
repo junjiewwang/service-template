@@ -53,18 +53,29 @@ func (s *IncrementalStrategy) Write(ctx context.Context, path string, content []
 		return err
 	}
 
+	// Get merger
+	merger := mergers.DefaultMergerRegistry.MustGet(s.mergerID)
+
 	// Check if file exists
 	existingContent, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			// File doesn't exist, write directly
-			return os.WriteFile(path, content, 0644)
+			// File doesn't exist, use merger to wrap content with markers
+			// This ensures first-time generation also has markers
+			mergedContent, err := merger.Merge(ctx, &mergers.MergeInput{
+				ExistingContent: []byte{}, // Empty existing content
+				NewContent:      content,
+				FilePath:        path,
+			})
+			if err != nil {
+				return err
+			}
+			return os.WriteFile(path, mergedContent, 0644)
 		}
 		return err
 	}
 
 	// File exists, use merger to merge content
-	merger := mergers.DefaultMergerRegistry.MustGet(s.mergerID)
 	mergedContent, err := merger.Merge(ctx, &mergers.MergeInput{
 		ExistingContent: existingContent,
 		NewContent:      content,

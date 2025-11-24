@@ -147,12 +147,27 @@ func TestMakefileIncrementalUpdateWithoutExisting(t *testing.T) {
 	require.NoError(t, err, "Failed to read generated Makefile")
 	contentStr := string(content)
 
-	// When no existing file, the content should be written directly without markers
-	// (markers are only added when merging with existing content)
+	// Even when no existing file, the content should have markers
+	// This ensures consistency and allows proper incremental updates
 	assert.NotEmpty(t, contentStr, "Generated Makefile should not be empty")
 	assert.Contains(t, contentStr, ".PHONY:", "Generated Makefile should contain targets")
+	assert.Contains(t, contentStr, "# ===== GENERATED_START =====", "First generation should have start marker")
+	assert.Contains(t, contentStr, "# ===== GENERATED_END =====", "First generation should have end marker")
 
 	t.Logf("Generated Makefile without existing file: %d bytes", len(content))
+
+	// Step 2: Generate again to verify idempotency
+	err = gen.generateMakefile()
+	require.NoError(t, err, "Failed to generate Makefile second time")
+
+	// Read again
+	content2, err := os.ReadFile(makefilePath)
+	require.NoError(t, err, "Failed to read Makefile after second generation")
+
+	// Should be identical (idempotent)
+	assert.Equal(t, string(content), string(content2), "Multiple generations should be idempotent")
+
+	t.Logf("Verified idempotency: content unchanged after second generation")
 }
 
 // TestMakefileIncrementalUpdatePreservesUserChanges tests that user changes outside markers are preserved
