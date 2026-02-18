@@ -91,14 +91,14 @@ func WithRuntimeOpt(name, amd64, arm64 string) ConfigOption {
 // WithBuilderImageOpt 设置构建镜像引用
 func WithBuilderImageOpt(ref string) ConfigOption {
 	return func(cfg *config.ServiceConfig) {
-		cfg.Build.BuilderImage = config.ImageRef(ref)
+		cfg.Build.BuilderImage = config.NewImageSpec(ref)
 	}
 }
 
 // WithRuntimeImageOpt 设置运行时镜像引用
 func WithRuntimeImageOpt(ref string) ConfigOption {
 	return func(cfg *config.ServiceConfig) {
-		cfg.Build.RuntimeImage = config.ImageRef(ref)
+		cfg.Build.RuntimeImage = config.NewImageSpec(ref)
 	}
 }
 

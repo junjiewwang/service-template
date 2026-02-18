@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"strings"
 
+	"github.com/junjiewwang/service-template/pkg/config"
 	"github.com/junjiewwang/service-template/pkg/generator/context"
 	"github.com/junjiewwang/service-template/pkg/generator/core"
 )
@@ -42,12 +43,15 @@ func (g *Generator) Generate() (string, error) {
 func (g *Generator) prepareTemplateVars() map[string]interface{} {
 	ctx := g.GetContext()
 
-	// 创建镜像解析器
-	resolver := ctx.Config.NewImageResolver()
-
-	// 解析镜像
-	builderImages := resolver.MustResolveBuilderImage()
-	runtimeImages := resolver.MustResolveRuntimeImage()
+	// 使用支持自动推导的镜像解析函数
+	builderImages, err := config.ResolveBuilderImageWithDefaults(ctx.Config)
+	if err != nil {
+		panic(err)
+	}
+	runtimeImages, err := config.ResolveRuntimeImageWithDefaults(ctx.Config)
+	if err != nil {
+		panic(err)
+	}
 
 	// Use preset for DevOps
 	composer := ctx.GetVariablePreset().ForDevOps()

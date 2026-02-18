@@ -46,8 +46,8 @@ func TestValidator_Validate(t *testing.T) {
 					Type: "go",
 				},
 				Build: BuildConfig{
-					BuilderImage: "@builders.test_builder",
-					RuntimeImage: "@runtimes.test_runtime",
+					BuilderImage: NewImageSpec("@builders.test_builder"),
+					RuntimeImage: NewImageSpec("@runtimes.test_runtime"),
 					Commands: BuildCommandsConfig{
 						Build: "go build",
 					},
@@ -85,8 +85,8 @@ func TestValidator_Validate(t *testing.T) {
 					Type: "go",
 				},
 				Build: BuildConfig{
-					BuilderImage: "@builders.test_builder",
-					RuntimeImage: "@runtimes.test_runtime",
+					BuilderImage: NewImageSpec("@builders.test_builder"),
+					RuntimeImage: NewImageSpec("@runtimes.test_runtime"),
 					Commands:     BuildCommandsConfig{Build: "build"},
 				},
 				Runtime: RuntimeConfig{
@@ -111,8 +111,8 @@ func TestValidator_Validate(t *testing.T) {
 					Type: "go",
 				},
 				Build: BuildConfig{
-					BuilderImage: "@builders.test_builder",
-					RuntimeImage: "@runtimes.test_runtime",
+					BuilderImage: NewImageSpec("@builders.test_builder"),
+					RuntimeImage: NewImageSpec("@runtimes.test_runtime"),
 					Commands:     BuildCommandsConfig{Build: "build"},
 				},
 				Runtime: RuntimeConfig{
@@ -135,8 +135,8 @@ func TestValidator_Validate(t *testing.T) {
 					Type: "invalid",
 				},
 				Build: BuildConfig{
-					BuilderImage: "@builders.test_builder",
-					RuntimeImage: "@runtimes.test_runtime",
+					BuilderImage: NewImageSpec("@builders.test_builder"),
+					RuntimeImage: NewImageSpec("@runtimes.test_runtime"),
 					Commands:     BuildCommandsConfig{Build: "build"},
 				},
 				Runtime: RuntimeConfig{
@@ -147,7 +147,7 @@ func TestValidator_Validate(t *testing.T) {
 			errMsg:  "is not supported",
 		},
 		{
-			name: "missing build command",
+			name: "missing build command with supported language is valid (has default)",
 			config: &ServiceConfig{
 				BaseImages: createTestBaseImages(),
 				Service: ServiceInfo{
@@ -159,16 +159,15 @@ func TestValidator_Validate(t *testing.T) {
 					Type: "go",
 				},
 				Build: BuildConfig{
-					BuilderImage: "@builders.test_builder",
-					RuntimeImage: "@runtimes.test_runtime",
+					BuilderImage: NewImageSpec("@builders.test_builder"),
+					RuntimeImage: NewImageSpec("@runtimes.test_runtime"),
 					Commands:     BuildCommandsConfig{Build: ""},
 				},
 				Runtime: RuntimeConfig{
 					Startup: StartupConfig{Command: "./app"},
 				},
 			},
-			wantErr: true,
-			errMsg:  "build.commands.build is required",
+			wantErr: false,
 		},
 		{
 			name: "empty ports is valid",
@@ -184,8 +183,8 @@ func TestValidator_Validate(t *testing.T) {
 					Type: "go",
 				},
 				Build: BuildConfig{
-					BuilderImage: "@builders.test_builder",
-					RuntimeImage: "@runtimes.test_runtime",
+					BuilderImage: NewImageSpec("@builders.test_builder"),
+					RuntimeImage: NewImageSpec("@runtimes.test_runtime"),
 					Commands: BuildCommandsConfig{
 						Build: "go build",
 					},
@@ -292,8 +291,8 @@ func TestValidator_ValidateHealthcheck(t *testing.T) {
 				},
 				Language: LanguageConfig{Type: "go"},
 				Build: BuildConfig{
-					BuilderImage: "@builders.test_builder",
-					RuntimeImage: "@runtimes.test_runtime",
+					BuilderImage: NewImageSpec("@builders.test_builder"),
+					RuntimeImage: NewImageSpec("@runtimes.test_runtime"),
 					Commands:     BuildCommandsConfig{Build: "build"},
 				},
 				Runtime: RuntimeConfig{

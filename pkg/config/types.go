@@ -8,7 +8,8 @@ import (
 // ServiceConfig represents the complete service configuration
 type ServiceConfig struct {
 	// 基础镜像配置（顶层，与 service 同级）
-	BaseImages BaseImagesConfig `yaml:"base_images"`
+	// 仅在使用 @builders.* / @runtimes.* 预设引用时需要配置
+	BaseImages BaseImagesConfig `yaml:"base_images,omitempty"`
 
 	Service  ServiceInfo    `yaml:"service"`
 	Language LanguageConfig `yaml:"language"`
@@ -19,11 +20,6 @@ type ServiceConfig struct {
 	Makefile MakefileConfig `yaml:"makefile,omitempty"`
 	Metadata MetadataConfig `yaml:"metadata"`
 	CI       CIConfig       `yaml:"ci,omitempty"`
-}
-
-// NewImageResolver 创建镜像解析器
-func (s *ServiceConfig) NewImageResolver() *ImageResolver {
-	return NewImageResolver(s)
 }
 
 // ServiceInfo contains basic service information
@@ -116,9 +112,13 @@ func (l *LanguageConfig) GetStringSlice(key string) []string {
 // BuildConfig contains build-related settings
 type BuildConfig struct {
 	DependencyFiles DependencyFilesConfig `yaml:"dependency_files"`
-	// 使用 ImageRef 类型强制引用
-	BuilderImage ImageRef            `yaml:"builder_image"`
-	RuntimeImage ImageRef            `yaml:"runtime_image"`
+	// 使用 ImageSpec 类型支持多种镜像配置格式
+	// 格式1: 不填（由 Resolver 按语言推导）
+	// 格式2: 字符串（如 "golang:1.23-alpine"，multi-arch 镜像）
+	// 格式3: 字符串（如 "@builders.go_1.22"，预设引用）
+	// 格式4: 对象（如 {amd64: "xxx", arm64: "yyy"}，按架构指定）
+	BuilderImage ImageSpec           `yaml:"builder_image,omitempty"`
+	RuntimeImage ImageSpec           `yaml:"runtime_image,omitempty"`
 	Dependencies DependenciesConfig  `yaml:"dependencies"`
 	Commands     BuildCommandsConfig `yaml:"commands"`
 }
@@ -133,6 +133,11 @@ type DependencyFilesConfig struct {
 type ArchImageConfig struct {
 	AMD64 string `yaml:"amd64"`
 	ARM64 string `yaml:"arm64"`
+}
+
+// IsEmpty 判断是否两个架构都未填
+func (a *ArchImageConfig) IsEmpty() bool {
+	return a.AMD64 == "" && a.ARM64 == ""
 }
 
 // Validate 验证架构镜像配置

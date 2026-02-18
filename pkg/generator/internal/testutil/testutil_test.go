@@ -19,12 +19,12 @@ func TestNewBuilder(t *testing.T) {
 	}
 
 	// 验证默认镜像配置
-	if cfg.Build.BuilderImage != "@builders.go_1.21" {
-		t.Errorf("expected builder image '@builders.go_1.21', got '%s'", cfg.Build.BuilderImage)
+	if cfg.Build.BuilderImage.String() != "@builders.go_1.21" {
+		t.Errorf("expected builder image '@builders.go_1.21', got '%s'", cfg.Build.BuilderImage.String())
 	}
 
-	if cfg.Build.RuntimeImage != "@runtimes.alpine_3.18" {
-		t.Errorf("expected runtime image '@runtimes.alpine_3.18', got '%s'", cfg.Build.RuntimeImage)
+	if cfg.Build.RuntimeImage.String() != "@runtimes.alpine_3.18" {
+		t.Errorf("expected runtime image '@runtimes.alpine_3.18', got '%s'", cfg.Build.RuntimeImage.String())
 	}
 }
 

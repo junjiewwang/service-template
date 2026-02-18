@@ -1,7 +1,10 @@
 package context
 
 import (
+	"fmt"
 	"sync"
+
+	"github.com/junjiewwang/service-template/pkg/config"
 )
 
 // VariablePool manages shared template variables (Flyweight Pool)
@@ -96,15 +99,18 @@ func (p *VariablePool) fillCommonVariables(shared *SharedVariables) {
 func (p *VariablePool) fillBuildVariables(shared *SharedVariables) {
 	cfg := p.ctx.Config
 
-	// 创建镜像解析器
-	resolver := cfg.NewImageResolver()
+	// 使用支持自动推导的镜像解析函数
+	builderImages, err := config.ResolveBuilderImageWithDefaults(cfg)
+	if err != nil {
+		panic(fmt.Errorf("failed to resolve builder image: %w", err))
+	}
+	runtimeImages, err := config.ResolveRuntimeImageWithDefaults(cfg)
+	if err != nil {
+		panic(fmt.Errorf("failed to resolve runtime image: %w", err))
+	}
 
-	// 解析镜像
-	builderImages := resolver.MustResolveBuilderImage()
-	runtimeImages := resolver.MustResolveRuntimeImage()
-
-	// 填充变量
-	shared.vars[VarBuildCommand] = cfg.Build.Commands.Build
+	// 填充变量（构建命令支持自动推导）
+	shared.vars[VarBuildCommand] = config.ResolveBuildCommand(cfg)
 	shared.vars[VarPreBuildCommand] = cfg.Build.Commands.PreBuild
 	shared.vars[VarPostBuildCommand] = cfg.Build.Commands.PostBuild
 	shared.vars["BUILD_DEPS_PACKAGES"] = cfg.Build.Dependencies.SystemPkgs

@@ -84,50 +84,54 @@ func (v *Validator) validateLanguage() {
 }
 
 // validateBaseImages 验证基础镜像配置
+// base_images 仅在使用预设引用时才要求，否则可以不写
 func (v *Validator) validateBaseImages() {
-	if err := v.config.BaseImages.Validate(); err != nil {
-		v.errors = append(v.errors, fmt.Sprintf("base_images: %v", err))
+	// 检查是否有预设引用
+	hasPresetRef := v.config.Build.BuilderImage.Kind() == ImageSpecPreset ||
+		v.config.Build.RuntimeImage.Kind() == ImageSpecPreset
+
+	if hasPresetRef && v.config.BaseImages.IsEmpty() {
+		v.errors = append(v.errors, "base_images is required when using preset references (@builders.* / @runtimes.*)")
+		return
+	}
+
+	// 如果有内容，验证格式合法性
+	if !v.config.BaseImages.IsEmpty() {
+		if err := v.config.BaseImages.Validate(); err != nil {
+			v.errors = append(v.errors, fmt.Sprintf("base_images: %v", err))
+		}
 	}
 }
 
 // validateImageReferences 验证镜像引用
 func (v *Validator) validateImageReferences() {
-	// 验证 builder_image 引用格式
-	if err := v.config.Build.BuilderImage.Validate(); err != nil {
-		v.errors = append(v.errors, fmt.Sprintf("build.builder_image: %v", err))
-		return // 格式错误，后续验证无意义
-	}
-
-	// 验证 runtime_image 引用格式
-	if err := v.config.Build.RuntimeImage.Validate(); err != nil {
-		v.errors = append(v.errors, fmt.Sprintf("build.runtime_image: %v", err))
-		return
-	}
-
-	// 验证引用是否存在且类型正确
-	resolver := NewImageResolver(v.config)
-
 	// 验证 builder_image
-	if !v.config.Build.BuilderImage.IsBuilder() {
-		v.errors = append(v.errors, fmt.Sprintf(
-			"build.builder_image: must reference @builders.* (got: %s)",
-			v.config.Build.BuilderImage,
-		))
-	} else {
-		if _, err := resolver.ResolveBuilderImage(); err != nil {
+	if !v.config.Build.BuilderImage.IsEmpty() {
+		if err := v.config.Build.BuilderImage.Validate(&v.config.BaseImages, "builders"); err != nil {
 			v.errors = append(v.errors, fmt.Sprintf("build.builder_image: %v", err))
+		}
+	} else {
+		// 未指定时，检查语言是否支持自动推导
+		if v.config.Language.Type != "" && !HasDefaultImages(v.config.Language.Type) {
+			v.errors = append(v.errors, fmt.Sprintf(
+				"build.builder_image is required for language '%s' (no default image available)",
+				v.config.Language.Type,
+			))
 		}
 	}
 
 	// 验证 runtime_image
-	if !v.config.Build.RuntimeImage.IsRuntime() {
-		v.errors = append(v.errors, fmt.Sprintf(
-			"build.runtime_image: must reference @runtimes.* (got: %s)",
-			v.config.Build.RuntimeImage,
-		))
-	} else {
-		if _, err := resolver.ResolveRuntimeImage(); err != nil {
+	if !v.config.Build.RuntimeImage.IsEmpty() {
+		if err := v.config.Build.RuntimeImage.Validate(&v.config.BaseImages, "runtimes"); err != nil {
 			v.errors = append(v.errors, fmt.Sprintf("build.runtime_image: %v", err))
+		}
+	} else {
+		// 未指定时，检查语言是否支持自动推导
+		if v.config.Language.Type != "" && !HasDefaultImages(v.config.Language.Type) {
+			v.errors = append(v.errors, fmt.Sprintf(
+				"build.runtime_image is required for language '%s' (no default image available)",
+				v.config.Language.Type,
+			))
 		}
 	}
 }
@@ -135,8 +139,14 @@ func (v *Validator) validateImageReferences() {
 func (v *Validator) validateBuild() {
 	// 镜像验证已在 validateImageReferences 中完成
 
+	// build.commands.build：有默认构建命令时可不填
 	if v.config.Build.Commands.Build == "" {
-		v.errors = append(v.errors, "build.commands.build is required")
+		if v.config.Language.Type != "" && !HasDefaultBuildCommand(v.config.Language.Type) {
+			v.errors = append(v.errors, fmt.Sprintf(
+				"build.commands.build is required for language '%s' (no default build command available)",
+				v.config.Language.Type,
+			))
+		}
 	}
 }
 

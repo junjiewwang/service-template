@@ -29,6 +29,10 @@ type LanguageStrategy interface {
 	// GetDepsInstallCommand returns the dependency installation command
 	GetDepsInstallCommand() string
 
+	// GetDefaultBuildCommand returns the default build command for this language
+	// Returns empty string if no reasonable default exists
+	GetDefaultBuildCommand() string
+
 	// GetPackageManager returns the package manager name
 	GetPackageManager() string
 
@@ -109,6 +113,16 @@ func (s *LanguageService) GetPackageManager(language string) string {
 	return strategy.GetPackageManager()
 }
 
+// GetDefaultBuildCommand returns the default build command for the given language
+func (s *LanguageService) GetDefaultBuildCommand(language string) string {
+	strategy, err := s.GetStrategy(language)
+	if err != nil {
+		return ""
+	}
+
+	return strategy.GetDefaultBuildCommand()
+}
+
 // IsSupported checks if the language is supported
 func (s *LanguageService) IsSupported(language string) bool {
 	_, err := s.GetStrategy(language)
@@ -156,6 +170,10 @@ func (s *GoStrategy) GetPackageManager() string {
 	return "go"
 }
 
+func (s *GoStrategy) GetDefaultBuildCommand() string {
+	return `CGO_ENABLED=0 go build -ldflags="-s -w" -o ${BUILD_OUTPUT_DIR}/bin/${SERVICE_NAME} ./cmd/server`
+}
+
 // --- Python Language Strategy ---
 
 // PythonStrategy implements LanguageStrategy for Python
@@ -186,6 +204,10 @@ func (s *PythonStrategy) GetPackageManager() string {
 	return "pip"
 }
 
+func (s *PythonStrategy) GetDefaultBuildCommand() string {
+	return `cp -r . ${BUILD_OUTPUT_DIR}/`
+}
+
 // --- NodeJS Language Strategy ---
 
 // NodeJSStrategy implements LanguageStrategy for NodeJS
@@ -214,6 +236,10 @@ func (s *NodeJSStrategy) GetDepsInstallCommand() string {
 
 func (s *NodeJSStrategy) GetPackageManager() string {
 	return "npm"
+}
+
+func (s *NodeJSStrategy) GetDefaultBuildCommand() string {
+	return `npm run build 2>/dev/null || true && cp -r . ${BUILD_OUTPUT_DIR}/`
 }
 
 // --- Java Language Strategy ---
@@ -272,6 +298,10 @@ func (s *JavaStrategy) GetPackageManager() string {
 	return "mvn"
 }
 
+func (s *JavaStrategy) GetDefaultBuildCommand() string {
+	return `mvn package -DskipTests && cp target/*.jar ${BUILD_OUTPUT_DIR}/app.jar`
+}
+
 // --- Rust Language Strategy ---
 
 // RustStrategy implements LanguageStrategy for Rust
@@ -300,6 +330,10 @@ func (s *RustStrategy) GetDepsInstallCommand() string {
 
 func (s *RustStrategy) GetPackageManager() string {
 	return "cargo"
+}
+
+func (s *RustStrategy) GetDefaultBuildCommand() string {
+	return `cargo build --release && cp target/release/${SERVICE_NAME} ${BUILD_OUTPUT_DIR}/bin/${SERVICE_NAME}`
 }
 
 // --- Helper Functions ---

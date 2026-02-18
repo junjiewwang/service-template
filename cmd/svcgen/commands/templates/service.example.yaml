@@ -4,10 +4,21 @@
 # ============================================
 
 # ============================================
-# 基础镜像预设库（顶层配置，与 service 同级）
+# 基础镜像预设库（可选，仅在使用 @预设引用 时需要）
 # ============================================
+# 当 builder_image/runtime_image 使用 @builders.xxx / @runtimes.xxx 格式时，
+# 需要在此定义预设映射。如果使用直接镜像名或自动推导，可省略此段。
+#
+# base_images:
+#   builders:
+#     go_1.23:
+#       amd64: "mirrors.tencent.com/tcs-infra/tceforqci_x86_go23:v1.0.0"
+#       arm64: "mirrors.tencent.com/tcs-infra/tceforqci_arm_go23:v1.0.0"
+#   runtimes:
+#     tencentos_minimal:
+#       amd64: "mirrors.tencent.com/tencentos/tencentos3-minimal:latest"
+#       arm64: "mirrors.tencent.com/tencentos/tencentos3-minimal:latest"
 base_images:
-  # 构建镜像预设
   builders:
     go_1.23:
       amd64: "mirrors.tencent.com/tcs-infra/tceforqci_x86_go23:v1.0.0"
@@ -21,7 +32,6 @@ base_images:
       amd64: "docker.io/python:3.11-slim"
       arm64: "docker.io/python:3.11-slim"
 
-  # 运行时镜像预设
   runtimes:
     tencentos_minimal:
       amd64: "mirrors.tencent.com/tencentos/tencentos3-minimal:latest"
@@ -114,13 +124,34 @@ build:
   #     - requirements-dev.txt
   #     - custom-deps.txt
 
-  # 构建基础镜像（引用 base_images 中的预设）
-  # 使用 @category.name 格式引用预设镜像
-  # 示例：@builders.go_1.21 引用 base_images.builders.go_1.21
+  # ============================================
+  # 构建/运行时镜像配置
+  # ============================================
+  # builder_image / runtime_image 支持 4 种格式：
+  #
+  # 格式1: 不填（自动推导）
+  #   根据 language.type 自动选择公开的 multi-arch 镜像
+  #   Go     → golang:{go_version}-alpine  /  alpine:3.19
+  #   Python → python:{python_version}-slim /  python:{python_version}-slim
+  #   Java   → maven:3-eclipse-temurin-{jdk_version} / eclipse-temurin:{jdk_version}-jre-alpine
+  #   Node.js→ node:{node_version}-alpine  /  node:{node_version}-alpine
+  #   Rust   → rust:{rust_version}-alpine  /  alpine:3.19
+  #
+  # 格式2: 直接镜像名（Docker Hub multi-arch 镜像，amd64/arm64 使用相同地址）
+  #   builder_image: "golang:1.23-alpine"
+  #   runtime_image: "alpine:3.19"
+  #
+  # 格式3: 预设引用（需配合顶层 base_images 段使用）
+  #   builder_image: "@builders.go_1.23"
+  #   runtime_image: "@runtimes.tencentos_minimal"
+  #
+  # 格式4: 按架构指定（amd64/arm64 使用不同镜像地址）
+  #   builder_image:
+  #     amd64: "mirrors.tencent.com/tcs-infra/tceforqci_x86_go23:v1.0.0"
+  #     arm64: "mirrors.tencent.com/tcs-infra/tceforqci_arm_go23:v1.0.0"
+  #
+  # 本示例使用格式3（预设引用）：
   builder_image: "@builders.go_1.23"
-
-  # 运行时基础镜像（引用 base_images 中的预设）
-  # 示例：@runtimes.tencentos_minimal 引用 base_images.runtimes.tencentos_minimal
   runtime_image: "@runtimes.tencentos_minimal"
 
   # 构建阶段依赖配置

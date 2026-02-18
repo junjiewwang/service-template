@@ -33,6 +33,11 @@ func (d *StrategyDecorator) GetPackageManager() string {
 	return d.wrapped.GetPackageManager()
 }
 
+// GetDefaultBuildCommand delegates to the wrapped strategy
+func (d *StrategyDecorator) GetDefaultBuildCommand() string {
+	return d.wrapped.GetDefaultBuildCommand()
+}
+
 // GetDependencyFilesWithDetection delegates to the wrapped strategy
 func (d *StrategyDecorator) GetDependencyFilesWithDetection(projectDir string) []string {
 	return d.wrapped.GetDependencyFilesWithDetection(projectDir)

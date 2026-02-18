@@ -27,8 +27,8 @@ func TestConfigBuilder(t *testing.T) {
 		t.Errorf("Expected language 'go', got '%s'", cfg.Language.Type)
 	}
 
-	if string(cfg.Build.BuilderImage) != "@builders.go_1.21" {
-		t.Errorf("Expected builder image '@builders.go_1.21', got '%s'", cfg.Build.BuilderImage)
+	if cfg.Build.BuilderImage.String() != "@builders.go_1.21" {
+		t.Errorf("Expected builder image '@builders.go_1.21', got '%s'", cfg.Build.BuilderImage.String())
 	}
 }
 

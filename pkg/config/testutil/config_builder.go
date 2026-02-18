@@ -123,13 +123,13 @@ func (b *ConfigBuilder) WithRuntime(name, amd64, arm64 string) *ConfigBuilder {
 
 // WithBuilderImage 设置构建镜像引用
 func (b *ConfigBuilder) WithBuilderImage(ref string) *ConfigBuilder {
-	b.cfg.Build.BuilderImage = config.ImageRef(ref)
+	b.cfg.Build.BuilderImage = config.NewImageSpec(ref)
 	return b
 }
 
 // WithRuntimeImage 设置运行时镜像引用
 func (b *ConfigBuilder) WithRuntimeImage(ref string) *ConfigBuilder {
-	b.cfg.Build.RuntimeImage = config.ImageRef(ref)
+	b.cfg.Build.RuntimeImage = config.NewImageSpec(ref)
 	return b
 }
 
