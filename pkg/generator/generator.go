@@ -88,8 +88,8 @@ func (g *Generator) Generate() error {
 func (g *Generator) generateDockerfiles() error {
 	architectures := []string{"amd64", "arm64"}
 
-	// Create .tad/build/{service-name} directory
-	dockerfileDir := filepath.Join(g.outputDir, ".tad", "build", g.config.Service.Name)
+	// Create CI script directory using CIPaths (supports custom script_dir)
+	dockerfileDir := filepath.Join(g.outputDir, g.ctx.Paths.CI.ScriptDir)
 	if err := os.MkdirAll(dockerfileDir, 0755); err != nil {
 		return fmt.Errorf("failed to create dockerfile directory: %w", err)
 	}
@@ -118,7 +118,7 @@ func (g *Generator) generateDockerfiles() error {
 			return fmt.Errorf("failed to write %s: %w", filename, err)
 		}
 
-		fmt.Printf("✓ Generated .tad/build/%s/%s\n", g.config.Service.Name, filename)
+		fmt.Printf("✓ Generated %s/%s\n", g.ctx.Paths.CI.ScriptDir, filename)
 	}
 
 	return nil

@@ -41,7 +41,7 @@ func (g *Generator) Generate() (string, error) {
 func (g *Generator) prepareTemplateVars() map[string]interface{} {
 	ctx := g.GetContext()
 
-	// Use preset for compose
+	// Use preset for compose (includes CIPaths for CI_SCRIPT_DIR)
 	composer := ctx.GetVariablePreset().ForCompose()
 
 	// Prepare custom port mappings

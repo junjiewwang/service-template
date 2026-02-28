@@ -42,7 +42,6 @@ svcgen generate
 Generates:
 - ✅ Multi-architecture Dockerfiles (AMD64/ARM64)
 - ✅ Docker Compose configurations
-- ✅ Kubernetes manifests (Deployment, Service, ConfigMap)
 - ✅ CI/CD pipeline scripts
 - ✅ Health check and startup scripts
 - ✅ Makefile with 20+ automation targets
@@ -94,7 +93,7 @@ build:
 runtime:
   healthcheck:
     enabled: true
-    type: http
+    type: default
 ```
 
 ```bash
@@ -116,7 +115,7 @@ Consistency: ✅ 100% standardized
 | **Multi-Architecture** | Native AMD64 and ARM64 support |
 | **Multi-Port Services** | Configure multiple ports with protocols |
 | **Plugin System** | Extensible plugin mechanism |
-| **Health Check Strategies** | HTTP, TCP, exec, custom |
+| **Health Check Strategies** | Default (process check), Custom |
 | **ConfigMap Generation** | Auto-generate from volumes |
 | **Template-Driven** | Go templates + Sprig functions |
 
@@ -202,10 +201,7 @@ build:
 runtime:
   healthcheck:
     enabled: true
-    type: http
-    http:
-      path: /health
-      port: 8080
+    type: default
 ```
 
 **📖 Full Configuration Guide**: [docs/CONFIGURATION.md](docs/CONFIGURATION.md)
@@ -239,7 +235,7 @@ svcgen generate
 # ✓ .tad/devops.yaml
 # ✓ compose.yaml
 # ✓ Makefile
-# ✓ k8s-manifests/*.yaml (if enabled)
+# ✓ k8s-manifests/*.yaml (if enabled, coming soon)
 ```
 
 ### 5️⃣ Build and Run
@@ -258,17 +254,16 @@ curl http://localhost:8080/health
 make docker-down
 ```
 
-### 6️⃣ Deploy to Kubernetes (Optional)
+### 6️⃣ Deploy to Kubernetes (Coming Soon)
+
+> **Note**: Kubernetes manifest generation is planned but not yet implemented.
+> The configuration schema is ready in `service.yaml` (`local_dev.kubernetes`).
 
 ```bash
-# Apply Kubernetes manifests
-make k8s-apply
-
-# Check deployment status
-make k8s-status
-
-# Delete deployment
-make k8s-delete
+# Future support:
+# make k8s-apply
+# make k8s-status
+# make k8s-delete
 ```
 
 ## 📚 Documentation

@@ -75,11 +75,10 @@ build:
   runtime_image:
     amd64: "mirrors.tencent.com/tencentos/tencentos3-minimal:latest"
     arm64: "mirrors.tencent.com/tencentos/tencentos3-minimal:latest"
-  system_dependencies:
-    build:
-      packages:
-        - git
-        - make
+  dependencies:
+    system_pkgs:
+      - git
+      - make
   commands:
     build: |
       cd ${SERVICE_ROOT}
@@ -89,11 +88,7 @@ build:
 runtime:
   healthcheck:
     enabled: true
-    type: http
-    http:
-      path: /health
-      port: 8080
-      timeout: 3
+    type: default
   startup:
     command: |
       #!/bin/sh
@@ -109,6 +104,6 @@ local_dev:
 
 metadata:
   template_version: "2.0.0"
-generator: "svcgen"
+  generator: "svcgen"
 `
 }

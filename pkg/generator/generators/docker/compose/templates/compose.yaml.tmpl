@@ -5,7 +5,7 @@ services:
   {{ .SERVICE_NAME }}:
     build:
       context: .
-      dockerfile: .tad/build/{{ .SERVICE_NAME }}/${DOCKERFILE}
+      dockerfile: {{ .CI_SCRIPT_DIR }}/${DOCKERFILE}
       args:
         # ARM64 args
         - TLINUX_BASE_IMAGE_ARM=${TLINUX_BASE_IMAGE_ARM}

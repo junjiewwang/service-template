@@ -50,8 +50,8 @@ func TestGenerator_Generate(t *testing.T) {
 	// Assert: Check that expected files were created
 	ciPaths := context.NewCIPaths(cfg)
 	expectedFiles := []string{
-		".tad/build/test-service/Dockerfile.test-service.amd64",
-		".tad/build/test-service/Dockerfile.test-service.arm64",
+		filepath.Join(ciPaths.ScriptDir, "Dockerfile.test-service.amd64"),
+		filepath.Join(ciPaths.ScriptDir, "Dockerfile.test-service.arm64"),
 		"compose.yaml",
 		"Makefile",
 		ciPaths.GetScriptPath(ciPaths.BuildScript),

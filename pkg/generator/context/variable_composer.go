@@ -211,7 +211,8 @@ func (p *VariablePreset) ForCompose() *VariableComposer {
 	return p.composer.Clone().
 		WithCommon().
 		WithRuntime().
-		WithService()
+		WithService().
+		WithCIPaths()
 }
 
 // ForMakefile returns a preset for Makefile generation
