@@ -23,9 +23,17 @@ services:
     ports:
 {{- range .PORTS }}
 {{- if eq .Port .TargetPort }}
+{{- if ne .Protocol "tcp" }}
+      - "{{ .Port }}/{{ .Protocol }}"
+{{- else }}
       - "{{ .Port }}"
+{{- end }}
+{{- else }}
+{{- if ne .Protocol "tcp" }}
+      - "{{ .Port }}:{{ .TargetPort }}/{{ .Protocol }}"
 {{- else }}
       - "{{ .Port }}:{{ .TargetPort }}"
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

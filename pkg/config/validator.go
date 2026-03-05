@@ -50,6 +50,7 @@ func (v *Validator) validateService() {
 	}
 
 	// ports 可以为空，但如果配置了端口，则需要验证其有效性
+	validProtocols := map[string]bool{"TCP": true, "UDP": true, "SCTP": true}
 	for i, port := range v.config.Service.Ports {
 		if port.Name == "" {
 			v.errors = append(v.errors, fmt.Sprintf("service.ports[%d].name is required", i))
@@ -59,6 +60,8 @@ func (v *Validator) validateService() {
 		}
 		if port.Protocol == "" {
 			v.errors = append(v.errors, fmt.Sprintf("service.ports[%d].protocol is required", i))
+		} else if !validProtocols[strings.ToUpper(port.Protocol)] {
+			v.errors = append(v.errors, fmt.Sprintf("service.ports[%d].protocol '%s' is not valid (valid: TCP, UDP, SCTP)", i, port.Protocol))
 		}
 	}
 

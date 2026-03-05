@@ -2,6 +2,7 @@ package compose
 
 import (
 	_ "embed"
+	"strings"
 
 	"github.com/junjiewwang/service-template/pkg/generator/context"
 	"github.com/junjiewwang/service-template/pkg/generator/core"
@@ -48,12 +49,14 @@ func (g *Generator) prepareTemplateVars() map[string]interface{} {
 	type PortMapping struct {
 		Port       int
 		TargetPort int
+		Protocol   string
 	}
 	var ports []PortMapping
 	for _, port := range ctx.Config.Service.Ports {
 		ports = append(ports, PortMapping{
 			Port:       port.Port,
 			TargetPort: port.Port,
+			Protocol:   strings.ToLower(port.Protocol),
 		})
 	}
 

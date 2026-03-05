@@ -204,6 +204,39 @@ func TestGenerator_Generate_WithComposeEnvironment(t *testing.T) {
 	}
 }
 
+func TestGenerator_Generate_WithUDPPort(t *testing.T) {
+	cfg := testutil.NewTestConfig()
+	cfg.Service.Ports = []config.PortConfig{
+		{Port: 4317, Protocol: "TCP"},
+		{Port: 4318, Protocol: "TCP"},
+		{Port: 6831, Protocol: "UDP"},
+	}
+
+	ctx := context.NewGeneratorContext(cfg, "/tmp/output")
+	gen, err := New(ctx)
+	if err != nil {
+		t.Fatalf("Failed to create generator: %v", err)
+	}
+
+	content, err := gen.Generate()
+	if err != nil {
+		t.Fatalf("Failed to generate: %v", err)
+	}
+
+	// TCP ports should not have protocol suffix
+	if !strings.Contains(content, `"4317"`) {
+		t.Error("Expected TCP port 4317 without suffix not found")
+	}
+	if !strings.Contains(content, `"4318"`) {
+		t.Error("Expected TCP port 4318 without suffix not found")
+	}
+
+	// UDP port should have /udp suffix
+	if !strings.Contains(content, `"6831/udp"`) {
+		t.Error("Expected UDP port 6831/udp not found")
+	}
+}
+
 func TestGenerator_Generate_WithEntrypoint(t *testing.T) {
 	tests := []struct {
 		name       string
