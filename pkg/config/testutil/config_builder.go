@@ -299,6 +299,12 @@ func (b *ConfigBuilder) WithMetadata(version, generator string) *ConfigBuilder {
 	return b
 }
 
+// WithManageGitignore 设置是否自动管理 .gitignore
+func (b *ConfigBuilder) WithManageGitignore(enabled bool) *ConfigBuilder {
+	b.cfg.Metadata.ManageGitignore = enabled
+	return b
+}
+
 // ============================================
 // 构建方法
 // ============================================

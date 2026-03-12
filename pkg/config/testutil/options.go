@@ -177,6 +177,13 @@ func WithCustomHealthcheckOpt(script string) ConfigOption {
 // 辅助函数
 // ============================================
 
+// WithManageGitignoreOpt 设置是否自动管理 .gitignore
+func WithManageGitignoreOpt(enabled bool) ConfigOption {
+	return func(cfg *config.ServiceConfig) {
+		cfg.Metadata.ManageGitignore = enabled
+	}
+}
+
 // ApplyOptions 应用配置选项到配置对象
 func ApplyOptions(cfg *config.ServiceConfig, opts ...ConfigOption) *config.ServiceConfig {
 	for _, opt := range opts {

@@ -88,7 +88,6 @@ func (p *VariablePool) fillCommonVariables(shared *SharedVariables) {
 	shared.vars[VarServiceName] = cfg.Service.Name
 	shared.vars[VarDeployDir] = cfg.Service.DeployDir
 	shared.vars[VarServiceRoot] = p.ctx.Paths.ServiceRoot
-	shared.vars[VarGeneratedAt] = cfg.Metadata.GeneratedAt
 	shared.vars[VarConfigDir] = p.ctx.Paths.ConfigDir
 	shared.vars[VarServiceBinDir] = p.ctx.Paths.BinDir
 	shared.vars[VarBuildOutputDir] = "/opt/dist"

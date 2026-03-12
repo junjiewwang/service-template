@@ -515,3 +515,6 @@ metadata:
   template_version: "2.0.0"
   generated_at: "" # 自动填充
   generator: "svcgen"
+  # 是否自动管理 .gitignore（将生成的文件添加到 .gitignore）
+  # 默认: false
+  # manage_gitignore: true

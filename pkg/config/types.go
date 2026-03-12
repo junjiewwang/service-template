@@ -358,6 +358,9 @@ type MetadataConfig struct {
 	TemplateVersion string `yaml:"template_version"`
 	GeneratedAt     string `yaml:"generated_at,omitempty"`
 	Generator       string `yaml:"generator"`
+	// ManageGitignore 控制是否自动管理 .gitignore（将生成的文件添加到 .gitignore）
+	// 默认: false（不写入 .gitignore）
+	ManageGitignore bool `yaml:"manage_gitignore,omitempty"`
 }
 
 // CIConfig CI/CD 相关路径配置

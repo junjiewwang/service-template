@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/junjiewwang/service-template/pkg/config"
 	"github.com/junjiewwang/service-template/pkg/generator/context"
@@ -37,9 +36,6 @@ type Generator struct {
 // NewGenerator creates a new generator instance
 func NewGenerator(cfg *config.ServiceConfig, outputDir string) *Generator {
 	ctx := context.NewGeneratorContext(cfg, outputDir)
-
-	// Update metadata
-	cfg.Metadata.GeneratedAt = time.Now().Format(time.RFC3339)
 
 	return &Generator{
 		config:    cfg,
@@ -78,6 +74,13 @@ func (g *Generator) Generate() error {
 	// Generate DevOps configuration
 	if err := g.generateDevOps(); err != nil {
 		return fmt.Errorf("failed to generate DevOps configuration: %w", err)
+	}
+
+	// Update .gitignore to ignore generated files (only when manage_gitignore is enabled)
+	if g.config.Metadata.ManageGitignore {
+		if err := g.updateGitignore(); err != nil {
+			return fmt.Errorf("failed to update .gitignore: %w", err)
+		}
 	}
 
 	fmt.Println("✓ Project generated successfully!")

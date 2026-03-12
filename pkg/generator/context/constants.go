@@ -75,9 +75,6 @@ const (
 	VarGOARCH = "GOARCH"
 	VarGOOS   = "GOOS"
 
-	// Metadata variables
-	VarGeneratedAt = "GENERATED_AT"
-
 	// CI path variables
 	VarCIScriptDir         = "CI_SCRIPT_DIR"
 	VarCIBuildConfigDir    = "CI_BUILD_CONFIG_DIR"

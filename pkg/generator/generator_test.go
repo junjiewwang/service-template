@@ -38,6 +38,7 @@ func TestGenerator_Generate(t *testing.T) {
 			DownloadURL: config.NewStaticDownloadURL("https://example.com/plugin.tar.gz"),
 		}).
 		WithDeployDir("/opt/services").
+		WithManageGitignore(true).
 		BuildWithDefaults()
 
 	outputDir := filepath.Join(tmpDir, "output")
@@ -60,6 +61,7 @@ func TestGenerator_Generate(t *testing.T) {
 		ciPaths.GetScriptPath(ciPaths.EntrypointScript),
 		ciPaths.GetScriptPath(ciPaths.HealthcheckScript),
 		".tad/devops.yaml",
+		".gitignore",
 	}
 
 	// List all generated files for debugging

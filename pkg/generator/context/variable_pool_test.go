@@ -22,7 +22,7 @@ func TestVariablePool_GetSharedVariables(t *testing.T) {
 		{
 			name:     "common variables",
 			category: CategoryCommon,
-			wantKeys: []string{VarServiceName, VarDeployDir, VarServiceRoot, VarGeneratedAt},
+			wantKeys: []string{VarServiceName, VarDeployDir, VarServiceRoot},
 		},
 		{
 			name:     "build variables",
