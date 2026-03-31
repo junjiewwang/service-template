@@ -38,6 +38,8 @@ func (g *Generator) gitignoreEntries() []string {
 
 	// 5. .env.make（由 Makefile 从 devops.yaml 解析生成）
 	entries[".env.make"] = struct{}{}
+	// 6. k8s-manifests/
+	entries["k8s-manifests/"] = struct{}{}
 
 	// 排序以保证输出稳定
 	sorted := make([]string, 0, len(entries))
