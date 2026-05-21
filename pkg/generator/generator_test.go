@@ -61,6 +61,7 @@ func TestGenerator_Generate(t *testing.T) {
 		ciPaths.GetScriptPath(ciPaths.EntrypointScript),
 		ciPaths.GetScriptPath(ciPaths.HealthcheckScript),
 		".tad/devops.yaml",
+		".tad/k8s-service.yaml",
 		".gitignore",
 	}
 

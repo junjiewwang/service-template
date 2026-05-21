@@ -18,6 +18,7 @@ import (
 	_ "github.com/junjiewwang/service-template/pkg/generator/generators/docker/compose"
 	_ "github.com/junjiewwang/service-template/pkg/generator/generators/docker/devops"
 	_ "github.com/junjiewwang/service-template/pkg/generator/generators/docker/dockerfile"
+	_ "github.com/junjiewwang/service-template/pkg/generator/generators/k8s/service"
 	_ "github.com/junjiewwang/service-template/pkg/generator/generators/scripts/build"
 	_ "github.com/junjiewwang/service-template/pkg/generator/generators/scripts/build_plugins"
 	_ "github.com/junjiewwang/service-template/pkg/generator/generators/scripts/deps_install"
@@ -74,6 +75,11 @@ func (g *Generator) Generate() error {
 	// Generate DevOps configuration
 	if err := g.generateDevOps(); err != nil {
 		return fmt.Errorf("failed to generate DevOps configuration: %w", err)
+	}
+
+	// Generate Kubernetes Service manifest
+	if err := g.generateK8sService(); err != nil {
+		return fmt.Errorf("failed to generate K8s Service manifest: %w", err)
 	}
 
 	// Update .gitignore to ignore generated files (only when manage_gitignore is enabled)
@@ -247,6 +253,32 @@ func (g *Generator) generateDevOps() error {
 	}
 
 	fmt.Println("✓ Generated .tad/devops.yaml")
+	return nil
+}
+
+// generateK8sService generates Kubernetes Service manifest
+func (g *Generator) generateK8sService() error {
+	generator, err := g.createGenerator("k8s-service")
+	if err != nil {
+		return fmt.Errorf("failed to create k8s-service generator: %w", err)
+	}
+
+	content, err := generator.Generate()
+	if err != nil {
+		return err
+	}
+
+	tadDir := filepath.Join(g.outputDir, ".tad")
+	if err := os.MkdirAll(tadDir, 0755); err != nil {
+		return fmt.Errorf("failed to create .tad directory: %w", err)
+	}
+
+	outputPath := filepath.Join(tadDir, "k8s-service.yaml")
+	if err := utils.WriteFile(outputPath, content); err != nil {
+		return err
+	}
+
+	fmt.Println("✓ Generated .tad/k8s-service.yaml")
 	return nil
 }
 
