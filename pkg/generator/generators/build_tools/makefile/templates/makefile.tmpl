@@ -230,6 +230,8 @@ k8s-convert: check-kompose .env.make
 		echo "ERROR: kompose convert failed"; \
 		exit 1; \
 	}
+	@echo "✓ kompose convert completed"
+	@echo ""
 	@echo "✓ K8s manifests generated successfully in $(K8S_OUTPUT_DIR)/"
 	@echo ""
 	@echo "Generated files:"
@@ -267,6 +269,14 @@ k8s-deploy: check-kubectl k8s-convert
 		exit 1; \
 	}
 	@echo "✓ Deployment successful"
+	@echo ""
+	@echo "Patching Service port names for Istio compatibility..."
+	@if [ -f ".tad/k8s-service.yaml" ]; then \
+		kubectl patch service $(PROJECT_NAME) -n $(K8S_NAMESPACE) --type=strategic --patch-file .tad/k8s-service.yaml && \
+		echo "✓ Service port names patched successfully"; \
+	else \
+		echo "⚠️  .tad/k8s-service.yaml not found, skipping port name patch"; \
+	fi
 	@echo ""
 	@echo "Checking deployment status..."
 	@kubectl get all -n $(K8S_NAMESPACE) -l io.kompose.service=$(PROJECT_NAME) 2>/dev/null || \

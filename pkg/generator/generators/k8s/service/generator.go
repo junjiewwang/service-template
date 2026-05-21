@@ -2,7 +2,6 @@ package service
 
 import (
 	_ "embed"
-	"strings"
 
 	"github.com/junjiewwang/service-template/pkg/generator/context"
 	"github.com/junjiewwang/service-template/pkg/generator/core"
@@ -38,27 +37,22 @@ func (g *Generator) Generate() (string, error) {
 	return g.RenderTemplate(tmpl, vars)
 }
 
-// ServicePort represents a port entry in K8s Service spec
+// ServicePort represents a port entry for K8s Service strategic merge patch
 type ServicePort struct {
-	Name     string
-	Port     int
-	Protocol string
+	Name string
+	Port int
 }
 
-// prepareTemplateVars prepares variables for k8s service template
+// prepareTemplateVars prepares variables for k8s service patch template
 func (g *Generator) prepareTemplateVars() map[string]interface{} {
 	ctx := g.GetContext()
 
-	// Collect ports that are marked as expose: true
+	// Collect all ports (kompose converts all compose ports to K8s Service ports)
 	var servicePorts []ServicePort
 	for _, port := range ctx.Config.Service.Ports {
-		if !port.Expose {
-			continue
-		}
 		servicePorts = append(servicePorts, ServicePort{
-			Name:     port.Name,
-			Port:     port.Port,
-			Protocol: strings.ToUpper(port.Protocol),
+			Name: port.Name,
+			Port: port.Port,
 		})
 	}
 
